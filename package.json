@@ -1,0 +1,33 @@
+{
+  "name": "feature_base_architecture",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "types": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.mjs",
+    "makemigration": "npx knex migrate:make --knexfile ./knex/knexfile",
+    "migrate": "npx knex migrate:latest --knexfile ./knex/knexfile",
+    "rollback": "npx knex migrate:rollback --knexfile ./knex/knexfile"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.4",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
+    "express-validator": "^7.3.1",
+    "jsonwebtoken": "^9.0.3",
+    "knex": "^3.1.0",
+    "morgan": "^1.10.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11",
+    "sqlite3": "^5.1.7"
+  }
+}
