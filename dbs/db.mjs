@@ -9,4 +9,8 @@ const db = knex({
     useNullAsDefault : true
 });
 
+db.raw("PRAGMA foreign_key= ON").then(()=>{
+    console.log("SQLite foreign key enabled")
+})
+
 export {db as default}
