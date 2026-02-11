@@ -1,7 +1,8 @@
+import { matchedData } from "express-validator";
 import { asyncHandler } from "../../utils/asyncHandler.mjs";
 
 
-const removeClient = asyncHandler(async (req, res, next)=>{
-    const {username} = req.body;
-    
+const addClient = asyncHandler(async (req, res, next)=>{
+    const validate = matchedData(req);
+    res.json({success : true});
 })

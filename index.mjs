@@ -7,6 +7,7 @@ dotenv.config();
 
 // routes
 import authRouter from "./src/auth/auth.router.mjs";
+import clientsRouter from "./src/client/client.router.mjs";
 
 // middlewares
 import { globalErrorHandler } from "./middlewares/error.middleware.mjs";
@@ -19,6 +20,7 @@ app.use(morgan("dev"));
 app.use(cors());
 
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/clients", clientsRouter);
 
 app.use(globalErrorHandler);
 
