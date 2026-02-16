@@ -1,10 +1,12 @@
 import * as authRepo from "./auth.repository.mjs";
 import * as crypt from "../../utils/crypt.mjs";
-import * as jwt from "../../utils/jwt.mjs"
-export async function verifyPassword(username, password){
+import * as jwt from "../../utils/jwt.mjs";
+import { ExpressError } from "../../utils/custom.error.mjs";
+
+export async function verifyPassword(username, password) {
     try {
         const user = await authRepo.getUserByUsername(username);
-        if(!user) throw new Error("Username not found!");
+        if (!user) throw new ExpressError("Username not found!");
 
         return await crypt.compareHash(password, user.hash);
     } catch (error) {
@@ -12,8 +14,7 @@ export async function verifyPassword(username, password){
     }
 }
 
-
-export async function generateToken(payload){
+export async function generateToken(payload) {
     try {
         return await jwt.signUser(payload);
     } catch (error) {
@@ -21,11 +22,33 @@ export async function generateToken(payload){
     }
 }
 
-export async function registerUser(model, password){
+export async function registerUser(model) {
     try {
-        const hash = await crypt.hashing(password);
+        const hash = await crypt.hashing(model.password);
 
-        await authRepo.createUser({...model, hash});
+        delete model.password;
+
+        await authRepo.createUser({ ...model, hash });
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function deleteUser(id, current_user) {
+    try {
+        const userToDelete = await authRepo.get(id);
+        if (!userToDelete) throw new ExpressError("User does not exist");
+        if (userToDelete.username === current_user)
+            throw new ExpressError("User can't delete itself", 403);
+        await authRepo.deleteUser(id);
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function updateUser(id, model) {
+    try {
+        await authRepo.updateUser(id, model);
     } catch (error) {
         throw error;
     }

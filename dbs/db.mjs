@@ -1,16 +1,16 @@
 import knex from "knex";
 
 const db = knex({
-    client : "sqlite3",
-    connection : {
-        filename : "./dbs/main.sqlite3",
-        timezone : "UTC"
+    client: "sqlite3",
+    connection: {
+        filename: "./dbs/main.sqlite3",
+        timezone: "UTC",
     },
-    useNullAsDefault : true
+    useNullAsDefault: true,
 });
 
-db.raw("PRAGMA foreign_key= ON").then(()=>{
-    console.log("SQLite foreign key enabled")
-})
+db.raw("PRAGMA foreign_key= ON").then(() => {
+    console.log("SQLite foreign key enabled");
+});
 
-export {db as default}
+export { db as default };

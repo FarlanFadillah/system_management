@@ -1,5 +1,9 @@
-export function globalErrorHandler(err, req, res, next){
-    console.log(err.message);
-    console.log(err.stack);
-    res.status(400).json({success : true, msg : err.message});
+export function globalErrorHandler(err, req, res, next) {
+    console.log("[GLOBAL ERROR HANDLER]");
+    console.error(err.message);
+    console.error(err.stack);
+    res.status(err.http_status || 400).json({
+        success: false,
+        msg: err.message,
+    });
 }
