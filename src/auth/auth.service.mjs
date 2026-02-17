@@ -1,4 +1,5 @@
 import * as authRepo from "./auth.repository.mjs";
+import * as mainRepo from "../../utils/main.repository.mjs";
 import * as crypt from "../../utils/crypt.mjs";
 import * as jwt from "../../utils/jwt.mjs";
 import { ExpressError } from "../../utils/custom.error.mjs";
@@ -28,7 +29,7 @@ export async function registerUser(model) {
 
         delete model.password;
 
-        await authRepo.createUser({ ...model, hash });
+        await mainRepo.create("users", { ...model, hash });
     } catch (error) {
         throw error;
     }
@@ -40,7 +41,7 @@ export async function deleteUser(id, current_user) {
         if (!userToDelete) throw new ExpressError("User does not exist");
         if (userToDelete.username === current_user)
             throw new ExpressError("User can't delete itself", 403);
-        await authRepo.deleteUser(id);
+        await mainRepo.remove("users", id);
     } catch (error) {
         throw error;
     }
@@ -48,7 +49,7 @@ export async function deleteUser(id, current_user) {
 
 export async function updateUser(id, model) {
     try {
-        await authRepo.updateUser(id, model);
+        await mainRepo.update("users", id, model);
     } catch (error) {
         throw error;
     }

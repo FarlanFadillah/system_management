@@ -14,19 +14,6 @@ import { ExpressError } from "../../utils/custom.error.mjs";
 //     "marriage_status" : "belum kawin",
 //     "gender" : "pria"
 // }
-/**
- *
- * @param {Object} model
- */
-export async function create(model) {
-    try {
-        await db("clients").insert(model);
-    } catch (error) {
-        if (error.code === "SQLITE_CONSTRAINT")
-            throw new ExpressError("Client already exists");
-        throw ExpressError(error.message);
-    }
-}
 
 /**
  *
@@ -71,28 +58,6 @@ export async function search(columns, keyword, currentpage, limit) {
                 "updated_at",
                 "created_at",
             ]);
-    } catch (error) {
-        throw ExpressError(error.message);
-    }
-}
-
-/**
- *
- * @param {Number} id
- */
-export async function remove(id) {
-    try {
-        await db("clients").where({ id }).delete();
-    } catch (error) {
-        throw ExpressError(error.message);
-    }
-}
-
-export async function update(data, id) {
-    try {
-        await db("clients")
-            .update({ ...data, updated_at: db.fn.now() })
-            .where({ id });
     } catch (error) {
         throw ExpressError(error.message);
     }

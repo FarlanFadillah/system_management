@@ -15,6 +15,10 @@ import {
 const router = express.Router();
 
 router
+    .route("/login")
+    .post(...loginValidationRules, validate, authLimiter, login);
+
+router
     .route("/register")
     .post(
         validateToken,
@@ -24,10 +28,6 @@ router
         authLimiter,
         register,
     );
-
-router
-    .route("/login")
-    .post(...loginValidationRules, validate, authLimiter, login);
 
 router
     .route("/:id")

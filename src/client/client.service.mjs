@@ -1,10 +1,11 @@
 import { UTCToGMT } from "../../helper/date.helper.mjs";
 import { ExpressError } from "../../utils/custom.error.mjs";
 import * as clientRepo from "./client.repository.mjs";
+import * as mainRepo from "../../utils/main.repository.mjs";
 
 export async function addClient(model) {
     try {
-        await clientRepo.create(model);
+        await mainRepo.create("clients", model);
     } catch (error) {
         throw error;
     }
@@ -32,15 +33,15 @@ export async function removeClient(id) {
     try {
         const user = await clientRepo.getById(id);
         if (!user) throw new ExpressError("User does not exists");
-        await clientRepo.remove(id);
+        await mainRepo.remove("clients", id);
     } catch (error) {
         throw error;
     }
 }
 
-export async function updateClientData(data, id) {
+export async function updateClientData(model, id) {
     try {
-        await clientRepo.update(data, id);
+        await mainRepo.update("clients", id, model);
     } catch (error) {
         throw error;
     }

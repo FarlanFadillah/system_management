@@ -1,18 +1,37 @@
 import db from "../../dbs/db.mjs";
 import { ExpressError } from "../../utils/custom.error.mjs";
 
+/**
+ *
+ * @param {"provinsi" | "kabupaten" | "kecamatan" | "kelurahan"} table
+ * @param {String} name
+ * @param {Number} limit
+ * @param {Number} offset
+ * @returns
+ */
+export async function get(table, name) {
+    try {
+        const addresses = await db(table)
+            .where("name", "like", `%${name}%`)
+            .select("id");
+        return addresses;
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
+}
+
 export async function getKelurahan(name, limit, offset) {
     try {
-        const code = await db("kelurahan")
+        const addresses = await db("kelurahan")
             .where("name", "like", `%${name}%`)
+            .select("id")
             .limit(limit)
             .offset(offset);
-        return code;
+        return addresses;
     } catch (error) {
         throw ExpressError(error.message);
     }
 }
-
 export async function getKecamatan(name) {
     try {
         const code = await db("kecamatan")

@@ -9,6 +9,7 @@ dotenv.config();
 import authRouter from "./src/auth/auth.router.mjs";
 import addressRouter from "./src/address/address.router.mjs";
 import clientsRouter from "./src/client/client.router.mjs";
+import alasHakRouter from "./src/alas_hak/alas_hak.router.mjs";
 
 // middlewares
 import { globalErrorHandler } from "./middlewares/error.middleware.mjs";
@@ -23,6 +24,7 @@ app.use(cors());
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/address", addressRouter);
 app.use("/api/v1/clients", clientsRouter);
+app.use("/api/v1/alas-hak", alasHakRouter);
 
 app.use(globalErrorHandler);
 
