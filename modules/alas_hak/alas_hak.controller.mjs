@@ -34,7 +34,8 @@ export const removeAlasHak = asyncHandler(async (req, res, next) => {
 
 export const searchAlasHak = asyncHandler(async (req, res, next) => {
     const { keyword, currentpage, address } = req.query;
-    if (!currentpage) return next(new Error("currentpage query is empty"));
+    if (isNaN(currentpage))
+        return next(new ExpressError("Invalid currentpage value"));
     if (!keyword)
         return next(
             new ExpressError(
@@ -46,13 +47,8 @@ export const searchAlasHak = asyncHandler(async (req, res, next) => {
               address,
               keyword,
               currentpage,
-              process.env.PAGINATION_LIMIT,
           )
-        : await alasHakService.searchAlasHak(
-              keyword,
-              currentpage,
-              process.env.PAGINATION_LIMIT,
-          );
+        : await alasHakService.searchAlasHak(keyword, currentpage);
     res.status(200).json({ success: true, data: alas_hak });
 });
 

@@ -12,9 +12,20 @@ export async function addClient(model) {
     }
 }
 
-export async function getAllClients(currentpage, limit) {
+export async function getAllClients(currentpage) {
     try {
-        return await clientRepo.getAll(limit, currentpage * limit);
+        return await clientRepo.getAll(
+            paginationConf.default.limit,
+            currentpage * paginationConf.default.limit,
+        );
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getClient(id) {
+    try {
+        return await clientRepo.getById(Number(id));
     } catch (error) {
         throw error;
     }

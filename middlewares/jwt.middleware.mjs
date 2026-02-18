@@ -20,6 +20,7 @@ export const validateToken = asyncHandler(async (req, res, next) => {
     const { decoded, user } = await jwtHelper.verifyUser(
         authHeader.split(" ")[1],
     );
+    console.log("[TOKEN VALID]");
     req.user = decoded;
     req.user.role = user.role;
     next();

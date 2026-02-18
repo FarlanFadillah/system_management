@@ -1,8 +1,12 @@
+const dotenv = require("dotenv").config({ path: "../.env" });
+const path = require("path");
+const process = require("process");
+
 module.exports = {
     development: {
-        client: "sqlite3",
+        client: process.env.DB_CLIENT,
         connection: {
-            filename: "../dbs/main.sqlite3",
+            filename: path.join("..", process.env.DB_FILENAME),
             timezone: "UTC",
         },
         useNullAsDefault: true,

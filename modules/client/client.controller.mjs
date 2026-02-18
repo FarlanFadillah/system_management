@@ -8,8 +8,20 @@ export const addClient = asyncHandler(async (req, res, next) => {
     res.json({ success: true, msg: "Client added successfully" });
 });
 
-export const getAllClient = asyncHandler(async (req, res, next) => {
+export const getAllClients = asyncHandler(async (req, res, next) => {
     const { currentpage } = req.query;
+    if (isNaN(currentpage))
+        return next(new ExpressError("Invalid currentpage value"));
+    const clients = await clientService.getAllClients(currentpage);
+
+    res.status(200).json({ success: true, clients });
+});
+
+export const getClient = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+    if (!id) return next(new ExpressError("Id is undefined"));
+    const client = await clientService.getClient(id);
+    res.status(200).json({ success: true, client });
 });
 
 export const deleteClient = asyncHandler(async (req, res, next) => {
@@ -21,7 +33,8 @@ export const deleteClient = asyncHandler(async (req, res, next) => {
 
 export const searchClient = asyncHandler(async (req, res, next) => {
     const { currentpage, keyword } = req.query;
-    if (!currentpage) return next(new Error("currentpage query is empty"));
+    if (isNaN(currentpage))
+        return next(new ExpressError("Invalid currentpage value"));
     if (!keyword)
         return next(
             new ExpressError(
@@ -29,10 +42,7 @@ export const searchClient = asyncHandler(async (req, res, next) => {
             ),
         );
 
-    console.log(req.user);
-
     const user = await clientService.searchClient(keyword, currentpage);
-
     res.status(200).json({ success: true, data: user });
 });
 

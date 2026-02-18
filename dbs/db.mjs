@@ -1,9 +1,9 @@
 import knex from "knex";
-
+import process from "process";
 const db = knex({
-    client: "sqlite3",
+    client: process.env.DB_CLIENT,
     connection: {
-        filename: "./dbs/main.sqlite3",
+        filename: process.env.DB_FILENAME,
         timezone: "UTC",
     },
     useNullAsDefault: true,

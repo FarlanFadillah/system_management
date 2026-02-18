@@ -1,10 +1,11 @@
 import * as addressRepo from "./address.repository.mjs";
+import * as paginationConf from "../../configs/pagination.config.mjs";
 
 export async function getKelurahan(name, limit, currentpage) {
     try {
         return await addressRepo.getKelurahan(
             name,
-            limit,
+            paginationConf.default.limit,
             Number(limit) * Number(currentpage),
         );
     } catch (error) {

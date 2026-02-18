@@ -4,6 +4,8 @@ import {
     deleteClient,
     updateClientData,
     searchClient,
+    getAllClients,
+    getClient,
 } from "./client.controller.mjs";
 import {
     patchClientValidationRules,
@@ -18,10 +20,13 @@ router.use(validateToken);
 router
     .route("/")
     .post(...createClientValidationRules, validate, addClient)
-    .get(searchClient);
+    .get(getAllClients);
+
+router.get("/search", searchClient);
 
 router
     .route("/:id")
+    .get(getClient)
     .delete(deleteClient)
     .patch(...patchClientValidationRules, validate, updateClientData)
     .put(...createClientValidationRules, validate, updateClientData);

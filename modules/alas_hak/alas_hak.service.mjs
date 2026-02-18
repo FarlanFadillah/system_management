@@ -74,6 +74,7 @@ export async function searchAlasHak(keyword, currentpage) {
 export async function searchAlasHakByAddress(level, address, currentpage) {
     try {
         let address_code = await addressRepo.get(level, address);
+        console.log(address_code);
         if (!address_code) throw new ExpressError("Address not found");
         return await alasHakRepo.searchMultipleKeywords(
             "address_code",

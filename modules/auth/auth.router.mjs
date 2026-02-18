@@ -20,14 +20,7 @@ router
 
 router
     .route("/register")
-    .post(
-        validateToken,
-        adminAuthorization,
-        ...registerValidationRules,
-        validate,
-        authLimiter,
-        register,
-    );
+    .post(...registerValidationRules, validate, authLimiter, register);
 
 router
     .route("/:id")
