@@ -1,3 +1,12 @@
-/node_modules
-/.env
-/dbs/main.sqlite3
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Database
+dbs/main.sqlite3
+
+# Prettier
+.prettierignore
+.prettierrc
