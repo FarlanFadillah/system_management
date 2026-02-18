@@ -51,24 +51,20 @@ export async function search(columns, keyword, currentpage, limit) {
 /**
  *
  * @param {String} column
- * @param {Array} keywords
+ * @param {String} keyword
  * @param {Number} currentpage
  * @param {Number} limit
  * @returns
  */
 export async function searchMultipleKeywords(
     column,
-    keywords,
+    keyword,
     currentpage,
     limit,
 ) {
     try {
         return await db("alas_hak")
-            .where(function () {
-                keywords.forEach((val) => {
-                    this.orWhere(column, "like", `%${val}%`);
-                });
-            })
+            .where({ [column]: keyword })
             .limit(limit)
             .offset(currentpage * limit);
     } catch (error) {

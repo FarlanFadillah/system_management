@@ -19,3 +19,7 @@ export const updateAlasHakValidationRules = [
     validator.numericalOptional("jenis_hak_id"),
     validator.numericalOptional("luas"),
 ];
+
+export const addAlasHakOwnerValidationRules = [
+    validator.arrayOfNumberRequired("clients"),
+];

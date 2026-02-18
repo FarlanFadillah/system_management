@@ -45,3 +45,21 @@ export async function update(table, id, model) {
         throw new ExpressError(error.message);
     }
 }
+
+/**
+ *
+ * @param {String} table
+ * @param {Number} id
+ * @returns
+ */
+export async function isExists(table, id) {
+    try {
+        const { count } = await db(table)
+            .where({ id })
+            .count("id as count")
+            .first();
+        return count > 0;
+    } catch (error) {
+        throw error;
+    }
+}

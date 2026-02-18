@@ -1,5 +1,6 @@
 import { check, validationResult } from "express-validator";
 import db from "../dbs/db.mjs";
+import { ExpressError } from "./custom.error.mjs";
 
 /**
  *
@@ -117,5 +118,28 @@ export function addressOptional(field) {
         .custom(async (value) => {
             const address = await db("kelurahan").where({ id: value });
             if (address.length <= 0) throw new Error("Invalid address code");
+        });
+}
+
+/**
+ *
+ * @param {String} field
+ * @returns
+ */
+export function arrayOfNumberRequired(field) {
+    return check(field)
+        .notEmpty()
+        .withMessage(`${field} cannon be empty`)
+        .isArray({ min: 1 })
+        .withMessage(`${field} must be an array`)
+        .custom(async (value, { req }) => {
+            try {
+                value.forEach((val) => {
+                    if (isNaN(val))
+                        throw new ExpressError("The elements is not number");
+                });
+            } catch (error) {
+                throw new ExpressError(`${field} must be an array`);
+            }
         });
 }

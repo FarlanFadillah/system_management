@@ -11,10 +11,10 @@ import { ExpressError } from "../../utils/custom.error.mjs";
  */
 export async function get(table, name) {
     try {
-        const addresses = await db(table)
+        return await db(table)
             .where("name", "like", `%${name}%`)
-            .select("id");
-        return addresses;
+            .select("id")
+            .first();
     } catch (error) {
         throw new ExpressError(error.message);
     }

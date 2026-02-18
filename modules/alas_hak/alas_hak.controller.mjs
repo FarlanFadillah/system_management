@@ -53,6 +53,16 @@ export const searchAlasHak = asyncHandler(async (req, res, next) => {
               currentpage,
               process.env.PAGINATION_LIMIT,
           );
-
     res.status(200).json({ success: true, data: alas_hak });
+});
+
+export const addAlasHakOwner = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+    const { clients } = req.matchedData;
+    if (!id || isNaN(id)) return next(new ExpressError("Alas Hak Not found"));
+    const msg = await alasHakService.addAlasHakOwner(id, clients);
+    res.status(200).json({
+        success: msg.length === clients.length ? false : true,
+        msg,
+    });
 });

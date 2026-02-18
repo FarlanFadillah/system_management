@@ -1,5 +1,5 @@
 import * as jwt from "../utils/jwt.mjs";
-import * as userRepo from "../src/auth/auth.repository.mjs";
+import * as userRepo from "../modules/auth/auth.repository.mjs";
 import { ExpressError } from "../utils/custom.error.mjs";
 
 export async function verifyUser(token) {

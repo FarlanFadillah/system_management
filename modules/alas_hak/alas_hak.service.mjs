@@ -4,8 +4,13 @@ import { ExpressError } from "../../utils/custom.error.mjs";
 import * as mainRepo from "../../utils/main.repository.mjs";
 import * as alasHakRepo from "./alas_hak.repository.mjs";
 import * as addressRepo from "../address/address.repository.mjs";
+import * as clientRepo from "../client/client.repository.mjs";
 import { mapingArrayObject } from "../../utils/DS.manipulation.mjs";
 
+/**
+ *
+ * @param {Object} model
+ */
 export async function addAlasHak(model) {
     try {
         await mainRepo.create("alas_hak", model);
@@ -14,6 +19,10 @@ export async function addAlasHak(model) {
     }
 }
 
+/**
+ *
+ * @param {Number} id
+ */
 export async function removeAlasHak(id) {
     try {
         await mainRepo.remove("alas_hak", id);
@@ -22,6 +31,11 @@ export async function removeAlasHak(id) {
     }
 }
 
+/**
+ *
+ * @param {Number} id
+ * @param {Object} model
+ */
 export async function updateAlasHak(id, model) {
     try {
         await mainRepo.update("alas_hak", id, model);
@@ -30,6 +44,13 @@ export async function updateAlasHak(id, model) {
     }
 }
 
+/**
+ *
+ * @param {String} keyword
+ * @param {Number} currentpage
+ * @param {Number} limit
+ * @returns
+ */
 export async function searchAlasHak(keyword, currentpage, limit) {
     try {
         return await alasHakRepo.search(
@@ -59,13 +80,10 @@ export async function searchAlasHakByAddress(
 ) {
     try {
         let address_code = await addressRepo.get(level, address);
-        address_code = mapingArrayObject(address_code, "id");
-        console.log(address_code);
-        if (address_code.length <= 0)
-            throw new ExpressError("Address not found");
+        if (!address_code) throw new ExpressError("Address not found");
         return await alasHakRepo.searchMultipleKeywords(
             "address_code",
-            address_code,
+            address_code.id,
             Number(currentpage),
             Number(limit),
         );
@@ -74,8 +92,28 @@ export async function searchAlasHakByAddress(
     }
 }
 
-export async function getAddressHierarchy(address) {
+/**
+ *
+ * @param {Number} alas_hak_id
+ * @param {Array} clients_id
+ */
+export async function addAlasHakOwner(alas_hak_id, clients_id) {
+    let messages = [];
     try {
+        if (!(await mainRepo.isExists("alas_hak", alas_hak_id)))
+            throw new ExpressError("Alas Hak not found");
+        for (let val of [...clients_id]) {
+            const exists = await mainRepo.isExists("clients", val);
+            if (exists) {
+                await mainRepo.create("alas_hak_clients", {
+                    alas_hak_id,
+                    client_id: val,
+                });
+            } else {
+                messages.push(`Clients with id ${val} does not exists`);
+            }
+        }
+        return messages;
     } catch (error) {
         throw error;
     }
