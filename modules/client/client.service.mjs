@@ -2,10 +2,19 @@ import { UTCToGMT } from "../../helper/date.helper.mjs";
 import { ExpressError } from "../../utils/custom.error.mjs";
 import * as clientRepo from "./client.repository.mjs";
 import * as mainRepo from "../../utils/main.repository.mjs";
+import * as paginationConf from "../../configs/pagination.config.mjs";
 
 export async function addClient(model) {
     try {
         await mainRepo.create("clients", model);
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getAllClients(currentpage, limit) {
+    try {
+        return await clientRepo.getAll(limit, currentpage * limit);
     } catch (error) {
         throw error;
     }
@@ -17,7 +26,7 @@ export async function searchClient(keyword, currentpage) {
             ["nik", "first_name", "last_name"],
             keyword,
             Number(currentpage),
-            Number(process.env.PAGINATION_LIMIT),
+            Number(paginationConf.default.limit),
         );
 
         client.forEach((val) => (val.updated_at = UTCToGMT(val.updated_at)));

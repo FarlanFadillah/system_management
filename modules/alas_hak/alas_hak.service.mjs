@@ -6,6 +6,7 @@ import * as alasHakRepo from "./alas_hak.repository.mjs";
 import * as addressRepo from "../address/address.repository.mjs";
 import * as clientRepo from "../client/client.repository.mjs";
 import { mapingArrayObject } from "../../utils/DS.manipulation.mjs";
+import * as paginationConf from "../../configs/pagination.config.mjs";
 
 /**
  *
@@ -48,16 +49,15 @@ export async function updateAlasHak(id, model) {
  *
  * @param {String} keyword
  * @param {Number} currentpage
- * @param {Number} limit
  * @returns
  */
-export async function searchAlasHak(keyword, currentpage, limit) {
+export async function searchAlasHak(keyword, currentpage) {
     try {
         return await alasHakRepo.search(
             ["no_alas_hak"],
             keyword,
             Number(currentpage),
-            Number(limit),
+            Number(paginationConf.default.limit),
         );
     } catch (error) {
         throw error;
@@ -69,15 +69,9 @@ export async function searchAlasHak(keyword, currentpage, limit) {
  * @param {"provinsi" | "kabupaten" | "kecamatan" | "kelurahan"} level
  * @param {String} address
  * @param {Number} currentpage
- * @param {Number} limit
  * @returns
  */
-export async function searchAlasHakByAddress(
-    level,
-    address,
-    currentpage,
-    limit,
-) {
+export async function searchAlasHakByAddress(level, address, currentpage) {
     try {
         let address_code = await addressRepo.get(level, address);
         if (!address_code) throw new ExpressError("Address not found");
@@ -85,7 +79,7 @@ export async function searchAlasHakByAddress(
             "address_code",
             address_code.id,
             Number(currentpage),
-            Number(limit),
+            Number(paginationConf.default.limit),
         );
     } catch (error) {
         throw error;

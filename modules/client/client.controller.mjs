@@ -8,6 +8,10 @@ export const addClient = asyncHandler(async (req, res, next) => {
     res.json({ success: true, msg: "Client added successfully" });
 });
 
+export const getAllClient = asyncHandler(async (req, res, next) => {
+    const { currentpage } = req.query;
+});
+
 export const deleteClient = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
     if (!id) return next(new Error("Id is undefined"));

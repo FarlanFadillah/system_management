@@ -62,3 +62,11 @@ export async function search(columns, keyword, currentpage, limit) {
         throw ExpressError(error.message);
     }
 }
+
+export async function getAll(limit, offset) {
+    try {
+        return await db("clients").limit(limit).offset(offset);
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
+}
