@@ -96,7 +96,7 @@ Create a `.env` file in the root directory:
 PORT=3000
 DB_CLIENT=sqlite3
 DB_FILENAME=./main.sqlite3
-JWT_SECRET=your_secret_key
+JWT_KEY=your_secret_key
 ```
 
 Make sure to adjust the values based on your environment.
@@ -111,6 +111,19 @@ or
 npm run migrate
 ```
 
+Fetch Wilayah.id.sqlite3 Database to main.sqlite3
+
+Make sure to install sqlite3 tools on your device.
+
+```bash
+sqlite /dbs/main.sqlite3
+ATTACH DATABASE /wilayah.id.sqlite3 as wilayah;
+CREATE TABLE kelurahan AS SELECT * FROM wilayah.kelurahan;
+CREATE TABLE kecamatan AS SELECT * FROM wilayah.kecamatan;
+CREATE TABLE kabupaten AS SELECT * FROM wilayah.kabupaten;
+CREATE TABLE provinsi AS SELECT * FROM wilayah.provinsi;
+```
+
 If using seeds:
 
 ```bash
@@ -120,14 +133,6 @@ npx knex seed:run
 ---
 
 ### 5️⃣ Start the Server
-
-For development:
-
-```bash
-npm run dev
-```
-
-For production:
 
 ```bash
 npm start
@@ -184,7 +189,10 @@ Before accessing protected routes, you need to authenticate.
 ```json
 {
   "username": "admin",
-  "password": "password123"
+  "password": "password123",
+  "first_name" : "your first name",
+  "last_name" : "your last name (optional)",
+  "email" : "your email address (optional)" 
 }
 ```
 
@@ -244,14 +252,14 @@ Authorization: Bearer your_jwt_token_here
 
 ---
 
-### Get All Clients
+### Get All Clients with pagination
 
 **GET** `/clients?currentpage=0`
 
 Optional query:
 
 ```
-/clients?search=farlan
+/clients?search=farlan&currentpage=0
 ```
 
 ---
@@ -282,9 +290,15 @@ Optional query:
 
 ```json
 {
-  "certificate_number": "AH-001",
-  "area_size": 120,
-  "location": "Pekanbaru"
+    "no_alas_hak" : "03040804102576",
+    "tgl_alas_hak" : "2020-12-20",
+    "no_surat_ukur" : "02525/Ampang Gadang/2020",
+    "tgl_surat_ukur" : "2020-10-05",
+    "luas" : 125,
+    "jor" : "Ampang Gadang",
+    "address_code" : "13.06.07.2005",
+    "jenis_hak_id" : 0,
+     "ket" : "Proses Pemecahan"
 }
 ```
 
@@ -302,31 +316,6 @@ Optional query:
 
 ---
 
-## 🗺️ 4. Administrative Regions
-
-### Get Provinces
-
-**GET** `/regions/provinces`
-
-### Get Regencies by Province
-
-**GET** `/regions/regencies/:province_id`
-
-### Get Districts by Regency
-
-**GET** `/regions/districts/:regency_id`
-
----
-
-# 🧪 Testing With cURL (Example)
-
-```bash
-curl -X GET http://localhost:3000/api/clients \
-  -H "Authorization: Bearer your_token_here"
-```
-
----
-
 # 📖 API Design Principles
 
 This API follows:
@@ -336,14 +325,3 @@ This API follows:
 * JSON request & response format
 * JWT-based authentication
 * Structured error handling
-
----
-
-If you want to level this up 🔥 you can:
-
-* Add status codes documentation (200, 201, 400, 401, 404)
-* Add response format standardization
-* Generate Swagger / OpenAPI docs
-* Add Postman collection export
-
-If you show me your exact route structure, I can make this 100% accurate to your actual implementation.
