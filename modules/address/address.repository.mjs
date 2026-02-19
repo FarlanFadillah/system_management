@@ -29,7 +29,7 @@ export async function getKelurahan(name, limit, offset) {
             .offset(offset);
         return addresses;
     } catch (error) {
-        throw ExpressError(error.message);
+        throw new ExpressError(error.message);
     }
 }
 export async function getKecamatan(name) {
@@ -39,7 +39,7 @@ export async function getKecamatan(name) {
             .first();
         return code;
     } catch (error) {
-        throw ExpressError(error.message);
+        throw new ExpressError(error.message);
     }
 }
 
@@ -50,7 +50,7 @@ export async function getKabupaten(name) {
             .first();
         return code;
     } catch (error) {
-        throw ExpressError(error.message);
+        throw new ExpressError(error.message);
     }
 }
 
@@ -61,6 +61,6 @@ export async function getProvinsi(name) {
             .first();
         return code;
     } catch (error) {
-        throw ExpressError(error.message);
+        throw new ExpressError(error.message);
     }
 }

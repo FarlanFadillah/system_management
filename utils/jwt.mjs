@@ -5,7 +5,7 @@ export function signUser(payload) {
     return new Promise((resolve, reject) => {
         jwt.sign(
             payload,
-            process.env.JWT_SECRET_KEY,
+            process.env.JWT_KEY,
             { algorithm: "HS256", expiresIn: "5h" },
             (err, token) => {
                 if (err) reject(new ExpressError(err.message));
@@ -17,7 +17,7 @@ export function signUser(payload) {
 
 export function verifyToken(token) {
     return new Promise((resolve, reject) => {
-        jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+        jwt.verify(token, process.env.JWT_KEY, (err, decoded) => {
             if (err) reject(new ExpressError(err.message));
             else resolve(decoded);
         });
