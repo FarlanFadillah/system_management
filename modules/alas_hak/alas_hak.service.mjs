@@ -22,6 +22,23 @@ export async function addAlasHak(model) {
 
 /**
  *
+ * @param {Number} currentpage
+ * @returns
+ */
+export async function getAllAlasHak(currentpage) {
+    try {
+        const limit = paginationConf.default.limit;
+        return await alasHakRepo.getAll(
+            Number(limit),
+            Number(currentpage) * Number(limit),
+        );
+    } catch (error) {
+        throw error;
+    }
+}
+
+/**
+ *
  * @param {Number} id
  */
 export async function removeAlasHak(id) {

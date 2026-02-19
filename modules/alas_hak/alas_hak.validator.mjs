@@ -21,5 +21,5 @@ export const updateAlasHakValidationRules = [
 ];
 
 export const addAlasHakOwnerValidationRules = [
-    validator.arrayOfNumberRequired("clients"),
+    validator.arrayOfNumberRequired("clients_id"),
 ];

@@ -8,6 +8,15 @@ export const addAlasHak = asyncHandler(async (req, res, next) => {
     res.status(200).json({ success: true, msg: "Alas Hak added successfully" });
 });
 
+export const getAllAlasHak = asyncHandler(async (req, res, next) => {
+    const { currentpage } = req.query;
+    if (isNaN(currentpage))
+        return next(new ExpressError("Invalid currentpage value"));
+
+    const alas_hak = await alasHakService.getAllAlasHak(currentpage);
+    res.status(200).json({ success: true, data: alas_hak });
+});
+
 export const updateAlasHak = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
     if (!id) return next(new ExpressError("Invalid id"));
@@ -54,11 +63,16 @@ export const searchAlasHak = asyncHandler(async (req, res, next) => {
 
 export const addAlasHakOwner = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
-    const { clients } = req.matchedData;
+    const { clients_id } = req.matchedData;
     if (!id || isNaN(id)) return next(new ExpressError("Alas Hak Not found"));
-    const msg = await alasHakService.addAlasHakOwner(id, clients);
+    const msg = await alasHakService.addAlasHakOwner(id, clients_id);
+
+    const req_failed = msg.length === clients_id.length;
     res.status(200).json({
-        success: msg.length === clients.length ? false : true,
-        msg,
+        success: req_failed ? false : true,
+        msg: req_failed
+            ? "Something went wrong"
+            : "Alas Hak Owners added successfully",
+        erros: msg,
     });
 });

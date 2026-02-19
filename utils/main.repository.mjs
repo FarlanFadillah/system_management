@@ -10,6 +10,9 @@ export async function create(table, model) {
     try {
         await db(table).insert(model);
     } catch (error) {
+        console.log(error);
+        if (error.code === "SQLITE_CONSTRAINT")
+            throw new ExpressError("This data already exists");
         throw new ExpressError(error.message);
     }
 }

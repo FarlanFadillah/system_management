@@ -71,3 +71,21 @@ export async function searchMultipleKeywords(
         throw new ExpressError(error.message);
     }
 }
+
+export async function getAll(limit, offset) {
+    try {
+        return await db("alas_hak")
+            .select([
+                "id",
+                "no_alas_hak",
+                "luas",
+                "tgl_alas_hak",
+                "address_code",
+                "ket",
+            ])
+            .limit(limit)
+            .offset(offset);
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
+}

@@ -2,6 +2,7 @@ import express from "express";
 import {
     addAlasHak,
     addAlasHakOwner,
+    getAllAlasHak,
     removeAlasHak,
     searchAlasHak,
     updateAlasHak,
@@ -21,12 +22,20 @@ router.use(validateToken);
 router
     .route("/")
     .post(...addAlasHakValidationRules, validate, addAlasHak)
-    .get(searchAlasHak);
+    .get(getAllAlasHak);
+
+router.get("/search", searchAlasHak);
 
 router
     .route("/:id")
-    .post(...addAlasHakOwnerValidationRules, validate, addAlasHakOwner)
     .patch(...updateAlasHakValidationRules, validate, updateAlasHak)
     .delete(removeAlasHak);
+
+router.post(
+    "/:id/owners",
+    addAlasHakOwnerValidationRules,
+    validate,
+    addAlasHakOwner,
+);
 
 export { router as default };
