@@ -20,6 +20,14 @@ export async function addAlasHak(model) {
     }
 }
 
+export async function getAlasHak(id) {
+    try {
+        return await mainRepo.get("alas_hak", id);
+    } catch (error) {
+        throw error;
+    }
+}
+
 /**
  *
  * @param {Number} currentpage

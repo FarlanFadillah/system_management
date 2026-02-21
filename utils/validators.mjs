@@ -55,6 +55,31 @@ export function numericalRequired(field) {
  * @param {String} field
  * @returns
  */
+export function mobilePhoneOptional(field) {
+    return check(field)
+        .optional()
+        .isMobilePhone()
+        .withMessage(`Invalid ${field} value`);
+}
+
+/**
+ *
+ * @param {String} field
+ * @returns
+ */
+export function mobilePhoneRequired(field) {
+    return check(field)
+        .notEmpty()
+        .withMessage(`${field} cannon be empty`)
+        .isMobilePhone()
+        .withMessage(`Invalid ${field} value`);
+}
+
+/**
+ *
+ * @param {String} field
+ * @returns
+ */
 export function emailOptional(field = "email") {
     return check(field)
         .optional()

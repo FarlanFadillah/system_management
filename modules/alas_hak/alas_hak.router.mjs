@@ -2,6 +2,7 @@ import express from "express";
 import {
     addAlasHak,
     addAlasHakOwner,
+    getAlasHak,
     getAllAlasHak,
     removeAlasHak,
     searchAlasHak,
@@ -29,7 +30,9 @@ router.get("/search", searchAlasHak);
 router
     .route("/:id")
     .patch(...updateAlasHakValidationRules, validate, updateAlasHak)
-    .delete(removeAlasHak);
+    .put(...addAlasHakValidationRules, validate, updateAlasHak)
+    .delete(removeAlasHak)
+    .get(getAlasHak);
 
 router.post(
     "/:id/owners",

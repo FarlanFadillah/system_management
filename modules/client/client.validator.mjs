@@ -16,6 +16,7 @@ export const createClientValidationRules = [
     validator.stringOptional("address"),
     validator.numericalOptional("rt"),
     validator.numericalOptional("rw"),
+    validator.mobilePhoneOptional("phone_number"),
 ];
 
 export const patchClientValidationRules = [
@@ -31,4 +32,5 @@ export const patchClientValidationRules = [
     validator.stringOptional("address"),
     validator.numericalOptional("rt"),
     validator.numericalOptional("rw"),
+    validator.mobilePhoneOptional("phone_number"),
 ];

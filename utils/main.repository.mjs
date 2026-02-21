@@ -66,3 +66,11 @@ export async function isExists(table, id) {
         throw error;
     }
 }
+
+export async function get(table, id) {
+    try {
+        return await db(table).where({ id }).first();
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
+}

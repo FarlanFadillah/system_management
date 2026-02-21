@@ -41,6 +41,14 @@ export const removeAlasHak = asyncHandler(async (req, res, next) => {
     });
 });
 
+export const getAlasHak = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+    if (!id) return next(new ExpressError("Invalid id"));
+
+    const alas_hak = await alasHakService.getAlasHak(Number(id));
+    res.status(200).json({ success: true, data: alas_hak });
+});
+
 export const searchAlasHak = asyncHandler(async (req, res, next) => {
     const { keyword, currentpage, address } = req.query;
     if (isNaN(currentpage))

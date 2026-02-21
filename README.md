@@ -24,50 +24,49 @@ Instead of separating by technical layer globally (controllers, services, routes
 
 Each feature encapsulates:
 
-* Controller layer (HTTP handling)
-* Service layer (business logic)
-* Repository layer (database abstraction)
-* Routes definition
+- Controller layer (HTTP handling)
+- Service layer (business logic)
+- Repository layer (database abstraction)
+- Routes definition
 
 This approach:
 
-* Makes the system scalable as features grow
-* Reduces tight coupling between domains
-* Improves maintainability
-* Encourages clean domain boundaries
+- Makes the system scalable as features grow
+- Reduces tight coupling between domains
+- Improves maintainability
+- Encourages clean domain boundaries
 
 ---
 
 ### 🚀 Features
 
-* 🔐 Authentication & authorization using JWT
-* 👤 Client management (CRUD)
-* 📂 Case management #TODO
-* 🏞️ Land ownership (Alas Hak) management
-* 🗺️ Administrative region hierarchy (Province → Regency → District → Village)
-* 🔎 Case-insensitive search
-* 🧾 Validation & centralized error handling
+- 🔐 Authentication & authorization using JWT
+- 👤 Client management (CRUD)
+- 📂 Case management #TODO
+- 🏞️ Land ownership (Alas Hak) management
+- 🗺️ Administrative region hierarchy (Province → Regency → District → Village)
+- 🔎 Case-insensitive search
+- 🧾 Validation & centralized error handling
 
 ---
 
 ### 🛠️ Tech Stack
 
-* Node.js
-* Express.js
-* Knex.js
-* SQLite
-* RESTful API
+- Node.js
+- Express.js
+- Knex.js
+- SQLite
+- RESTful API
 
 ---
 
 ### 🎯 What This Project Demonstrates
 
-* Feature-based modular backend architecture
-* Proper async handling
-* Repository & service layer separation
-* Clean error propagation pattern
-* Real-world relational database modeling
-
+- Feature-based modular backend architecture
+- Proper async handling
+- Repository & service layer separation
+- Clean error propagation pattern
+- Real-world relational database modeling
 
 ## ⚙️ How to Run the Project
 
@@ -144,9 +143,9 @@ npm start
 
 You can test the API using:
 
-* Postman
-* Insomnia
-* Thunder Client (VS Code extension)
+- Postman
+- Insomnia
+- Thunder Client (VS Code extension)
 
 Default base URL:
 
@@ -166,7 +165,6 @@ http://localhost:3000
   /address
 /dbs
 ```
-
 
 # 🌐 How to Use the REST API
 
@@ -188,11 +186,11 @@ Before accessing protected routes, you need to authenticate.
 
 ```json
 {
-  "username": "admin",
-  "password": "password123",
-  "first_name" : "your first name",
-  "last_name" : "your last name (optional)",
-  "email" : "your email address (optional)" 
+    "username": "admin",
+    "password": "password123",
+    "first_name": "your first name",
+    "last_name": "your last name (optional)",
+    "email": "your email address (optional)"
 }
 ```
 
@@ -204,8 +202,8 @@ Before accessing protected routes, you need to authenticate.
 
 ```json
 {
-  "username": "admin",
-  "password": "password123"
+    "username": "admin",
+    "password": "password123"
 }
 ```
 
@@ -213,8 +211,8 @@ Response:
 
 ```json
 {
-  "success": true,
-  "token": "your_jwt_token_here"
+    "success": true,
+    "token": "your_jwt_token_here"
 }
 ```
 
@@ -290,15 +288,15 @@ Optional query:
 
 ```json
 {
-    "no_alas_hak" : "03040804102576",
-    "tgl_alas_hak" : "2020-12-20",
-    "no_surat_ukur" : "02525/Ampang Gadang/2020",
-    "tgl_surat_ukur" : "2020-10-05",
-    "luas" : 125,
-    "jor" : "Ampang Gadang",
-    "address_code" : "13.06.07.2005",
-    "jenis_hak_id" : 0,
-     "ket" : "Proses Pemecahan"
+    "no_alas_hak": "03040804102576",
+    "tgl_alas_hak": "2020-12-20",
+    "no_surat_ukur": "02525/Ampang Gadang/2020",
+    "tgl_surat_ukur": "2020-10-05",
+    "luas": 125,
+    "jor": "Ampang Gadang",
+    "address_code": "13.06.07.2005",
+    "jenis_hak_id": 0,
+    "ket": "Proses Pemecahan"
 }
 ```
 
@@ -310,7 +308,7 @@ Optional query:
 
 ```json
 {
-  "clients_id": [1, 2]
+    "clients_id": [1, 2]
 }
 ```
 
@@ -320,8 +318,8 @@ Optional query:
 
 This API follows:
 
-* RESTful resource naming
-* Proper HTTP methods (GET, POST, PUT, DELETE)
-* JSON request & response format
-* JWT-based authentication
-* Structured error handling
+- RESTful resource naming
+- Proper HTTP methods (GET, POST, PUT, DELETE)
+- JSON request & response format
+- JWT-based authentication
+- Structured error handling
