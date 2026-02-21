@@ -93,8 +93,8 @@ export async function getAll(limit, offset) {
 export async function getOwners(id) {
     try {
         return await db("alas_hak_clients as ahc")
-            .where({ id })
             .leftJoin("clients", "clients.id", "ahc.client_id")
+            .where("ahc.alas_hak_id", id)
             .select(
                 "clients.id",
                 "clients.nik",

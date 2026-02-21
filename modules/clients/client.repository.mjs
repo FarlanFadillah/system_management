@@ -64,7 +64,10 @@ export async function search(columns, keyword, currentpage, limit) {
 
 export async function getAll(limit, offset) {
     try {
-        return await db("clients").limit(limit).offset(offset);
+        return await db("clients")
+            .select("id", "nik", "first_name", "last_name", "birth_place")
+            .limit(limit)
+            .offset(offset);
     } catch (error) {
         throw new ExpressError(error.message);
     }
