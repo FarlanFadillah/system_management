@@ -74,8 +74,8 @@ This approach:
 ### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/feature_base_architecture.git
-cd feature_base_architecture
+git clone https://github.com/your-username/system_management
+cd system_management
 ```
 
 ---
