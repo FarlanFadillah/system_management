@@ -84,3 +84,11 @@ export const addAlasHakOwner = asyncHandler(async (req, res, next) => {
         erros: msg,
     });
 });
+
+export const getAlasHakOwners = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+    if (!id) return next(new ExpressError("Id is undefined"));
+
+    const data = await alasHakService.getOwners(id);
+    res.status(200).json({ success: true, data });
+});

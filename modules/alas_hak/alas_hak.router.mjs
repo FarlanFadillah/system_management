@@ -3,6 +3,7 @@ import {
     addAlasHak,
     addAlasHakOwner,
     getAlasHak,
+    getAlasHakOwners,
     getAllAlasHak,
     removeAlasHak,
     searchAlasHak,
@@ -34,11 +35,9 @@ router
     .delete(removeAlasHak)
     .get(getAlasHak);
 
-router.post(
-    "/:id/owners",
-    addAlasHakOwnerValidationRules,
-    validate,
-    addAlasHakOwner,
-);
+router
+    .route("/:id/owners")
+    .post(addAlasHakOwnerValidationRules, validate, addAlasHakOwner)
+    .get(getAlasHakOwners);
 
 export { router as default };

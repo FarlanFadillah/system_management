@@ -89,3 +89,21 @@ export async function getAll(limit, offset) {
         throw new ExpressError(error.message);
     }
 }
+
+export async function getOwners(id) {
+    try {
+        return await db("alas_hak_clients as ahc")
+            .where({ id })
+            .leftJoin("clients", "clients.id", "ahc.client_id")
+            .select(
+                "clients.id",
+                "clients.nik",
+                "clients.first_name",
+                "clients.last_name",
+            )
+            .limit(10)
+            .offset(0);
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
+}

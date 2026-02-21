@@ -66,3 +66,11 @@ export async function updateClientData(model, id) {
         throw error;
     }
 }
+
+export async function getAlasHak(client_id) {
+    try {
+        return await clientRepo.getAlasHak(client_id);
+    } catch (error) {
+        throw error;
+    }
+}

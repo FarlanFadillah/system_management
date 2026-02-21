@@ -54,3 +54,11 @@ export const updateClientData = asyncHandler(async (req, res, next) => {
 
     res.status(200).json({ success: true, msg: "Client updated successfully" });
 });
+
+export const getAlasHak = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+    if (!id) return next(new ExpressError("Id is undefined"));
+
+    const data = await clientService.getAlasHak(id);
+    res.status(200).json({ success: true, data });
+});

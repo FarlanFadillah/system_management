@@ -6,6 +6,7 @@ import {
     searchClient,
     getAllClients,
     getClient,
+    getAlasHak,
 } from "./client.controller.mjs";
 import {
     patchClientValidationRules,
@@ -23,6 +24,8 @@ router
     .get(getAllClients);
 
 router.get("/search", searchClient);
+
+router.route("/:id/alas-hak").get(getAlasHak);
 
 router
     .route("/:id")

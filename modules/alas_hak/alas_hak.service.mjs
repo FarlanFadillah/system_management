@@ -138,3 +138,11 @@ export async function addAlasHakOwner(alas_hak_id, clients_id) {
         throw error;
     }
 }
+
+export async function getOwners(id) {
+    try {
+        return await alasHakRepo.getOwners(id);
+    } catch (error) {
+        throw error;
+    }
+}
