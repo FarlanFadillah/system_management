@@ -4,7 +4,7 @@ import { ExpressError } from "../../utils/custom.error.mjs";
 import * as mainRepo from "../../utils/main.repository.mjs";
 import * as alasHakRepo from "./alas_hak.repository.mjs";
 import * as addressRepo from "../address/address.repository.mjs";
-import * as clientRepo from "../client/client.repository.mjs";
+import * as clientRepo from "../clients/client.repository.mjs";
 import { mapingArrayObject } from "../../utils/DS.manipulation.mjs";
 import * as paginationConf from "../../configs/pagination.config.mjs";
 

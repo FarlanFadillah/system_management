@@ -6,7 +6,7 @@ import cors from "cors";
 // routes
 import authRouter from "./modules/auth/auth.router.mjs";
 import addressRouter from "./modules/address/address.router.mjs";
-import clientsRouter from "./modules/client/client.router.mjs";
+import clientsRouter from "./modules/clients/client.router.mjs";
 import alasHakRouter from "./modules/alas_hak/alas_hak.router.mjs";
 
 // middlewares
