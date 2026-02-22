@@ -9,12 +9,14 @@ export const addClient = asyncHandler(async (req, res, next) => {
 });
 
 export const getAllClients = asyncHandler(async (req, res, next) => {
-    const { currentpage } = req.query;
-    if (isNaN(currentpage))
-        return next(new ExpressError("Invalid currentpage value"));
-    const clients = await clientService.getAllClients(currentpage);
+    const { cursor } = req.query;
+    const clients = await clientService.getAllClients(cursor || 0);
 
-    res.status(200).json({ success: true, clients });
+    res.status(200).json({
+        success: true,
+        data: clients,
+        cursor: clients.length > 0 ? clients[clients.length - 1].id : 0,
+    });
 });
 
 export const getClient = asyncHandler(async (req, res, next) => {

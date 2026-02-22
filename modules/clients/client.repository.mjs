@@ -62,18 +62,19 @@ export async function search(columns, keyword, currentpage, limit) {
     }
 }
 
-export async function getAll(limit, offset) {
+export async function getAll(limit, cursor) {
     try {
         return await db("clients")
             .select("id", "nik", "first_name", "last_name", "birth_place")
+            .orderBy("id", "asc")
             .limit(limit)
-            .offset(offset);
+            .where("id", ">", cursor);
     } catch (error) {
         throw new ExpressError(error.message);
     }
 }
 
-export async function getAlasHak(client_id) {
+export async function getAlasHak(client_id, limit) {
     try {
         return await db("alas_hak_clients as ahc")
             .leftJoin("alas_hak", "alas_hak.id", "ahc.alas_hak_id")

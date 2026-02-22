@@ -12,12 +12,9 @@ export async function addClient(model) {
     }
 }
 
-export async function getAllClients(currentpage) {
+export async function getAllClients(cursor) {
     try {
-        return await clientRepo.getAll(
-            paginationConf.default.limit,
-            currentpage * paginationConf.default.limit,
-        );
+        return await clientRepo.getAll(paginationConf.default.limit, cursor);
     } catch (error) {
         throw error;
     }
