@@ -35,7 +35,7 @@ export async function getById(id) {
  * @param {Number} limit
  * @returns
  */
-export async function search(columns, keyword, currentpage, limit) {
+export async function search(columns, keyword, limit, offset) {
     try {
         return await db("clients")
             .where(function () {
@@ -45,32 +45,33 @@ export async function search(columns, keyword, currentpage, limit) {
                 });
             })
             .limit(limit)
-            .offset(currentpage * limit)
-            .select([
-                "id",
-                "nik",
-                "first_name",
-                "last_name",
-                "birth_place",
-                "address_code",
-                "job_name",
-                "updated_at",
-                "created_at",
-            ]);
+            .offset(offset)
+            .select(["id", "nik", "first_name", "last_name", "birth_place"]);
     } catch (error) {
         throw ExpressError(error.message);
     }
 }
 
-export async function getAll(limit, cursor) {
+export async function getAll(limit, cursor, orderBy = "id", order = "asc") {
     try {
         return await db("clients")
             .select("id", "nik", "first_name", "last_name", "birth_place")
-            .orderBy("id", "asc")
+            .orderBy(orderBy, order)
             .limit(limit)
             .where("id", ">", cursor);
     } catch (error) {
         throw new ExpressError(error.message);
+    }
+}
+
+export async function getAllLimitOffset(limit, offset) {
+    try {
+        return await db("clients")
+            .select("id", "nik", "first_name", "last_name", "birth_place")
+            .limit(limit)
+            .offset(offset);
+    } catch (error) {
+        return new ExpressError(error.message);
     }
 }
 

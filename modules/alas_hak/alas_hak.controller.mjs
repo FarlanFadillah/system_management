@@ -9,11 +9,14 @@ export const addAlasHak = asyncHandler(async (req, res, next) => {
 });
 
 export const getAllAlasHak = asyncHandler(async (req, res, next) => {
-    const { currentpage } = req.query;
+    const { currentpage, limit } = req.query;
     if (isNaN(currentpage))
         return next(new ExpressError("Invalid currentpage value"));
 
-    const alas_hak = await alasHakService.getAllAlasHak(currentpage);
+    const alas_hak = await alasHakService.getAllAlasHak(
+        Number(limit),
+        Number(currentpage) * Number(limit),
+    );
     res.status(200).json({ success: true, data: alas_hak });
 });
 
@@ -50,7 +53,7 @@ export const getAlasHak = asyncHandler(async (req, res, next) => {
 });
 
 export const searchAlasHak = asyncHandler(async (req, res, next) => {
-    const { keyword, currentpage, address } = req.query;
+    const { keyword, currentpage, limit, address } = req.query;
     if (isNaN(currentpage))
         return next(new ExpressError("Invalid currentpage value"));
     if (!keyword)
@@ -63,9 +66,14 @@ export const searchAlasHak = asyncHandler(async (req, res, next) => {
         ? await alasHakService.searchAlasHakByAddress(
               address,
               keyword,
-              currentpage,
+              Number(limit),
+              Number(limit) * Number(currentpage),
           )
-        : await alasHakService.searchAlasHak(keyword, currentpage);
+        : await alasHakService.searchAlasHak(
+              keyword,
+              Number(limit),
+              Number(limit) * Number(currentpage),
+          );
     res.status(200).json({ success: true, data: alas_hak });
 });
 

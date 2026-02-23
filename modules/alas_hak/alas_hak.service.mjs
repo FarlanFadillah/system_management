@@ -6,7 +6,6 @@ import * as alasHakRepo from "./alas_hak.repository.mjs";
 import * as addressRepo from "../address/address.repository.mjs";
 import * as clientRepo from "../clients/client.repository.mjs";
 import { mapingArrayObject } from "../../utils/DS.manipulation.mjs";
-import * as paginationConf from "../../configs/pagination.config.mjs";
 
 /**
  *
@@ -30,16 +29,13 @@ export async function getAlasHak(id) {
 
 /**
  *
- * @param {Number} currentpage
+ * @param {Number} limit
+ * @param {Number} offset
  * @returns
  */
-export async function getAllAlasHak(currentpage) {
+export async function getAllAlasHak(limit, offset) {
     try {
-        const limit = paginationConf.default.limit;
-        return await alasHakRepo.getAll(
-            Number(limit),
-            Number(currentpage) * Number(limit),
-        );
+        return await alasHakRepo.getAll(limit, offset);
     } catch (error) {
         throw error;
     }
@@ -73,16 +69,17 @@ export async function updateAlasHak(id, model) {
 /**
  *
  * @param {String} keyword
- * @param {Number} currentpage
+ * @param {Number} limit
+ * @param {Number} offset
  * @returns
  */
-export async function searchAlasHak(keyword, currentpage) {
+export async function searchAlasHak(keyword, limit, offset) {
     try {
         return await alasHakRepo.search(
             ["no_alas_hak"],
             keyword,
-            Number(currentpage),
-            Number(paginationConf.default.limit),
+            limit,
+            offset,
         );
     } catch (error) {
         throw error;
@@ -93,10 +90,11 @@ export async function searchAlasHak(keyword, currentpage) {
  *
  * @param {"provinsi" | "kabupaten" | "kecamatan" | "kelurahan"} level
  * @param {String} address
- * @param {Number} currentpage
+ * @param {Number} limit
+ * @param {Number} offset
  * @returns
  */
-export async function searchAlasHakByAddress(level, address, currentpage) {
+export async function searchAlasHakByAddress(level, address, limit, offset) {
     try {
         let address_code = await addressRepo.get(level, address);
         console.log(address_code);
@@ -104,8 +102,8 @@ export async function searchAlasHakByAddress(level, address, currentpage) {
         return await alasHakRepo.searchMultipleKeywords(
             "address_code",
             address_code.id,
-            Number(currentpage),
-            Number(paginationConf.default.limit),
+            limit,
+            offset,
         );
     } catch (error) {
         throw error;

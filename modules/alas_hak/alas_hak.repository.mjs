@@ -18,11 +18,11 @@ import db from "../../dbs/db.mjs";
  *
  * @param {Array} columns
  * @param {String} keyword
- * @param {Number} currentpage
  * @param {Number} limit
+ * @param {Number} offset
  * @returns
  */
-export async function search(columns, keyword, currentpage, limit) {
+export async function search(columns, keyword, limit, offset) {
     try {
         return await db("alas_hak")
             .where(function () {
@@ -42,7 +42,7 @@ export async function search(columns, keyword, currentpage, limit) {
             ])
             .orderBy("alas_hak.id")
             .limit(limit)
-            .offset(currentpage * limit);
+            .offset(offset);
     } catch (error) {
         throw new ExpressError(error.message);
     }
@@ -52,21 +52,16 @@ export async function search(columns, keyword, currentpage, limit) {
  *
  * @param {String} column
  * @param {String} keyword
- * @param {Number} currentpage
  * @param {Number} limit
+ * @param {Number} offset
  * @returns
  */
-export async function searchMultipleKeywords(
-    column,
-    keyword,
-    currentpage,
-    limit,
-) {
+export async function searchMultipleKeywords(column, keyword, limit, offset) {
     try {
         return await db("alas_hak")
             .where({ [column]: keyword })
             .limit(limit)
-            .offset(currentpage * limit);
+            .offset(offset);
     } catch (error) {
         throw new ExpressError(error.message);
     }

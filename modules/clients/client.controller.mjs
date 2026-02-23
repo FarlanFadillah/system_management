@@ -8,15 +8,32 @@ export const addClient = asyncHandler(async (req, res, next) => {
     res.json({ success: true, msg: "Client added successfully" });
 });
 
+/**
+ * Cursor based pagination
+ */
 export const getAllClients = asyncHandler(async (req, res, next) => {
-    const { cursor } = req.query;
-    const clients = await clientService.getAllClients(cursor || 0);
+    const { cursor, limit, orderBy } = req.query;
+    const clients = await clientService.getAllClients(limit, cursor, orderBy);
 
     res.status(200).json({
         success: true,
         data: clients,
-        cursor: clients.length > 0 ? clients[clients.length - 1].id : 0,
+        nextCursor: clients.length > 0 ? clients[clients.length - 1].id : 0,
     });
+});
+
+/**
+ * Limit Offset based pagination
+ */
+export const getAllClientsLimitOffset = asyncHandler(async (req, res, next) => {
+    const { currentpage, limit } = req.query;
+
+    const clients = await clientService.getAllClientsLimitOffset(
+        Number(limit),
+        Number(currentpage) * Number(limit),
+    );
+
+    res.status(200).json({ success: true, data: clients });
 });
 
 export const getClient = asyncHandler(async (req, res, next) => {
@@ -34,17 +51,13 @@ export const deleteClient = asyncHandler(async (req, res, next) => {
 });
 
 export const searchClient = asyncHandler(async (req, res, next) => {
-    const { currentpage, keyword } = req.query;
-    if (isNaN(currentpage))
-        return next(new ExpressError("Invalid currentpage value"));
-    if (!keyword)
-        return next(
-            new ExpressError(
-                "Please provide the keyword for searching clients",
-            ),
-        );
+    const { currentpage, limit, keyword } = req.query;
 
-    const user = await clientService.searchClient(keyword, currentpage);
+    const user = await clientService.searchClient(
+        keyword,
+        Number(limit),
+        Number(currentpage) * Number(limit),
+    );
     res.status(200).json({ success: true, data: user });
 });
 

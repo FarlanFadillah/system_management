@@ -252,12 +252,12 @@ Authorization: Bearer your_jwt_token_here
 
 ### Get All Clients with pagination
 
-**GET** `/clients?currentpage=0`
+**GET** `/clients?currentpage=0&limit=10`
 
 Optional query:
 
 ```
-/clients?search=farlan&currentpage=0
+/clients/search?keyword=yourname&currentpage=0&limit=10
 ```
 
 ---
@@ -311,6 +311,36 @@ Optional query:
     "clients_id": [1, 2]
 }
 ```
+
+### Get All Alas Hak with pagination
+
+**GET** `/alas-hak?currentpage=0&limit=10`
+
+Optional query:
+
+```
+/alas-hak/search?keyword=yourname&currentpage=0&limit=10
+```
+
+---
+
+### Get Alas Hak by ID
+
+**GET** `/alas-hak/:id`
+
+---
+
+### Update Client
+
+**PUT** `/alas-hak/:id`
+
+---
+
+### Delete Client
+
+**DELETE** `/alas-hak/:id`
+
+---
 
 ---
 

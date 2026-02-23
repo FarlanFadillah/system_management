@@ -2,7 +2,6 @@ import { UTCToGMT } from "../../helper/date.helper.mjs";
 import { ExpressError } from "../../utils/custom.error.mjs";
 import * as clientRepo from "./client.repository.mjs";
 import * as mainRepo from "../../utils/main.repository.mjs";
-import * as paginationConf from "../../configs/pagination.config.mjs";
 
 export async function addClient(model) {
     try {
@@ -12,9 +11,29 @@ export async function addClient(model) {
     }
 }
 
-export async function getAllClients(cursor) {
+/**
+ *
+ * @param {Number} limit
+ * @param {String} cursor
+ * @returns
+ */
+export async function getAllClients(limit, cursor, order = "asc") {
     try {
-        return await clientRepo.getAll(paginationConf.default.limit, cursor);
+        return await clientRepo.getAll(limit, cursor, "id", order);
+    } catch (error) {
+        throw error;
+    }
+}
+
+/**
+ *
+ * @param {Number} limit
+ * @param {Number} offset
+ * @returns
+ */
+export async function getAllClientsLimitOffset(limit, offset) {
+    try {
+        return await clientRepo.getAllLimitOffset(limit, offset);
     } catch (error) {
         throw error;
     }
@@ -22,25 +41,25 @@ export async function getAllClients(cursor) {
 
 export async function getClient(id) {
     try {
-        return await clientRepo.getById(Number(id));
+        const client = await clientRepo.getById(Number(id));
+
+        client.created_at = UTCToGMT(client.created_at);
+        client.updated_at = UTCToGMT(client.updated_at);
+
+        return client;
     } catch (error) {
         throw error;
     }
 }
 
-export async function searchClient(keyword, currentpage) {
+export async function searchClient(keyword, limit, offset) {
     try {
-        let client = await clientRepo.search(
+        return await clientRepo.search(
             ["nik", "first_name", "last_name"],
             keyword,
-            Number(currentpage),
-            Number(paginationConf.default.limit),
+            limit,
+            offset,
         );
-
-        client.forEach((val) => (val.updated_at = UTCToGMT(val.updated_at)));
-        client.forEach((val) => (val.created_at = UTCToGMT(val.created_at)));
-
-        return client;
     } catch (error) {
         throw error;
     }

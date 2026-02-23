@@ -7,6 +7,7 @@ import {
     getAllClients,
     getClient,
     getAlasHak,
+    getAllClientsLimitOffset,
 } from "./client.controller.mjs";
 import {
     patchClientValidationRules,
