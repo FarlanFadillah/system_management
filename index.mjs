@@ -8,6 +8,7 @@ import authRouter from "./modules/auth/auth.router.mjs";
 import addressRouter from "./modules/address/address.router.mjs";
 import clientsRouter from "./modules/clients/client.router.mjs";
 import alasHakRouter from "./modules/alas_hak/alas_hak.router.mjs";
+import prosesRouter from "./modules/proses_alas_hak/proses.router.mjs";
 
 // middlewares
 import { globalErrorHandler } from "./middlewares/error.middleware.mjs";
@@ -23,7 +24,7 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/address", addressRouter);
 app.use("/api/v1/clients", clientsRouter);
 app.use("/api/v1/alas-hak", alasHakRouter);
-
+app.use("/api/v1/proses", prosesRouter);
 app.use(globalErrorHandler);
 
 app.listen(process.env.PORT, (error) => {
