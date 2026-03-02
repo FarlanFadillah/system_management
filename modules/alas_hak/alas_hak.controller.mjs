@@ -3,9 +3,13 @@ import { ExpressError } from "../../utils/custom.error.mjs";
 import * as alasHakService from "./alas_hak.service.mjs";
 
 export const addAlasHak = asyncHandler(async (req, res, next) => {
-    await alasHakService.addAlasHak(req.matchedData);
+    const id = await alasHakService.addAlasHak(req.matchedData);
 
-    res.status(200).json({ success: true, msg: "Alas Hak added successfully" });
+    res.status(200).json({
+        success: true,
+        msg: "Alas Hak added successfully",
+        id,
+    });
 });
 
 export const getAllAlasHak = asyncHandler(async (req, res, next) => {

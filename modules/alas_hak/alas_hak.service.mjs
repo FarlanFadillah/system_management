@@ -13,7 +13,7 @@ import { mapingArrayObject } from "../../utils/DS.manipulation.mjs";
  */
 export async function addAlasHak(model) {
     try {
-        await mainRepo.create("alas_hak", model);
+        return await mainRepo.create("alas_hak", model);
     } catch (error) {
         throw error;
     }

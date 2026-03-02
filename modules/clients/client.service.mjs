@@ -5,7 +5,7 @@ import * as mainRepo from "../../utils/main.repository.mjs";
 
 export async function addClient(model) {
     try {
-        await mainRepo.create("clients", model);
+        return await mainRepo.create("clients", model);
     } catch (error) {
         throw error;
     }
@@ -19,7 +19,7 @@ export async function addClient(model) {
  */
 export async function getAllClients(limit, cursor, order = "asc") {
     try {
-        return await clientRepo.getAll(limit, cursor, "id", order);
+        return await clientRepo.getAll(limit, cursor | 0, "id", order);
     } catch (error) {
         throw error;
     }

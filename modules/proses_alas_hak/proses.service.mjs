@@ -2,7 +2,7 @@ import * as mainRepo from "../../utils/main.repository.mjs";
 
 export async function create(data) {
     try {
-        await mainRepo.create("proses_alas_hak", data);
+        return await mainRepo.create("proses_alas_hak", data);
     } catch (error) {
         throw error;
     }

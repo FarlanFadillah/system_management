@@ -8,7 +8,9 @@ import { ExpressError } from "./custom.error.mjs";
  */
 export async function create(table, model) {
     try {
-        await db(table).insert(model);
+        const [id] = await db(table).insert(model);
+        console.log(id);
+        return id;
     } catch (error) {
         console.log(error);
         if (error.code === "SQLITE_CONSTRAINT")

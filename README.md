@@ -92,10 +92,14 @@ npm install
 Create a `.env` file in the root directory:
 
 ```env
+DB_CLIENT=mysql2
+JWT_KEY=V5QxSWb6yBho1SCex9O8XYqUtNTS024PTthiTJ0mUBa
 PORT=3000
-DB_CLIENT=sqlite3
-DB_FILENAME=./main.sqlite3
-JWT_KEY=your_secret_key
+DB_NAME=your_db_name
+DB_PASS=your_mysql_password
+DB_USER=username
+DB_PORT=your_port
+DP_HOST=localhost
 ```
 
 Make sure to adjust the values based on your environment.
@@ -110,17 +114,12 @@ or
 npm run migrate
 ```
 
-Fetch Wilayah.id.sqlite3 Database to main.sqlite3
+Fetch wilayah/address Database to your database
 
-Make sure to install sqlite3 tools on your device.
+Make sure to install MySQL tools on your device.
 
 ```bash
-sqlite /dbs/main.sqlite3
-ATTACH DATABASE /wilayah.id.sqlite3 as wilayah;
-CREATE TABLE kelurahan AS SELECT * FROM wilayah.kelurahan;
-CREATE TABLE kecamatan AS SELECT * FROM wilayah.kecamatan;
-CREATE TABLE kabupaten AS SELECT * FROM wilayah.kabupaten;
-CREATE TABLE provinsi AS SELECT * FROM wilayah.provinsi;
+mysql -u [username] -p [db_name] < ./dumb.sql
 ```
 
 If using seeds:

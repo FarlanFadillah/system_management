@@ -4,8 +4,8 @@ import * as clientService from "./client.service.mjs";
 import { ExpressError } from "../../utils/custom.error.mjs";
 
 export const addClient = asyncHandler(async (req, res, next) => {
-    await clientService.addClient(req.matchedData);
-    res.json({ success: true, msg: "Client added successfully" });
+    const id = await clientService.addClient(req.matchedData);
+    res.json({ success: true, msg: "Client added successfully", id });
 });
 
 /**
