@@ -10,7 +10,7 @@ export function stringRequired(field) {
     return check(field)
         .trim()
         .notEmpty()
-        .withMessage(`${field} cannon be empty`)
+        .withMessage(`${field} can't be empty`)
         .matches(/^[^<>]*$/)
         .withMessage(field + " cant contain html element");
 }
@@ -45,7 +45,7 @@ export function numericalOptional(field) {
 export function numericalRequired(field) {
     return check(field)
         .notEmpty()
-        .withMessage(`${field} cannon be empty`)
+        .withMessage(`${field} can't be empty`)
         .isNumeric()
         .withMessage(`${field} must be a numeric`);
 }
@@ -70,7 +70,7 @@ export function mobilePhoneOptional(field) {
 export function mobilePhoneRequired(field) {
     return check(field)
         .notEmpty()
-        .withMessage(`${field} cannon be empty`)
+        .withMessage(`${field} can't be empty`)
         .isMobilePhone()
         .withMessage(`Invalid ${field} value`);
 }
@@ -96,7 +96,7 @@ export function emailOptional(field = "email") {
 export function emailRequired(field = "email") {
     return check(field)
         .notEmpty()
-        .withMessage(`${field} cannon be empty`)
+        .withMessage(`${field} can't be empty`)
         .isEmail()
         .withMessage("Invalid email address")
         .normalizeEmail();
@@ -154,7 +154,7 @@ export function addressOptional(field) {
 export function arrayOfNumberRequired(field) {
     return check(field)
         .notEmpty()
-        .withMessage(`${field} cannon be empty`)
+        .withMessage(`${field} can't be empty`)
         .isArray({ min: 1 })
         .withMessage(`${field} must be an array`)
         .custom(async (value, { req }) => {
