@@ -168,14 +168,22 @@ export function arrayOfNumberRequired(field) {
             }
         });
 }
-const enumStatus = ["DRAFT", "PENDING", "ON PROCESS", "DONE"];
 
-export function stringIncludeRequired(field) {
+export function stringIncludeRequired(field, arr) {
     return check(field)
         .notEmpty()
         .withMessage(`${field} can't empty`)
         .custom(async (value, { req }) => {
-            if (!enumStatus.includes(value))
-                throw new ExpressError(`Value invalid [${enumStatus}]`);
+            if (!arr.includes(value))
+                throw new ExpressError(`Value invalid [${arr}]`);
+        });
+}
+
+export function stringIncludeOptional(field, arr) {
+    return check(field)
+        .optional()
+        .custom(async (value, { req }) => {
+            if (!arr.includes(value))
+                throw new ExpressError(`Value invalid [${arr}]`);
         });
 }

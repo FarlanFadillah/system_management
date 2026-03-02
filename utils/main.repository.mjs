@@ -47,6 +47,8 @@ export async function update(table, id, model) {
             })
             .where({ id: id });
     } catch (error) {
+        if (error.code === "ER_DUP_ENTRY")
+            throw new ExpressError(`Duplicate entry, update failed`);
         throw new ExpressError(error.message);
     }
 }
@@ -72,6 +74,14 @@ export async function isExists(table, id) {
 export async function get(table, id) {
     try {
         return await db(table).where({ id }).first();
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
+}
+
+export async function getBy(table, column_name, value) {
+    try {
+        return await db(table).where(column_name, value).first();
     } catch (error) {
         throw new ExpressError(error.message);
     }
