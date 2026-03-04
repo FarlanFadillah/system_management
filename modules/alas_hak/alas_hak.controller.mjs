@@ -57,7 +57,7 @@ export const getAlasHak = asyncHandler(async (req, res, next) => {
 });
 
 export const searchAlasHak = asyncHandler(async (req, res, next) => {
-    const { keyword, currentpage, limit, address } = req.query;
+    const { keyword, currentpage, limit, level } = req.query;
     if (isNaN(currentpage))
         return next(new ExpressError("Invalid currentpage value"));
     if (!keyword)
@@ -66,9 +66,10 @@ export const searchAlasHak = asyncHandler(async (req, res, next) => {
                 "Please provide the keyword for searching clients",
             ),
         );
-    const alas_hak = address
-        ? await alasHakService.searchAlasHakByAddress(
-              address,
+
+    const alas_hak = level
+        ? await alasHakService.searchByAddressCode(
+              level,
               keyword,
               Number(limit),
               Number(limit) * Number(currentpage),

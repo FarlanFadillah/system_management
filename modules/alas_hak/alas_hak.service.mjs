@@ -21,7 +21,7 @@ export async function addAlasHak(model) {
 
 export async function getAlasHak(id) {
     try {
-        return await mainRepo.get("alas_hak", id);
+        return await alasHakRepo.get(id);
     } catch (error) {
         throw error;
     }
@@ -101,6 +101,21 @@ export async function searchAlasHakByAddress(level, address, limit, offset) {
         if (!address_code) throw new ExpressError("Address not found");
         return await alasHakRepo.searchMultipleKeywords(
             "address_code",
+            address_code.id,
+            limit,
+            offset,
+        );
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function searchByAddressCode(level, keyword, limit, offset) {
+    try {
+        console.log(level, keyword);
+        let address_code = await addressRepo.get(level, keyword);
+        if (!address_code) throw new ExpressError("Address not found");
+        return await alasHakRepo.getByAddressCode(
             address_code.id,
             limit,
             offset,
