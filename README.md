@@ -119,7 +119,7 @@ Fetch wilayah/address Database to your database
 Make sure to install MySQL tools on your device.
 
 ```bash
-mysql -u [username] -p [db_name] < ./dumb.sql
+mysql -u [username] -p [db_name] < ./dump.sql
 ```
 
 If using seeds:
