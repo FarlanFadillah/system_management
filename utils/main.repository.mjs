@@ -9,12 +9,13 @@ import { ExpressError } from "./custom.error.mjs";
 export async function create(table, model) {
     try {
         const [id] = await db(table).insert(model);
-        console.log(id);
         return id;
     } catch (error) {
-        console.log(error);
         if (error.code === "SQLITE_CONSTRAINT")
-            throw new ExpressError("This data already exists");
+            throw new ExpressError("This data already exists", 409);
+        else if (error.code === "ER_DUP_ENTRY") {
+            throw new ExpressError(error.sqlMessage, 409);
+        }
         throw new ExpressError(error.message);
     }
 }
@@ -47,8 +48,11 @@ export async function update(table, id, model) {
             })
             .where({ id: id });
     } catch (error) {
-        if (error.code === "ER_DUP_ENTRY")
-            throw new ExpressError(`Duplicate entry, update failed`);
+        if (error.code === "SQLITE_CONSTRAINT")
+            throw new ExpressError(error.sqlMessage, 409);
+        else if (error.code === "ER_DUP_ENTRY") {
+            throw new ExpressError(error.sqlMessage, 409);
+        }
         throw new ExpressError(error.message);
     }
 }

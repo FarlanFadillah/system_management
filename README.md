@@ -316,9 +316,17 @@ Optional query:
 **GET** `/alas-hak?currentpage=0&limit=10`
 
 Optional query:
+Search By no_alas_hak column
 
 ```
-/alas-hak/search?keyword=yourname&currentpage=0&limit=10
+/alas-hak/search?keyword=no_alas_hak&currentpage=0&limit=10
+```
+
+Search By address_code column
+level = [kelurahan | kecamatan | kabupaten | provinsi]
+
+```
+/alas-hak/search?level=kelurahan&keyword=no_alas_hak&currentpage=0&limit=10
 ```
 
 ---

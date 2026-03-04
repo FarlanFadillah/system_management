@@ -14,6 +14,18 @@ import db from "../../dbs/db.mjs";
 //      "ket" : "Proses Pemecahan"
 // }
 
+export async function get(id) {
+    try {
+        return await db("alas_hak as a")
+            .where("a.id", id)
+            .leftJoin("jenis_hak as j", "j.id", "a.jenis_hak_id")
+            .select("a.*", "j.desc as Jenis Hak")
+            .first();
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
+}
+
 /**
  *
  * @param {Array} columns
@@ -24,21 +36,23 @@ import db from "../../dbs/db.mjs";
  */
 export async function search(columns, keyword, limit, offset) {
     try {
-        return await db("alas_hak")
+        return await db("alas_hak as a")
             .where(function () {
                 columns.forEach((col, i) => {
                     if (i === 0) this.where(col, "like", `%${keyword}%`);
                     else this.orWhere(col, "like", `%${keyword}%`);
                 });
             })
+            .leftJoin("jenis_hak as j", "j.id", "a.jenis_hak_id")
             .leftJoin("kelurahan as kel", "kel.id", "alas_hak.address_code")
             .select([
-                "alas_hak.id",
-                "no_alas_hak",
-                "luas",
-                "tgl_alas_hak",
+                "a.id",
+                "a.no_alas_hak",
+                "a.luas",
+                "a.tgl_alas_hak",
                 "kel.name as kelurahan",
-                "ket",
+                "a.ket",
+                "j.desc as Jenis Hak",
             ])
             .orderBy("alas_hak.id")
             .limit(limit)
@@ -58,8 +72,39 @@ export async function search(columns, keyword, limit, offset) {
  */
 export async function searchMultipleKeywords(column, keyword, limit, offset) {
     try {
-        return await db("alas_hak")
+        return await db("alas_hak as a")
+            .leftJoin("jenis_hak as j", "j.id", "a.jenis_hak_id")
+            .select([
+                "a.id",
+                "a.no_alas_hak",
+                "a.luas",
+                "a.tgl_alas_hak",
+                "a.address_code",
+                "a.ket",
+                "j.desc as Jenis Hak",
+            ])
             .where({ [column]: keyword })
+            .limit(limit)
+            .offset(offset);
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
+}
+
+export async function getByAddressCode(address_code, limit, offset) {
+    try {
+        return await db("alas_hak as a")
+            .leftJoin("jenis_hak as j", "j.id", "a.jenis_hak_id")
+            .where("address_code", "like", `%${address_code}%`)
+            .select([
+                "a.id",
+                "a.no_alas_hak",
+                "a.luas",
+                "a.tgl_alas_hak",
+                "a.address_code",
+                "a.ket",
+                "j.desc as Jenis Hak",
+            ])
             .limit(limit)
             .offset(offset);
     } catch (error) {
@@ -69,14 +114,16 @@ export async function searchMultipleKeywords(column, keyword, limit, offset) {
 
 export async function getAll(limit, offset) {
     try {
-        return await db("alas_hak")
+        return await db("alas_hak as a")
+            .leftJoin("jenis_hak as j", "j.id", "a.jenis_hak_id")
             .select([
-                "id",
-                "no_alas_hak",
-                "luas",
-                "tgl_alas_hak",
-                "address_code",
-                "ket",
+                "a.id",
+                "a.no_alas_hak",
+                "a.luas",
+                "a.tgl_alas_hak",
+                "a.address_code",
+                "a.ket",
+                "j.desc as Jenis Hak",
             ])
             .limit(limit)
             .offset(offset);

@@ -1,0 +1,58 @@
+/**
+ * @param { import("knex").Knex } knex
+ * @returns { Promise<void> }
+ */
+exports.up = function (knex) {
+    // --- TABLE: akta_ppat ---
+    return knex.schema.createTable("akta_ppat", (table) => {
+        // columns
+        table.increments("id").primary();
+        table.string("no_akta", 50);
+        table.string("tahun_akta", 4);
+        table.date("tgl_akta");
+        table.datetime("created_at").defaultTo(knex.fn.now());
+        table.datetime("updated_at").defaultTo(knex.fn.now());
+
+        table.unique(["no_akta", "tahun_akta"]);
+        // foreign keys
+        table
+            .integer("proses_id")
+            .unsigned()
+            .references("id")
+            .inTable("proses_alas_hak")
+            .onDelete("SET NULL")
+            .nullable();
+        table
+            .integer("produk_id")
+            .unsigned()
+            .references("id")
+            .inTable("produk")
+            .onDelete("SET NULL");
+        table
+            .integer("saksi1_id")
+            .unsigned()
+            .references("id")
+            .inTable("clients")
+            .onDelete("CASCADE");
+        table
+            .integer("saksi2_id")
+            .unsigned()
+            .references("id")
+            .inTable("clients")
+            .onDelete("CASCADE");
+
+        // indexes
+        table.index("proses_id");
+        table.index("produk_id");
+        table.index("no_akta");
+        table.index("tgl_akta");
+    });
+};
+
+/**
+ * @param { import("knex").Knex } knex
+ * @returns { Promise<void> }
+ */
+exports.down = function (knex) {
+    return knex.schema.dropTable("akta_ppat");
+};
