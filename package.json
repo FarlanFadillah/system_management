@@ -2,11 +2,11 @@
     "name": "feature_base_architecture",
     "version": "1.0.0",
     "description": "",
-    "main": "index.js",
-    "types": "module",
+    "main": "src/index.,js",
+    "type": "module",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "start": "nodemon index.mjs",
+        "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+        "start": "nodemon src/index.mjs",
         "makemigration": "npx knex migrate:make --knexfile ./knex/knexfile",
         "migrate": "npx knex migrate:latest --knexfile ./knex/knexfile",
         "rollback": "npx knex migrate:rollback --knexfile ./knex/knexfile"
@@ -14,7 +14,6 @@
     "keywords": [],
     "author": "",
     "license": "ISC",
-    "type": "commonjs",
     "dependencies": {
         "bcrypt": "^6.0.0",
         "cors": "^2.8.6",
@@ -28,6 +27,11 @@
         "mysql2": "^3.18.2"
     },
     "devDependencies": {
+        "@babel/core": "^7.29.0",
+        "@babel/preset-env": "^7.29.0",
+        "@jest/globals": "^30.2.0",
+        "@types/jest": "^30.0.0",
+        "babel-jest": "^30.2.0",
         "nodemon": "^3.1.11",
         "prettier": "^3.8.1",
         "sqlite3": "^5.1.7"
