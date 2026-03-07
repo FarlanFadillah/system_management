@@ -23,3 +23,7 @@ export function verifyToken(token) {
         });
     });
 }
+
+export function decoded(token) {
+    return jwt.decode(token, process.env.JWT_KEY);
+}

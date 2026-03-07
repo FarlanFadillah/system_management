@@ -4,6 +4,7 @@ import { ExpressError } from "../utils/custom.error.mjs";
 
 export async function verifyUser(token) {
     try {
+        // console.log(jwt.decoded(token));
         const decoded = await jwt.verifyToken(token);
         const user = await userRepo.getUserByUsername(decoded.username);
         return { decoded, user };
