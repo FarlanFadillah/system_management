@@ -23,7 +23,7 @@ export async function getById(id) {
     try {
         return await db("clients").where({ id }).first();
     } catch (error) {
-        throw ExpressError(error.message);
+        throw new ExpressError(error.message);
     }
 }
 
@@ -48,7 +48,7 @@ export async function search(columns, keyword, limit, offset) {
             .offset(offset)
             .select(["id", "nik", "first_name", "last_name", "birth_place"]);
     } catch (error) {
-        throw ExpressError(error.message);
+        throw new ExpressError(error.message);
     }
 }
 

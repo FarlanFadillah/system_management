@@ -42,6 +42,7 @@ export async function getAllClientsLimitOffset(limit, offset) {
 export async function getClient(id) {
     try {
         const client = await clientRepo.getById(Number(id));
+        if (!client) return {};
 
         client.created_at = UTCToGMT(client.created_at);
         client.updated_at = UTCToGMT(client.updated_at);
