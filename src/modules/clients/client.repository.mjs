@@ -37,16 +37,25 @@ export async function getById(id) {
  */
 export async function search(columns, keyword, limit, offset) {
     try {
-        return await db("clients")
+        const data = await db("clients")
             .where(function () {
                 columns.forEach((col, i) => {
                     if (i === 0) this.where(col, "like", `%${keyword}%`);
                     else this.orWhere(col, "like", `%${keyword}%`);
                 });
             })
-            .limit(limit)
-            .offset(offset)
+            .limit(limit || 10)
+            .offset(offset || 0)
             .select(["id", "nik", "first_name", "last_name", "birth_place"]);
+        const [{ count }] = await db("clients")
+            .where(function () {
+                columns.forEach((col, i) => {
+                    if (i === 0) this.where(col, "like", `%${keyword}%`);
+                    else this.orWhere(col, "like", `%${keyword}%`);
+                });
+            })
+            .count("id as count");
+        return { data, count };
     } catch (error) {
         throw new ExpressError(error.message);
     }
@@ -66,12 +75,15 @@ export async function getAll(limit, cursor, orderBy = "id", order = "asc") {
 
 export async function getAllLimitOffset(limit, offset) {
     try {
-        return await db("clients")
+        const data = await db("clients")
             .select("id", "nik", "first_name", "last_name", "birth_place")
-            .limit(limit)
-            .offset(offset);
+            .limit(limit || 10)
+            .offset(offset || 0);
+
+        const [{ count }] = await db("clients").count("id as count");
+        return { data, count };
     } catch (error) {
-        return new ExpressError(error.message);
+        throw new ExpressError(error.message);
     }
 }
 

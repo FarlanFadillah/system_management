@@ -1,7 +1,12 @@
-const dotenv = require("dotenv").config({ path: "../.env" });
-const process = require("process");
+import process from "process";
+import dotenv from "dotenv";
+dotenv.config({
+    path: `../../.env.${process.env.NODE_ENV || "development"}`,
+});
 
-module.exports = {
+console.log(process.env.DB_NAME);
+
+export default {
     development: {
         client: process.env.DB_CLIENT,
         connection: {

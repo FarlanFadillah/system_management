@@ -1,4 +1,8 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+dotenv.config({
+    path: `.env.${process.env.NODE_ENV || "development"}`,
+});
+console.log(process.env.NODE_ENV);
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";
@@ -30,5 +34,5 @@ app.use("/api/v1/akta-ppat", aktaRouter);
 app.use(globalErrorHandler);
 
 app.listen(process.env.PORT, (error) => {
-    console.log("Server listening on http://localhost:3000");
+    console.log(`Server listening on http://localhost:${process.env.PORT}`);
 });

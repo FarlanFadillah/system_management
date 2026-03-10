@@ -2,7 +2,7 @@
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-exports.up = function (knex) {
+export async function up(knex) {
     return knex.schema.createTable("users", (table) => {
         table.increments("id").notNullable().primary();
         table.string("username").unique().notNullable();
@@ -12,12 +12,12 @@ exports.up = function (knex) {
         table.string("last_name");
         table.enum("role", ["superuser", "admin", "guest"]).defaultTo("guest");
     });
-};
+}
 
 /**
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-exports.down = function (knex) {
+export async function down(knex) {
     return knex.schema.dropTable("users");
-};
+}

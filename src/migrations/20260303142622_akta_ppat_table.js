@@ -2,7 +2,7 @@
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-exports.up = function (knex) {
+export async function up(knex) {
     // --- TABLE: akta_ppat ---
     return knex.schema.createTable("akta_ppat", (table) => {
         // columns
@@ -47,12 +47,12 @@ exports.up = function (knex) {
         table.index("no_akta");
         table.index("tgl_akta");
     });
-};
+}
 
 /**
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-exports.down = function (knex) {
+export async function down(knex) {
     return knex.schema.dropTable("akta_ppat");
-};
+}

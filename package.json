@@ -6,10 +6,10 @@
     "type": "module",
     "scripts": {
         "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-        "start": "nodemon src/index.mjs",
-        "makemigration": "npx knex migrate:make --knexfile ./knex/knexfile",
-        "migrate": "npx knex migrate:latest --knexfile ./knex/knexfile",
-        "rollback": "npx knex migrate:rollback --knexfile ./knex/knexfile"
+        "start": "cross-env NODE_ENV=development nodemon src/index.mjs",
+        "makemigration": "cross-env NODE_ENV=development npx knex migrate:make --knexfile ./src/knex/knexfile",
+        "migrate": "cross-env NODE_ENV=development npx knex migrate:latest --knexfile ./src/knex/knexfile",
+        "rollback": "cross-env NODE_ENV=development npx knex migrate:rollback --knexfile ./src/knex/knexfile"
     },
     "keywords": [],
     "author": "",
@@ -32,6 +32,7 @@
         "@jest/globals": "^30.2.0",
         "@types/jest": "^30.0.0",
         "babel-jest": "^30.2.0",
+        "cross-env": "^10.1.0",
         "jest": "^30.2.0",
         "nodemon": "^3.1.11",
         "prettier": "^3.8.1",
