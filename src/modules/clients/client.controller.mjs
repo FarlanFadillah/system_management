@@ -38,7 +38,6 @@ export const getAllClientsLimitOffset = asyncHandler(async (req, res, next) => {
 
 export const getClient = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
-    console.log(id);
     if (!id) return next(new ExpressError("Id is undefined"));
     const client = await clientService.getClient(id);
     res.status(200).json({ success: true, data: client });

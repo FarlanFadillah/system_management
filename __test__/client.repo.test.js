@@ -1,12 +1,13 @@
 import "../env.mjs";
 import db from "../src/dbs/db.mjs";
 import * as clientRepo from "../src/modules/clients/client.repository.mjs";
+import { ExpressError } from "../src/utils/custom.error.mjs";
 
 describe("Client Repo Testing - getById", () => {
     it("Should return client data where id = 1", async () => {
-        const result = await clientRepo.getById(3);
+        const result = await clientRepo.getById(1);
         expect(result).toHaveProperty("id");
-        expect(result.id).toBe(3);
+        expect(result.id).toBe(1);
     });
     it("Should return undefined when user with id = 100 does not exists", async () => {
         const result = await clientRepo.getById(100);
@@ -32,10 +33,10 @@ describe("Client Repo Testing - getAllLimitOffset", () => {
 });
 
 describe("Client Repo Testing - search", () => {
-    it("Should return the clients data and the total of clients based on searching by its columns", async () => {
+    it("Should return the an array data or empty array if key not found, and the total of clients", async () => {
         const result = await clientRepo.search(
             ["nik", "first_name", "last_name"],
-            "farlan",
+            "agus",
             10,
             0,
         );
@@ -43,6 +44,25 @@ describe("Client Repo Testing - search", () => {
         expect(result).not.toBeUndefined();
         expect(result.data).toBeInstanceOf(Array);
         expect(result.count).not.toBeUndefined();
+    });
+
+    it("Should return an error when the column names does not exists", async () => {
+        expect(
+            clientRepo.search(
+                ["wrong_column", "bad_column", "abc"],
+                "agus",
+                10,
+                0,
+            ),
+        ).rejects.toThrow("Column not found");
+    });
+});
+
+describe("Client Repo Testing - getAlasHak", () => {
+    it("Should return arrays of alas hak", async () => {
+        const result = await clientRepo.getAlasHak(1, 10, 0);
+        expect(result).not.toBeUndefined();
+        expect(result).toBeInstanceOf(Array);
     });
 });
 

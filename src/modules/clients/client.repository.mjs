@@ -57,6 +57,8 @@ export async function search(columns, keyword, limit, offset) {
             .count("id as count");
         return { data, count };
     } catch (error) {
+        if (error.code === "ER_BAD_FIELD_ERROR")
+            throw new ExpressError("Column not found");
         throw new ExpressError(error.message);
     }
 }
@@ -87,7 +89,7 @@ export async function getAllLimitOffset(limit, offset) {
     }
 }
 
-export async function getAlasHak(client_id, limit) {
+export async function getAlasHak(client_id, limit, offset) {
     try {
         return await db("alas_hak_clients as ahc")
             .leftJoin("alas_hak", "alas_hak.id", "ahc.alas_hak_id")
@@ -98,8 +100,8 @@ export async function getAlasHak(client_id, limit) {
                 "alas_hak.no_surat_ukur",
                 "alas_hak.ket",
             )
-            .limit(10)
-            .offset(0);
+            .limit(limit || 10)
+            .offset(offset || 0);
     } catch (error) {
         throw new ExpressError(error.message);
     }
