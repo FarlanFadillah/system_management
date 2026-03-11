@@ -22,7 +22,7 @@ router.use(validateToken);
 router
     .route("/")
     .post(...createClientValidationRules, validate, addClient)
-    .get(getAllClients);
+    .get(getAllClientsLimitOffset);
 
 router.get("/search", searchClient);
 

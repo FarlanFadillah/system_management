@@ -1,4 +1,5 @@
-import "dotenv/config";
+import "../env.mjs";
+
 import db from "../src/dbs/db.mjs";
 import { jest } from "@jest/globals";
 

@@ -5,11 +5,11 @@
     "main": "src/index.,js",
     "type": "module",
     "scripts": {
-        "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+        "test": "cross-env NODE_ENV=development node --experimental-vm-modules node_modules/jest/bin/jest.js",
         "start": "cross-env NODE_ENV=development nodemon src/index.mjs",
-        "makemigration": "cross-env NODE_ENV=development npx knex migrate:make --knexfile ./src/knex/knexfile",
-        "migrate": "cross-env NODE_ENV=development npx knex migrate:latest --knexfile ./src/knex/knexfile",
-        "rollback": "cross-env NODE_ENV=development npx knex migrate:rollback --knexfile ./src/knex/knexfile"
+        "makemigration": "cross-env NODE_ENV=development npx knex migrate:make --knexfile ./knexfile",
+        "migrate": "cross-env NODE_ENV=development npx knex migrate:latest --knexfile ./knexfile",
+        "rollback": "cross-env NODE_ENV=development npx knex migrate:rollback --knexfile ./knexfile"
     },
     "keywords": [],
     "author": "",
