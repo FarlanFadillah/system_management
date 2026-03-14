@@ -1,8 +1,13 @@
-import { UTCToGMT } from "../../helper/date.helper.mjs";
 import { ExpressError } from "../../utils/custom.error.mjs";
 import * as clientRepo from "./client.repository.mjs";
 import * as mainRepo from "../../utils/main.repository.mjs";
+import * as jsonHelper from "../../helper/json.helper.mjs";
 
+/**
+ *
+ * @param {Object} model
+ * @returns
+ */
 export async function addClient(model) {
     try {
         return await mainRepo.create("clients", model);
@@ -13,8 +18,74 @@ export async function addClient(model) {
 
 /**
  *
+ * @param {Number} id
+ */
+export async function removeClient(id) {
+    try {
+        const user = await clientRepo.getById(id);
+        if (!user) throw new ExpressError("User does not exists");
+        await mainRepo.remove("clients", id);
+    } catch (error) {
+        throw error;
+    }
+}
+
+/**
+ *
+ * @param {Number} id
+ * @param {Object} model
+ */
+export async function updateClientData(id, model) {
+    try {
+        await mainRepo.update("clients", id, model);
+    } catch (error) {
+        throw error;
+    }
+}
+
+/**
+ *
+ * @param {Number} id
+ * @returns
+ */
+export async function getClient(id) {
+    try {
+        const clients = await clientRepo.getById(Number(id));
+        if (!clients) return {};
+
+        const {
+            alas_hak_id, //  to remove the data
+            no_alas_hak, // to remove the data
+            kelurahan,
+            kecamatan,
+            kabupaten,
+            provinsi,
+            ...clientData
+        } = clients[0];
+
+        return {
+            ...clientData,
+            address: {
+                kelurahan,
+                kecamatan,
+                kabupaten,
+                provinsi,
+            },
+            alas_hak: clients.map((row) => ({
+                id: row.alas_hak_id,
+                no_alas_hak: row.no_alas_hak,
+            })),
+        };
+    } catch (error) {
+        throw error;
+    }
+}
+
+/**
+ *
  * @param {Number} limit
  * @param {String} cursor
+ * @param {String} order
  * @returns
  */
 export async function getAllClients(limit, cursor, order = "asc") {
@@ -31,61 +102,85 @@ export async function getAllClients(limit, cursor, order = "asc") {
  * @param {Number} offset
  * @returns
  */
-export async function getAllClientsLimitOffset(limit, offset) {
+export async function getAllClientsLimitOffset(limit, currentpage) {
     try {
-        return await clientRepo.getAllLimitOffset(limit, offset);
+        const offset = (currentpage - 1) * limit;
+        const { data, count } = await clientRepo.getAllLimitOffset(
+            limit,
+            offset,
+        );
+
+        const _metadata = jsonHelper.paginationMetadata(
+            "clients",
+            currentpage,
+            limit,
+            count,
+        );
+
+        const clients = jsonHelper.destructureAddressesDetails(data);
+        return { clients, _metadata };
     } catch (error) {
         throw error;
     }
 }
 
-export async function getClient(id) {
+/**
+ *
+ * @param {String} keyword
+ * @param {Number} limit
+ * @param {Number} currentpage
+ * @returns
+ */
+export async function searchClient(keyword, limit, currentpage) {
     try {
-        const client = await clientRepo.getById(Number(id));
-
-        client.created_at = UTCToGMT(client.created_at);
-        client.updated_at = UTCToGMT(client.updated_at);
-
-        return client;
-    } catch (error) {
-        throw error;
-    }
-}
-
-export async function searchClient(keyword, limit, offset) {
-    try {
-        return await clientRepo.search(
+        const offset = (currentpage - 1) * limit;
+        const { data, count } = await clientRepo.search(
             ["nik", "first_name", "last_name"],
             keyword,
             limit,
             offset,
         );
+        console.log(data);
+        const clients = jsonHelper.destructureAddressesDetails(data);
+        const _metadata = jsonHelper.paginationMetadata(
+            "clients/search",
+            currentpage,
+            limit,
+            count,
+            [`keyword=${keyword}`],
+        );
+
+        return { clients, _metadata };
     } catch (error) {
         throw error;
     }
 }
 
-export async function removeClient(id) {
+/**
+ *
+ * @param {Number} client_id
+ * @param {Number} limit
+ * @param {Number} currentpage
+ * @returns
+ */
+export async function getAlasHak(client_id, limit, currentpage) {
     try {
-        const user = await clientRepo.getById(id);
-        if (!user) throw new ExpressError("User does not exists");
-        await mainRepo.remove("clients", id);
-    } catch (error) {
-        throw error;
-    }
-}
+        const offset = (currentpage - 1) * limit;
+        const { data, count } = await clientRepo.getAlasHak(
+            client_id,
+            limit,
+            offset,
+        );
 
-export async function updateClientData(model, id) {
-    try {
-        await mainRepo.update("clients", id, model);
-    } catch (error) {
-        throw error;
-    }
-}
+        const alas_hak = jsonHelper.destructureAddressesDetails(data);
+        const _metadata = jsonHelper.paginationMetadata(
+            `clients/${client_id}/alas-hak`,
+            currentpage,
+            limit,
+            count,
+        );
 
-export async function getAlasHak(client_id) {
-    try {
-        return await clientRepo.getAlasHak(client_id);
+        return { alas_hak, _metadata };
     } catch (error) {
         throw error;
     }

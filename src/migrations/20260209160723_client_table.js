@@ -2,7 +2,7 @@
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-exports.up = function (knex) {
+export async function up(knex) {
     // --- TABLE: clients ---
     return knex.schema.createTable("clients", (table) => {
         table.increments("id").primary();
@@ -35,12 +35,12 @@ exports.up = function (knex) {
         table.index("last_name");
         table.index("address_code");
     });
-};
+}
 
 /**
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-exports.down = function (knex) {
+export async function down(knex) {
     return knex.schema.dropTable("clients");
-};
+}

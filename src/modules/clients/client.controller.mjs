@@ -8,6 +8,29 @@ export const addClient = asyncHandler(async (req, res, next) => {
     res.json({ success: true, msg: "Client added successfully", id });
 });
 
+export const getClient = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+    if (!id) return next(new ExpressError("Id is undefined"));
+    const client = await clientService.getClient(id);
+    res.status(200).json({ success: true, data: client });
+});
+
+export const deleteClient = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+    if (!id) return next(new Error("Id is undefined"));
+    await clientService.removeClient(id);
+    res.status(200).json({ success: true, msg: "User deleted successfully" });
+});
+
+export const updateClientData = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+    if (!id) return next(new ExpressError("Id is undefined"));
+
+    await clientService.updateClientData(req.matchedData, id);
+
+    res.status(200).json({ success: true, msg: "Client updated successfully" });
+});
+
 /**
  * Cursor based pagination
  */
@@ -28,52 +51,46 @@ export const getAllClients = asyncHandler(async (req, res, next) => {
 export const getAllClientsLimitOffset = asyncHandler(async (req, res, next) => {
     const { currentpage, limit } = req.query;
 
-    const clients = await clientService.getAllClientsLimitOffset(
+    const { clients, _metadata } = await clientService.getAllClientsLimitOffset(
         Number(limit),
-        Number(currentpage) * Number(limit),
+        Number(currentpage),
     );
 
-    res.status(200).json({ success: true, data: clients });
-});
-
-export const getClient = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    if (!id) return next(new ExpressError("Id is undefined"));
-    const client = await clientService.getClient(id);
-    res.status(200).json({ success: true, client });
-});
-
-export const deleteClient = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    if (!id) return next(new Error("Id is undefined"));
-    await clientService.removeClient(id);
-    res.status(200).json({ success: true, msg: "User deleted successfully" });
+    res.status(200).json({
+        success: true,
+        _metadata,
+        data: clients,
+    });
 });
 
 export const searchClient = asyncHandler(async (req, res, next) => {
     const { currentpage, limit, keyword } = req.query;
 
-    const user = await clientService.searchClient(
+    const { clients, _metadata } = await clientService.searchClient(
         keyword,
         Number(limit),
-        Number(currentpage) * Number(limit),
+        Number(currentpage),
     );
-    res.status(200).json({ success: true, data: user });
-});
-
-export const updateClientData = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    if (!id) return next(new ExpressError("Id is undefined"));
-
-    await clientService.updateClientData(req.matchedData, id);
-
-    res.status(200).json({ success: true, msg: "Client updated successfully" });
+    res.status(200).json({
+        success: true,
+        _metadata,
+        data: clients,
+    });
 });
 
 export const getAlasHak = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
+    const { currentpage, limit } = req.query;
     if (!id) return next(new ExpressError("Id is undefined"));
 
-    const data = await clientService.getAlasHak(id);
-    res.status(200).json({ success: true, data });
+    const { alas_hak, _metadata } = await clientService.getAlasHak(
+        id,
+        Number(limit),
+        Number(currentpage),
+    );
+    res.status(200).json({
+        success: true,
+        _metadata,
+        data: alas_hak,
+    });
 });

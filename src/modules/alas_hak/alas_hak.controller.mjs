@@ -12,18 +12,6 @@ export const addAlasHak = asyncHandler(async (req, res, next) => {
     });
 });
 
-export const getAllAlasHak = asyncHandler(async (req, res, next) => {
-    const { currentpage, limit } = req.query;
-    if (isNaN(currentpage))
-        return next(new ExpressError("Invalid currentpage value"));
-
-    const alas_hak = await alasHakService.getAllAlasHak(
-        Number(limit),
-        Number(currentpage) * Number(limit),
-    );
-    res.status(200).json({ success: true, data: alas_hak });
-});
-
 export const updateAlasHak = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
     if (!id) return next(new ExpressError("Invalid id"));
@@ -56,30 +44,40 @@ export const getAlasHak = asyncHandler(async (req, res, next) => {
     res.status(200).json({ success: true, data: alas_hak });
 });
 
+export const getAllAlasHak = asyncHandler(async (req, res, next) => {
+    const { currentpage, limit } = req.query;
+
+    const { alas_hak, _metadata } = await alasHakService.getAllAlasHak(
+        Number(limit),
+        Number(currentpage),
+    );
+    res.status(200).json({
+        success: true,
+        _metadata,
+        data: alas_hak,
+    });
+});
+
 export const searchAlasHak = asyncHandler(async (req, res, next) => {
     const { keyword, currentpage, limit, level } = req.query;
-    if (isNaN(currentpage))
-        return next(new ExpressError("Invalid currentpage value"));
-    if (!keyword)
-        return next(
-            new ExpressError(
-                "Please provide the keyword for searching clients",
-            ),
-        );
 
-    const alas_hak = level
+    const { alas_hak, _metadata } = level
         ? await alasHakService.searchByAddressCode(
               level,
               keyword,
               Number(limit),
-              Number(limit) * Number(currentpage),
+              Number(currentpage),
           )
         : await alasHakService.searchAlasHak(
               keyword,
               Number(limit),
-              Number(limit) * Number(currentpage),
+              Number(currentpage),
           );
-    res.status(200).json({ success: true, data: alas_hak });
+    res.status(200).json({
+        success: true,
+        _metadata,
+        data: alas_hak,
+    });
 });
 
 export const addAlasHakOwner = asyncHandler(async (req, res, next) => {

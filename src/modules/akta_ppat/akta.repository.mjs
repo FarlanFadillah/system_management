@@ -75,5 +75,7 @@ export async function getByDate(limit, offset, from, to) {
             ])
             .limit(limit)
             .offset(offset);
-    } catch (error) {}
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
 }

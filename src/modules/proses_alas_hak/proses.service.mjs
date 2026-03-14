@@ -32,7 +32,6 @@ export async function get(id) {
 export async function getByNoSurat(value) {
     try {
         value = value.replaceAll("_", "/");
-        console.log(value);
         return await mainRepo.getBy("proses_alas_hak", "no_surat", value);
     } catch (error) {
         throw error;

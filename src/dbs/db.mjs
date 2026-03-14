@@ -1,9 +1,10 @@
 import knex from "knex";
 import process from "process";
+import "../../env.mjs";
 const db = knex({
     client: process.env.DB_CLIENT,
     connection: {
-        host: process.env.DP_HOST,
+        host: process.env.DB_HOST,
         port: process.env.DB_PORT,
         user: process.env.DB_USER,
         password: process.env.DB_PASS,

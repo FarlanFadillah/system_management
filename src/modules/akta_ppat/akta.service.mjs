@@ -1,4 +1,3 @@
-import { UTCToGMT } from "../../helper/date.helper.mjs";
 import { ExpressError } from "../../utils/custom.error.mjs";
 import * as mainRepo from "../../utils/main.repository.mjs";
 import * as aktaRepo from "./akta.repository.mjs";
@@ -30,11 +29,6 @@ export async function update(id, data) {
 export async function getAll(limit, offset) {
     try {
         let data = await aktaRepo.getAll(limit, offset);
-        data = data.map((val) => {
-            val.tgl_akta = UTCToGMT(val.tgl_akta, true);
-            val.tgl_surat = UTCToGMT(val.tgl_surat, true);
-            return val;
-        });
         return data;
     } catch (error) {
         throw error;
@@ -51,9 +45,6 @@ export async function getAktaByNomorTahun(value) {
         let data = await aktaRepo.getAktaByNomorTahun(values[0], values[1]);
         if (!data) return [];
 
-        data.tgl_akta = UTCToGMT(data.tgl_akta, true);
-        data.tgl_surat = UTCToGMT(data.tgl_surat, true);
-
         return data;
     } catch (error) {
         throw error;
@@ -63,11 +54,6 @@ export async function getAktaByNomorTahun(value) {
 export async function getByDate(limit, offset, from, to) {
     try {
         let data = await aktaRepo.getByDate(limit, offset, from, to);
-        data = data.map((val) => {
-            val.tgl_akta = UTCToGMT(val.tgl_akta, true);
-            val.tgl_surat = UTCToGMT(val.tgl_surat, true);
-            return val;
-        });
         return data;
     } catch (error) {
         throw error;
