@@ -24,7 +24,7 @@ export async function getKelurahan(name, limit, offset) {
     try {
         const addresses = await db("kelurahan")
             .where("name", "like", `%${name}%`)
-            .select("id")
+            .select("id", "name")
             .limit(limit)
             .offset(offset);
         return addresses;

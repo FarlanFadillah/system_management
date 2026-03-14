@@ -5,8 +5,8 @@ export async function getKelurahan(name, limit, currentpage) {
     try {
         return await addressRepo.getKelurahan(
             name,
-            paginationConf.default.limit,
-            Number(limit) * Number(currentpage),
+            limit,
+            limit * (currentpage - 1),
         );
     } catch (error) {
         throw error;

@@ -89,7 +89,7 @@ npm install
 
 ### 3️⃣ Setup Environment Variables
 
-Create a `.env` file in the root directory:
+Create a `.env.development` file in the root directory:
 
 ```env
 DB_CLIENT=mysql2
@@ -251,12 +251,12 @@ Authorization: Bearer your_jwt_token_here
 
 ### Get All Clients with pagination
 
-**GET** `/clients?currentpage=0&limit=10`
+**GET** `/clients?currentpage=1&limit=10`
 
 Optional query:
 
 ```
-/clients/search?keyword=yourname&currentpage=0&limit=10
+/clients/search?keyword=yourname&currentpage=1&limit=10
 ```
 
 ---
@@ -313,20 +313,20 @@ Optional query:
 
 ### Get All Alas Hak with pagination
 
-**GET** `/alas-hak?currentpage=0&limit=10`
+**GET** `/alas-hak?currentpage=1&limit=10`
 
 Optional query:
 Search By no_alas_hak column
 
 ```
-/alas-hak/search?keyword=no_alas_hak&currentpage=0&limit=10
+/alas-hak/search?keyword=no_alas_hak&currentpage=1&limit=10
 ```
 
 Search By address_code column
 level = [kelurahan | kecamatan | kabupaten | provinsi]
 
 ```
-/alas-hak/search?level=kelurahan&keyword=no_alas_hak&currentpage=0&limit=10
+/alas-hak/search?level=kelurahan&keyword=no_alas_hak&currentpage=1&limit=10
 ```
 
 ---
@@ -337,19 +337,25 @@ level = [kelurahan | kecamatan | kabupaten | provinsi]
 
 ---
 
-### Update Client
+### Update Alas Hak
 
 **PUT** `/alas-hak/:id`
 
 ---
 
-### Delete Client
+### Delete Alas Hak
 
 **DELETE** `/alas-hak/:id`
 
 ---
 
 ---
+
+## 🏞️ 4. Address (Address Code)
+
+### Get Address by kelurahan name
+
+**GET** `/address/kel?name=address-name&currentpage=1&limit=10`
 
 # 📖 API Design Principles
 
