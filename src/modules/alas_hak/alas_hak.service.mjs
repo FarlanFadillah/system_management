@@ -1,11 +1,8 @@
-import { validateAddressCode } from "../../helper/regex.helper.mjs";
-import { globalErrorHandler } from "../../middlewares/error.middleware.mjs";
 import { ExpressError } from "../../utils/custom.error.mjs";
 import * as mainRepo from "../../utils/main.repository.mjs";
 import * as alasHakRepo from "./alas_hak.repository.mjs";
 import * as addressRepo from "../address/address.repository.mjs";
-import * as clientRepo from "../clients/client.repository.mjs";
-import { mapingArrayObject } from "../../utils/DS.manipulation.mjs";
+import * as jsonHelper from "../../helper/json.helper.mjs";
 
 /**
  *
@@ -14,28 +11,6 @@ import { mapingArrayObject } from "../../utils/DS.manipulation.mjs";
 export async function addAlasHak(model) {
     try {
         return await mainRepo.create("alas_hak", model);
-    } catch (error) {
-        throw error;
-    }
-}
-
-export async function getAlasHak(id) {
-    try {
-        return await alasHakRepo.get(id);
-    } catch (error) {
-        throw error;
-    }
-}
-
-/**
- *
- * @param {Number} limit
- * @param {Number} offset
- * @returns
- */
-export async function getAllAlasHak(limit, offset) {
-    try {
-        return await alasHakRepo.getAll(limit, offset);
     } catch (error) {
         throw error;
     }
@@ -68,19 +43,37 @@ export async function updateAlasHak(id, model) {
 
 /**
  *
- * @param {String} keyword
- * @param {Number} limit
- * @param {Number} offset
+ * @param {Number} id
  * @returns
  */
-export async function searchAlasHak(keyword, limit, offset) {
+export async function getAlasHak(id) {
     try {
-        return await alasHakRepo.search(
-            ["no_alas_hak"],
-            keyword,
-            limit,
-            offset,
-        );
+        const alas_hak = await alasHakRepo.get(id);
+        const {
+            cl_first_name,
+            cl_id,
+            cl_last_name,
+            kelurahan,
+            kecamatan,
+            kabupaten,
+            provinsi,
+            ...data
+        } = alas_hak[0];
+
+        return {
+            ...data,
+            address: {
+                kelurahan,
+                kecamatan,
+                kabupaten,
+                provinsi,
+            },
+            owners: alas_hak.map((row) => ({
+                id: row.cl_id,
+                first_name: row.cl_first_name,
+                last_name: row.cl_last_name,
+            })),
+        };
     } catch (error) {
         throw error;
     }
@@ -88,38 +81,90 @@ export async function searchAlasHak(keyword, limit, offset) {
 
 /**
  *
- * @param {"provinsi" | "kabupaten" | "kecamatan" | "kelurahan"} level
- * @param {String} address
  * @param {Number} limit
- * @param {Number} offset
+ * @param {Number} currentpage
  * @returns
  */
-export async function searchAlasHakByAddress(level, address, limit, offset) {
+export async function getAllAlasHak(limit, currentpage) {
     try {
-        let address_code = await addressRepo.get(level, address);
-        console.log(address_code);
-        if (!address_code) throw new ExpressError("Address not found");
-        return await alasHakRepo.searchMultipleKeywords(
-            "address_code",
-            address_code.id,
+        const offset = (currentpage - 1) * limit;
+        const { data, count } = await alasHakRepo.getAll(limit, offset);
+        const alas_hak = jsonHelper.destructureAddressesDetails(data);
+        const _metadata = jsonHelper.paginationMetadata(
+            "alas-hak",
+            currentpage,
             limit,
-            offset,
+            count,
         );
+
+        return { alas_hak, _metadata };
     } catch (error) {
         throw error;
     }
 }
 
-export async function searchByAddressCode(level, keyword, limit, offset) {
+/**
+ *
+ * @param {String} keyword
+ * @param {Number} limit
+ * @param {Number} currentpage
+ * @returns
+ */
+export async function searchAlasHak(keyword, limit, currentpage) {
     try {
-        console.log(level, keyword);
+        const offset = (currentpage - 1) * limit;
+        const { data, count } = await alasHakRepo.search(
+            ["no_alas_hak"],
+            keyword,
+            limit,
+            offset,
+        );
+
+        const alas_hak = jsonHelper.destructureAddressesDetails(data);
+        const _metadata = jsonHelper.paginationMetadata(
+            "alas-hak/search",
+            currentpage,
+            limit,
+            count,
+            [`keyword=${keyword}`],
+        );
+
+        return { alas_hak, _metadata };
+    } catch (error) {
+        throw error;
+    }
+}
+
+/**
+ *
+ * @param {String} level
+ * @param {String} keyword
+ * @param {Number} limit
+ * @param {Number} currentpage
+ * @returns
+ */
+export async function searchByAddressCode(level, keyword, limit, currentpage) {
+    try {
+        const offset = (currentpage - 1) * limit;
         let address_code = await addressRepo.get(level, keyword);
         if (!address_code) throw new ExpressError("Address not found");
-        return await alasHakRepo.getByAddressCode(
+
+        const { data, count } = await alasHakRepo.getByAddressCode(
             address_code.id,
             limit,
             offset,
         );
+
+        const alas_hak = jsonHelper.destructureAddressesDetails(data);
+        const _metadata = jsonHelper.paginationMetadata(
+            "alas-hak/search",
+            currentpage,
+            limit,
+            count,
+            [`keyword=${keyword}`, `level=${level}`],
+        );
+
+        return { alas_hak, _metadata };
     } catch (error) {
         throw error;
     }
@@ -152,6 +197,11 @@ export async function addAlasHakOwner(alas_hak_id, clients_id) {
     }
 }
 
+/**
+ *
+ * @param {Number} id
+ * @returns
+ */
 export async function getOwners(id) {
     try {
         return await alasHakRepo.getOwners(id);
