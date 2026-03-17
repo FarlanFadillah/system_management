@@ -11,7 +11,7 @@ import { ExpressError } from "../../utils/custom.error.mjs";
 
 export async function getAll(limit, offset) {
     try {
-        return await db("proses_alas_hak as p")
+        const data = await db("proses_alas_hak as p")
             .leftJoin("produk", "produk.id", "p.produk_id")
             .select([
                 "p.id",
@@ -21,6 +21,8 @@ export async function getAll(limit, offset) {
             ])
             .limit(limit)
             .offset(offset);
+        const [{ count }] = await db("proses_alas_hak").count("id as count");
+        return { data, count };
     } catch (error) {
         throw new ExpressError(error.message);
     }
@@ -28,11 +30,17 @@ export async function getAll(limit, offset) {
 
 export async function getByDate(limit, offset, from, to, no_surat) {
     try {
-        return await db("proses_alas_hak")
+        const data = await db("proses_alas_hak")
             .whereBetween("tgl_surat", [from, to])
             .select(["id", "no_surat", "tgl_surat"])
             .limit(limit)
             .offset(offset);
+
+        const [{ count }] = await db("proses_alas_hak")
+            .whereBetween("tgl_surat", [from, to])
+            .count("id as count");
+
+        return { data, count };
     } catch (error) {
         throw new ExpressError(error.message);
     }

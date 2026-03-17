@@ -16,3 +16,12 @@ export const patchProsesValidationRules = [
     validator.numericalOptional("produk_id"),
     validator.numericalOptional("alas_hak_id"),
 ];
+
+export const clientRolesValidationRules = [
+    validator.arrayOfNumberRequired("clients_id"),
+    validator.numericalRequired("roles_id"),
+];
+
+export const removeClientRolesValidationRules = [
+    validator.arrayOfNumberRequired("clients_id"),
+];
