@@ -20,6 +20,23 @@ export const updateAlasHakValidationRules = [
     validator.numericalOptional("luas"),
 ];
 
+export const searchAlasHakValidationRules = [
+    validator.stringRequired("keyword"),
+    validator.stringOptional("level"),
+];
+
+export const IDValidatorRules = [validator.numericalRequired("id")];
+
+export const paginationValidationRules = [
+    validator.numericalRequired("currentpage"),
+    validator.numericalRequired("limit"),
+];
+
 export const addAlasHakOwnerValidationRules = [
     validator.arrayOfNumberRequired("clients_id"),
+];
+
+export const removeAlasHakOwnerValidationRules = [
+    validator.numericalRequired("id"),
+    validator.numericalRequired("client_id"),
 ];

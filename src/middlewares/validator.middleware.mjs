@@ -4,6 +4,7 @@ export function validate(req, res, next) {
     const result = validationResult(req);
 
     if (result.isEmpty()) {
+        console.log("[REQUEST VALID]");
         req.matchedData = matchedData(req);
         return next();
     }

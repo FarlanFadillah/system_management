@@ -49,6 +49,7 @@ export async function updateAlasHak(id, model) {
 export async function getAlasHak(id) {
     try {
         const data = await alasHakRepo.get(id);
+        if (data.length <= 0) throw new ExpressError("Alas Hak not found", 404);
         return destructureData(data);
     } catch (error) {
         throw error;
@@ -174,10 +175,11 @@ export async function addAlasHakOwner(alas_hak_id, clients_id) {
                     client_id: cl_id,
                 })
             ) {
-                result.skipped({
+                result.skipped.push({
                     clients_id: cl_id,
                     reason: "ENTRY_ALREDY_EXISTS",
                 });
+                continue;
             }
             await mainRepo.create("alas_hak_clients", {
                 alas_hak_id,
@@ -195,44 +197,27 @@ export async function addAlasHakOwner(alas_hak_id, clients_id) {
 /**
  *
  * @param {Number} alas_hak_id
- * @param {Array} clients_id
+ * @param {Number} client_id
  */
-export async function removeAlasHakOwner(alas_hak_id, clients_id) {
-    let result = {
-        id: alas_hak_id,
-        deleted: [],
-        skipped: [],
-        invalid: [],
-    };
+export async function removeAlasHakOwner(alas_hak_id, client_id) {
     try {
         if (!(await mainRepo.isExists("alas_hak", alas_hak_id)))
             throw new ExpressError("Alas Hak not found");
-        for (const cl_id of clients_id) {
-            if (!(await mainRepo.isExists("clients", cl_id))) {
-                result.invalid.push({
-                    client_id: cl_id,
-                    reason: "CLIENT_NOT_FOUND",
-                });
-                continue;
-            } else if (
-                await mainRepo.isRowExists("alas_hak_clients", {
-                    alas_hak_id: alas_hak_id,
-                    client_id: cl_id,
-                })
-            ) {
-                result.skipped({
-                    clients_id: cl_id,
-                    reason: "ENTRY_ALREDY_EXISTS",
-                });
-            }
-            await mainRepo.create("alas_hak_clients", {
-                alas_hak_id,
-                client_id: cl_id,
-            });
-
-            result.created.push({ clients_id: cl_id, reason: "SUCCESS" });
+        else if (!(await mainRepo.isExists("clients", client_id))) {
+            throw new ExpressError("Client not found");
+        } else if (
+            !(await mainRepo.isRowExists("alas_hak_clients", {
+                alas_hak_id: alas_hak_id,
+                client_id,
+            }))
+        ) {
+            throw new ExpressError("Alas Hak - Client relations not found");
         }
-        return { result };
+
+        await mainRepo.removeWhere("alas_hak_clients", {
+            alas_hak_id,
+            client_id,
+        });
     } catch (error) {
         throw error;
     }

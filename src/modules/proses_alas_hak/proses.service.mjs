@@ -192,44 +192,27 @@ export async function addClientAndRoles(id, clients_id, roles_id) {
 /**
  *
  * @param {Number} id
- * @param {Array} clients_id
+ * @param {Number} client_id
  */
-export async function removeClientAndRoles(id, clients_id) {
+export async function removeClientAndRoles(id, client_id) {
     try {
-        const result = {
-            proses_id: id,
-            deleted: [],
-            skipped: [],
-            invalid: [],
-        };
-        for (const cl_id of clients_id) {
-            if (!(await mainRepo.isExists("clients", cl_id))) {
-                console.log("clients does not exists" + cl_id);
-                result.invalid.push({
-                    client_id: cl_id,
-                    reason: "CLIENT_NOT_FOUND",
-                });
-                continue;
-            } else if (
-                !(await mainRepo.isRowExists("proses_clients", {
-                    pah_id: id,
-                    client_id: cl_id,
-                }))
-            ) {
-                result.skipped.push({
-                    client_id: cl_id,
-                    reason: "DATA_NOT_FOUND",
-                });
-                continue;
-            }
-
-            await mainRepo.removeWhere("proses_clients", {
+        if (!(await mainRepo.isExists("proses", id))) {
+            throw new ExpressError("Proses not found", 404);
+        } else if (!(await mainRepo.isExists("clients", cl_id))) {
+            throw new ExpressError("Client not found", 404);
+        } else if (
+            !(await mainRepo.isRowExists("proses_clients", {
                 pah_id: id,
                 client_id: cl_id,
-            });
-            result.deleted.push({ client_id: cl_id, reason: "SUCCESS" });
+            }))
+        ) {
+            throw new ExpressError("Proses - Client relations not found", 404);
         }
-        return { result };
+
+        await mainRepo.removeWhere("proses_clients", {
+            pah_id: id,
+            client_id: cl_id,
+        });
     } catch (error) {
         throw error;
     }
@@ -238,30 +221,31 @@ export async function removeClientAndRoles(id, clients_id) {
 /**
  *
  * @param {Number} id
- * @param {Array} clients_id
+ * @param {Number} client_id
  * @param {Number} roles_id
  */
-export async function updateClientRoles(id, clients_id, roles_id) {
+export async function updateClientRoles(id, client_id, roles_id) {
     try {
-        for (const cl_id of clients_id) {
-            if (
-                !mainRepo.isRowExists("proses_clients", {
-                    pah_id: id,
-                    client_id: cl_id,
-                })
-            ) {
-                continue;
-            }
-
-            await mainRepo.updateWhere(
-                "proses_clients",
-                {
-                    pah_id: id,
-                    client_id: cl_id,
-                },
-                { roles_id },
+        if (
+            !mainRepo.isRowExists("proses_clients", {
+                pah_id: id,
+                client_id,
+            })
+        ) {
+            throw new ExpressError(
+                "Proses Alas Hak - Client relations not found",
+                404,
             );
         }
+
+        await mainRepo.updateWhere(
+            "proses_clients",
+            {
+                pah_id: id,
+                client_id,
+            },
+            { roles_id },
+        );
     } catch (error) {}
 }
 
