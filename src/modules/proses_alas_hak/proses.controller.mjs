@@ -7,7 +7,9 @@ export const createProsesAlasHak = asyncHandler(async (req, res, next) => {
     res.status(200).json({
         success: true,
         msg: "Proses Alas Hak added Successfully",
-        id,
+        data: {
+            id,
+        },
     });
 });
 
@@ -33,7 +35,7 @@ export const removeProsesAlasHak = asyncHandler(async (req, res, next) => {
 export const addClient = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
     const { clients_id, roles_id } = req.matchedData;
-    const { warnings } = await prosesService.addClientAndRoles(
+    const { result } = await prosesService.addClientAndRoles(
         id,
         clients_id,
         roles_id,
@@ -42,7 +44,7 @@ export const addClient = asyncHandler(async (req, res, next) => {
     res.status(200).json({
         success: true,
         msg: "Client and Roles added succesfully",
-        warnings,
+        data: result,
     });
 });
 
@@ -50,10 +52,11 @@ export const removeClient = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
     const { clients_id } = req.matchedData;
 
-    await prosesService.removeClientAndRoles(id, clients_id);
+    const { result } = await prosesService.removeClientAndRoles(id, clients_id);
     res.status(200).json({
         success: true,
         msg: "Client and Roles deleted successfully",
+        data: result,
     });
 });
 
@@ -92,7 +95,7 @@ export const getAllProsesAlasHak = asyncHandler(async (req, res, next) => {
 
 export const searchByDate = asyncHandler(async (req, res, next) => {
     const { currentpage, limit, from, to } = req.query;
-    const { data, _metadata } = await prosesService.getByDate(
+    const { data, _metadata } = await prosesService.searchByDate(
         from,
         to,
         Number(currentpage),

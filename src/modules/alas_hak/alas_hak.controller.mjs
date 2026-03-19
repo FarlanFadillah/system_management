@@ -8,7 +8,9 @@ export const addAlasHak = asyncHandler(async (req, res, next) => {
     res.status(200).json({
         success: true,
         msg: "Alas Hak added successfully",
-        id,
+        data: {
+            id,
+        },
     });
 });
 
@@ -84,16 +86,19 @@ export const addAlasHakOwner = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
     const { clients_id } = req.matchedData;
     if (!id || isNaN(id)) return next(new ExpressError("Alas Hak Not found"));
-    const msg = await alasHakService.addAlasHakOwner(id, clients_id);
+    const { result } = await alasHakService.addAlasHakOwner(id, clients_id);
 
     const req_failed = msg.length === clients_id.length;
     res.status(200).json({
         success: req_failed ? false : true,
-        msg: req_failed
-            ? "Something went wrong"
-            : "Alas Hak Owners added successfully",
-        erros: msg,
+        msg: "Alas Hak Owners added successfully",
+        data: result,
     });
+});
+
+export const removeAlasHakOwners = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+    const { clients_id } = req.params;
 });
 
 export const getAlasHakOwners = asyncHandler(async (req, res, next) => {

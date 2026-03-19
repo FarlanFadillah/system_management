@@ -5,7 +5,7 @@ import { ExpressError } from "../../utils/custom.error.mjs";
 
 export const addClient = asyncHandler(async (req, res, next) => {
     const id = await clientService.addClient(req.matchedData);
-    res.json({ success: true, msg: "Client added successfully", id });
+    res.json({ success: true, msg: "Client added successfully", data: { id } });
 });
 
 export const getClient = asyncHandler(async (req, res, next) => {
