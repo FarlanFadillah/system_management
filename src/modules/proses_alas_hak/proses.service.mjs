@@ -85,9 +85,10 @@ export async function getAll(currentpage, limit) {
  * @param {Number} offset
  * @param {String} from
  * @param {String} to
+ * @param {String} number
  * @returns
  */
-export async function searchByDate(from, to, currentpage, limit) {
+export async function search(from, to, number, currentpage, limit) {
     try {
         const offset = (currentpage - 1) * limit;
         const { data, count } = await prosesRepo.searchByDate(
@@ -95,6 +96,7 @@ export async function searchByDate(from, to, currentpage, limit) {
             offset,
             from,
             to,
+            number,
         );
 
         const _metadata = jsonHelper.paginationMetadata(
@@ -102,7 +104,11 @@ export async function searchByDate(from, to, currentpage, limit) {
             currentpage,
             limit,
             count,
-            [`from=${from}`, `to=${to}`],
+            [
+                `from=${from}`,
+                `to=${to}`,
+                ...(number ? [`number=${number}`] : []),
+            ],
         );
 
         return { data, _metadata };
@@ -196,14 +202,14 @@ export async function addClientAndRoles(id, clients_id, roles_id) {
  */
 export async function removeClientAndRoles(id, client_id) {
     try {
-        if (!(await mainRepo.isExists("proses", id))) {
+        if (!(await mainRepo.isExists("proses_alas_hak", id))) {
             throw new ExpressError("Proses not found", 404);
-        } else if (!(await mainRepo.isExists("clients", cl_id))) {
+        } else if (!(await mainRepo.isExists("clients", client_id))) {
             throw new ExpressError("Client not found", 404);
         } else if (
             !(await mainRepo.isRowExists("proses_clients", {
                 pah_id: id,
-                client_id: cl_id,
+                client_id,
             }))
         ) {
             throw new ExpressError("Proses - Client relations not found", 404);
@@ -211,7 +217,7 @@ export async function removeClientAndRoles(id, client_id) {
 
         await mainRepo.removeWhere("proses_clients", {
             pah_id: id,
-            client_id: cl_id,
+            client_id,
         });
     } catch (error) {
         throw error;
@@ -226,16 +232,17 @@ export async function removeClientAndRoles(id, client_id) {
  */
 export async function updateClientRoles(id, client_id, roles_id) {
     try {
-        if (
-            !mainRepo.isRowExists("proses_clients", {
+        if (!(await mainRepo.isExists("proses", id))) {
+            throw new ExpressError("Proses not found", 404);
+        } else if (!(await mainRepo.isExists("clients", client_id))) {
+            throw new ExpressError("Client not found", 404);
+        } else if (
+            !(await mainRepo.isRowExists("proses_clients", {
                 pah_id: id,
                 client_id,
-            })
+            }))
         ) {
-            throw new ExpressError(
-                "Proses Alas Hak - Client relations not found",
-                404,
-            );
+            throw new ExpressError("Proses - Client relations not found", 404);
         }
 
         await mainRepo.updateWhere(
@@ -246,7 +253,9 @@ export async function updateClientRoles(id, client_id, roles_id) {
             },
             { roles_id },
         );
-    } catch (error) {}
+    } catch (error) {
+        throw error;
+    }
 }
 
 export async function getClientRoles(roles) {
@@ -279,5 +288,8 @@ function destructureData(data) {
         };
     });
 
-    return { ...proses_data, clients_roles };
+    return {
+        ...proses_data,
+        client_roles: clients_roles[0].id ? clients_roles : [],
+    };
 }

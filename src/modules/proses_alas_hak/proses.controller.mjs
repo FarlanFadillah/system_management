@@ -14,8 +14,8 @@ export const createProsesAlasHak = asyncHandler(async (req, res, next) => {
 });
 
 export const update = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    await prosesService.update(id, req.matchedData);
+    const { id, ...data } = req.matchedData;
+    await prosesService.update(id, data);
 
     res.status(200).json({
         status: true,
@@ -24,7 +24,7 @@ export const update = asyncHandler(async (req, res, next) => {
 });
 
 export const removeProsesAlasHak = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
+    const { id } = req.matchedData;
     await prosesService.remove(id);
     res.status(200).json({
         success: true,
@@ -32,9 +32,17 @@ export const removeProsesAlasHak = asyncHandler(async (req, res, next) => {
     });
 });
 
+export const getProsesAlasHak = asyncHandler(async (req, res, next) => {
+    const { id } = req.matchedData;
+    const data = await prosesService.get(id);
+    res.status(200).json({
+        success: true,
+        data,
+    });
+});
+
 export const addClient = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    const { clients_id, roles_id } = req.matchedData;
+    const { id, clients_id, roles_id } = req.matchedData;
     const { result } = await prosesService.addClientAndRoles(
         id,
         clients_id,
@@ -49,14 +57,12 @@ export const addClient = asyncHandler(async (req, res, next) => {
 });
 
 export const removeClient = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    const { clients_id } = req.matchedData;
+    const { id, client_id } = req.matchedData;
 
-    const { result } = await prosesService.removeClientAndRoles(id, clients_id);
+    await prosesService.removeClientAndRoles(id, client_id);
     res.status(200).json({
         success: true,
-        msg: "Client and Roles deleted successfully",
-        data: result,
+        msg: "Client - Roles relations processed",
     });
 });
 
@@ -70,17 +76,8 @@ export const updateClient = asyncHandler(async (req, res, next) => {
     });
 });
 
-export const getProsesAlasHak = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    const data = await prosesService.get(id);
-    res.status(200).json({
-        success: true,
-        data,
-    });
-});
-
 export const getAllProsesAlasHak = asyncHandler(async (req, res, next) => {
-    const { currentpage, limit } = req.query;
+    const { currentpage, limit } = req.matchedData;
 
     const { data, _metadata } = await prosesService.getAll(
         Number(currentpage),
@@ -94,10 +91,11 @@ export const getAllProsesAlasHak = asyncHandler(async (req, res, next) => {
 });
 
 export const searchByDate = asyncHandler(async (req, res, next) => {
-    const { currentpage, limit, from, to } = req.query;
-    const { data, _metadata } = await prosesService.searchByDate(
+    const { currentpage, limit, from, to, number = null } = req.matchedData;
+    const { data, _metadata } = await prosesService.search(
         from,
         to,
+        number,
         Number(currentpage),
         Number(limit),
     );
@@ -118,7 +116,7 @@ export const getByNoSurat = asyncHandler(async (req, res, next) => {
 });
 
 export const getClientRoles = asyncHandler(async (req, res, next) => {
-    const { name } = req.query;
+    const { name } = req.matchedData;
     const roles = await prosesService.getClientRoles(name);
 
     res.status(200).json({ success: true, data: roles });

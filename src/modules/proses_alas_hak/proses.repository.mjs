@@ -80,10 +80,24 @@ export async function getAll(limit, offset) {
     }
 }
 
-export async function searchByDate(limit, offset, from, to, no_surat) {
+/**
+ *
+ * @param {Number} limit
+ * @param {Number} offset
+ * @param {String} from
+ * @param {String} to
+ * @param {String} number
+ * @returns
+ */
+export async function searchByDate(limit, offset, from, to, number) {
     try {
         const data = await db("proses_alas_hak")
             .whereBetween("tgl_surat", [from, to])
+            .modify(function (queryBuiler) {
+                if (number) {
+                    queryBuiler.andWhere("no_surat", "like", `${number}%`);
+                }
+            })
             .select(["id", "no_surat", "tgl_surat"])
             .limit(limit)
             .offset(offset);
