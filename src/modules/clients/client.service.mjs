@@ -140,7 +140,6 @@ export async function searchClient(keyword, limit, currentpage) {
             limit,
             offset,
         );
-        console.log(data);
         const clients = jsonHelper.destructureAddressesDetails(data);
         const _metadata = jsonHelper.paginationMetadata(
             "clients/search",

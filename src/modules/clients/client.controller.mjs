@@ -9,24 +9,20 @@ export const addClient = asyncHandler(async (req, res, next) => {
 });
 
 export const getClient = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    if (!id) return next(new ExpressError("Id is undefined"));
+    const { id } = req.matchedData;
     const client = await clientService.getClient(id);
     res.status(200).json({ success: true, data: client });
 });
 
 export const deleteClient = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    if (!id) return next(new Error("Id is undefined"));
+    const { id } = req.matchedData;
     await clientService.removeClient(id);
     res.status(200).json({ success: true, msg: "User deleted successfully" });
 });
 
 export const updateClientData = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    if (!id) return next(new ExpressError("Id is undefined"));
-
-    await clientService.updateClientData(req.matchedData, id);
+    const { id, ...data } = req.matchedData;
+    await clientService.updateClientData(id, data);
 
     res.status(200).json({ success: true, msg: "Client updated successfully" });
 });
@@ -49,7 +45,7 @@ export const getAllClients = asyncHandler(async (req, res, next) => {
  * Limit Offset based pagination
  */
 export const getAllClientsLimitOffset = asyncHandler(async (req, res, next) => {
-    const { currentpage, limit } = req.query;
+    const { currentpage, limit } = req.matchedData;
 
     const { clients, _metadata } = await clientService.getAllClientsLimitOffset(
         Number(limit),
@@ -64,7 +60,7 @@ export const getAllClientsLimitOffset = asyncHandler(async (req, res, next) => {
 });
 
 export const searchClient = asyncHandler(async (req, res, next) => {
-    const { currentpage, limit, keyword } = req.query;
+    const { currentpage, limit, keyword } = req.matchedData;
 
     const { clients, _metadata } = await clientService.searchClient(
         keyword,
@@ -79,10 +75,7 @@ export const searchClient = asyncHandler(async (req, res, next) => {
 });
 
 export const getAlasHak = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    const { currentpage, limit } = req.query;
-    if (!id) return next(new ExpressError("Id is undefined"));
-
+    const { id, currentpage, limit } = req.matchedData;
     const { alas_hak, _metadata } = await clientService.getAlasHak(
         id,
         Number(limit),

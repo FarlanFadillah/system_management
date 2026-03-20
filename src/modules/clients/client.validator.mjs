@@ -34,3 +34,12 @@ export const patchClientValidationRules = [
     validator.numericalOptional("rw"),
     validator.mobilePhoneOptional("phone_number"),
 ];
+
+export const IDValidationRules = [validator.numericalRequired("id")];
+
+export const paginationValidationRules = [
+    validator.numericalRequired("currentpage"),
+    validator.numericalRequired("limit"),
+];
+
+export const searchValidationRules = [validator.stringRequired("keyword")];
