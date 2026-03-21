@@ -28,19 +28,6 @@ export async function up(knex) {
             .references("id")
             .inTable("produk")
             .onDelete("SET NULL");
-        table
-            .integer("saksi1_id")
-            .unsigned()
-            .references("id")
-            .inTable("clients")
-            .onDelete("CASCADE");
-        table
-            .integer("saksi2_id")
-            .unsigned()
-            .references("id")
-            .inTable("clients")
-            .onDelete("CASCADE");
-
         // indexes
         table.index("proses_id");
         table.index("produk_id");

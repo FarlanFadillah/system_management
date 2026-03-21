@@ -15,12 +15,15 @@ export async function getBy(key, value) {
             .leftJoin("proses_clients as pc", "pc.pah_id", "p.id")
             .leftJoin("clients as cl", "cl.id", "pc.client_id")
             .leftJoin("client_roles as cr", "cr.id", "pc.roles_id")
+            .leftJoin("alas_hak as ah", "ah.id", "p.alas_hak_id")
             .leftJoin("produk", "produk.id", "p.produk_id")
             .select([
                 "p.id",
                 "p.no_surat",
                 "p.tgl_surat",
                 "produk.desc as produk",
+                "ah.no_alas_hak",
+                "ah.luas",
                 "cl.id as client_id",
                 "cl.first_name",
                 "cl.last_name",

@@ -11,7 +11,6 @@ export async function create(table, model) {
         const [id] = await db(table).insert(model);
         return id;
     } catch (error) {
-        console.log(error.code);
         if (error.code === "SQLITE_CONSTRAINT")
             throw new ExpressError("This data already exists", 409);
         else if (error.code === "ER_DUP_ENTRY") {
@@ -20,7 +19,8 @@ export async function create(table, model) {
                 409,
             );
         } else if (error.code === "ER_NO_REFERENCED_ROW_2") {
-            throw new ExpressError("a foreign key contstrain fails", 409);
+            console.log("DEBUG : ", error.constraint);
+            throw new ExpressError(error.sqlMessage, 422, error.code);
         }
         throw new ExpressError(error.message);
     }
@@ -121,9 +121,16 @@ export async function isRowExists(table, model) {
     }
 }
 
-export async function get(table, id) {
+/**
+ *
+ * @param {String} table
+ * @param {Number} id
+ * @param {Array} select
+ * @returns
+ */
+export async function get(table, id, select = ["*"]) {
     try {
-        return await db(table).where({ id }).first();
+        return await db(table).where({ id }).select(select).first();
     } catch (error) {
         throw new ExpressError(error.message);
     }

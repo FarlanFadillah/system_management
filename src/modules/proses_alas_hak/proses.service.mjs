@@ -135,7 +135,7 @@ export async function searchByNoSurat(value, currentpage, limit) {
             offset,
         );
         const _metadata = jsonHelper.paginationMetadata(
-            "proses/no-surat0-",
+            "proses/no-surat",
             currentpage,
             limit,
             count,
@@ -275,8 +275,16 @@ export async function getClientRoles(roles) {
  * @returns {Array}
  */
 function destructureData(data) {
-    const { first_name, last_name, client_id, roles_name, ...proses_data } =
-        data[0];
+    const {
+        first_name,
+        last_name,
+        client_id,
+        roles_name,
+        alas_hak_id,
+        no_alas_hak,
+        luas,
+        ...proses_data
+    } = data[0];
 
     const clients_roles = data.map((val) => {
         const { first_name, last_name, client_id, roles_name, ...dump } = val;
@@ -290,6 +298,11 @@ function destructureData(data) {
 
     return {
         ...proses_data,
+        alas_hak: {
+            id: alas_hak_id,
+            no_alas_hak,
+            luas,
+        },
         client_roles: clients_roles[0].id ? clients_roles : [],
     };
 }
