@@ -9,7 +9,8 @@
         "start": "cross-env NODE_ENV=development nodemon src/index.mjs",
         "makemigration": "cross-env NODE_ENV=development npx knex migrate:make --knexfile ./knexfile",
         "migrate": "cross-env NODE_ENV=development npx knex migrate:latest --knexfile ./knexfile",
-        "rollback": "cross-env NODE_ENV=development npx knex migrate:rollback --knexfile ./knexfile"
+        "rollback": "cross-env NODE_ENV=development npx knex migrate:rollback --knexfile ./knexfile",
+        "down": "cross-env NODE_ENV=development npx knex migrate:down --knexfile ./knexfile"
     },
     "keywords": [],
     "author": "",

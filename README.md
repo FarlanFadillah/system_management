@@ -1,6 +1,6 @@
-## 🏛️ System Management Law Office
+## 🏛️ System Management Notary Office
 
-**System Management Law Office** is a backend-focused REST API designed to manage law office operations such as client data, legal cases, land ownership (Alas Hak), and administrative regional hierarchy.
+**System Management Notary Office** is a backend-focused REST API designed to manage notary office operations such as client data, legal cases, land ownership (Alas Hak), and administrative regional hierarchy.
 
 This project is built using a **feature-based architecture**, where each business domain is modularized into its own isolated feature module, improving scalability, maintainability, and clarity.
 
@@ -104,6 +104,9 @@ DP_HOST=localhost
 
 Make sure to adjust the values based on your environment.
 
+Set the environment in `package.json` by defining `NODE_ENV=your_environment`.
+Ensure that a corresponding `.env` file exists for each environment (e.g., `.env.development`, `.env.production`).
+
 ---
 
 ### 4️⃣ Run Database Migration
@@ -114,7 +117,7 @@ or
 npm run migrate
 ```
 
-Fetch wilayah/address Database to your database
+Fetch wilayah/address and necessary data to your database
 
 Make sure to install MySQL tools on your device.
 
@@ -253,7 +256,7 @@ Authorization: Bearer your_jwt_token_here
 
 **GET** `/clients?currentpage=1&limit=10`
 
-Optional query:
+Search query:
 
 ```
 /clients/search?keyword=yourname&currentpage=1&limit=10
@@ -269,7 +272,7 @@ Optional query:
 
 ### Update Client
 
-**PUT** `/clients/:id`
+**PATCH** `/clients/:id`
 
 ---
 
@@ -294,14 +297,25 @@ Optional query:
     "luas": 125,
     "jor": "Ampang Gadang",
     "address_code": "13.06.07.2005",
-    "jenis_hak_id": 0,
+    "jenis_hak_id": 1,
     "ket": "Proses Pemecahan"
+}
+```
+
+Hints for jenis_hak_id:
+
+```
+{
+    "1" : "SHM"
+    "2"	: "SHGB"
+    "3"	: "SHGU"
+    "4"	: "SHT"
 }
 ```
 
 ---
 
-### Assign Owner to Alas Hak
+### Assign Owners to Alas Hak
 
 **POST** `/alas-hak/:id/owners`
 
@@ -311,23 +325,23 @@ Optional query:
 }
 ```
 
+### Remove the Owner
+
+**DELETE** `/alas-hak/:id/owners/:client_id`
+
 ### Get All Alas Hak with pagination
 
 **GET** `/alas-hak?currentpage=1&limit=10`
 
 Optional query:
-Search By no_alas_hak column
+Search By no_alas_hak
 
-```
-/alas-hak/search?keyword=no_alas_hak&currentpage=1&limit=10
-```
+**GET** `/alas-hak/search?keyword=no_alas_hak&currentpage=1&limit=10`
 
 Search By address_code column
 level = [kelurahan | kecamatan | kabupaten | provinsi]
 
-```
-/alas-hak/search?level=kelurahan&keyword=no_alas_hak&currentpage=1&limit=10
-```
+**GET** `/alas-hak/search?level=kelurahan&keyword=03040804102576&currentpage=1&limit=10`
 
 ---
 

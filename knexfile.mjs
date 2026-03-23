@@ -1,6 +1,6 @@
 import "./env.mjs";
 
-console.log(process.env.DB_CLIENT);
+console.log(process.env.DB_NAME);
 
 export default {
     development: {
@@ -16,6 +16,7 @@ export default {
         useNullAsDefault: true,
         migrations: {
             directory: "./src/migrations",
+            loadExtensions: [".mjs", ".js"],
         },
     },
     test: {

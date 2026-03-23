@@ -26,7 +26,7 @@ export function destructureAddressesDetails(arr) {
  * @param {Number} currentpage
  * @param {Number} limit
  * @param {Number} total
- * @param {String} additions
+ * @param {Array} additions
  * @returns {Object} return pagination metadata
  */
 export function paginationMetadata(

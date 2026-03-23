@@ -1,5 +1,4 @@
 import { asyncHandler } from "../../utils/asyncHandler.mjs";
-import { ExpressError } from "../../utils/custom.error.mjs";
 import * as alasHakService from "./alas_hak.service.mjs";
 
 export const addAlasHak = asyncHandler(async (req, res, next) => {
@@ -8,15 +7,16 @@ export const addAlasHak = asyncHandler(async (req, res, next) => {
     res.status(200).json({
         success: true,
         msg: "Alas Hak added successfully",
-        id,
+        data: {
+            id,
+        },
     });
 });
 
 export const updateAlasHak = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    if (!id) return next(new ExpressError("Invalid id"));
+    const { id, ...data } = req.matchedData;
 
-    await alasHakService.updateAlasHak(id, req.matchedData);
+    await alasHakService.updateAlasHak(id, data);
 
     res.status(200).json({
         success: true,
@@ -25,8 +25,7 @@ export const updateAlasHak = asyncHandler(async (req, res, next) => {
 });
 
 export const removeAlasHak = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    if (!id) return next(new ExpressError("Invalid id"));
+    const { id } = req.matchedData;
 
     await alasHakService.removeAlasHak(id);
 
@@ -37,15 +36,14 @@ export const removeAlasHak = asyncHandler(async (req, res, next) => {
 });
 
 export const getAlasHak = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    if (!id) return next(new ExpressError("Invalid id"));
+    const { id } = req.matchedData;
 
     const alas_hak = await alasHakService.getAlasHak(Number(id));
     res.status(200).json({ success: true, data: alas_hak });
 });
 
 export const getAllAlasHak = asyncHandler(async (req, res, next) => {
-    const { currentpage, limit } = req.query;
+    const { currentpage, limit } = req.matchedData;
 
     const { alas_hak, _metadata } = await alasHakService.getAllAlasHak(
         Number(limit),
@@ -59,7 +57,7 @@ export const getAllAlasHak = asyncHandler(async (req, res, next) => {
 });
 
 export const searchAlasHak = asyncHandler(async (req, res, next) => {
-    const { keyword, currentpage, limit, level } = req.query;
+    const { keyword, currentpage, limit, level } = req.matchedData;
 
     const { alas_hak, _metadata } = level
         ? await alasHakService.searchByAddressCode(
@@ -81,24 +79,29 @@ export const searchAlasHak = asyncHandler(async (req, res, next) => {
 });
 
 export const addAlasHakOwner = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    const { clients_id } = req.matchedData;
-    if (!id || isNaN(id)) return next(new ExpressError("Alas Hak Not found"));
-    const msg = await alasHakService.addAlasHakOwner(id, clients_id);
+    const { id, clients_id } = req.matchedData;
+    const { result } = await alasHakService.addAlasHakOwner(id, clients_id);
 
-    const req_failed = msg.length === clients_id.length;
     res.status(200).json({
-        success: req_failed ? false : true,
-        msg: req_failed
-            ? "Something went wrong"
-            : "Alas Hak Owners added successfully",
-        erros: msg,
+        success: true,
+        msg: "Alas Hak - Client relations processed",
+        data: result,
+    });
+});
+
+export const removeAlasHakOwners = asyncHandler(async (req, res, next) => {
+    const { id, client_id } = req.matchedData;
+
+    await alasHakService.removeAlasHakOwner(id, client_id);
+
+    res.status(200).json({
+        success: true,
+        msg: "Alas Hak - Client relations removed successfully",
     });
 });
 
 export const getAlasHakOwners = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    if (!id) return next(new ExpressError("Id is undefined"));
+    const { id } = req.matchedData;
 
     const data = await alasHakService.getOwners(id);
     res.status(200).json({ success: true, data });

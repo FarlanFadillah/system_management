@@ -1,5 +1,6 @@
 import { asyncHandler } from "../../utils/asyncHandler.mjs";
 import * as aktaService from "./akta.service.mjs";
+
 export const addAktaPPAT = asyncHandler(async (req, res, next) => {
     const id = await aktaService.create(req.matchedData);
     res.status(200).json({
@@ -10,7 +11,7 @@ export const addAktaPPAT = asyncHandler(async (req, res, next) => {
 });
 
 export const removeAktaPPAT = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
+    const { id } = req.matchedData;
     await aktaService.remove(id);
     res.status(200).json({
         success: true,
@@ -27,21 +28,31 @@ export const patchAktaPPAT = asyncHandler(async (req, res, next) => {
     });
 });
 
+export const getByID = asyncHandler(async (req, res, next) => {
+    const { id } = req.matchedData;
+    const data = await aktaService.getByID(id);
+    console.log(id);
+    res.status(200).json({
+        success: true,
+        data: data,
+    });
+});
+
 export const getAllAktaPPAT = asyncHandler(async (req, res, next) => {
     const { currentpage, limit } = req.query;
-    const data = await aktaService.getAll(
+    const { data, _metadata } = await aktaService.getAll(
+        Number(currentpage),
         Number(limit),
-        Number(currentpage) * Number(limit),
     );
     res.status(200).json({
         success: true,
-        length: data.length,
+        _metadata,
         data,
     });
 });
 
 export const searchByNomorAkta = asyncHandler(async (req, res, next) => {
-    const { value } = req.params;
+    const { value } = req.matchedData;
     const data = await aktaService.getAktaByNomorTahun(value);
     res.status(200).json({
         success: true,
@@ -51,16 +62,16 @@ export const searchByNomorAkta = asyncHandler(async (req, res, next) => {
 });
 
 export const getAktaPPATByDate = asyncHandler(async (req, res, next) => {
-    const { currentpage, limit, from, to } = req.query;
-    const data = await aktaService.getByDate(
+    const { currentpage, limit, from, to } = req.matchedData;
+    const { data, _metadata } = await aktaService.getByDate(
+        Number(currentpage),
         Number(limit),
-        Number(currentpage) * Number(limit),
         from,
         to,
     );
     res.status(200).json({
         success: true,
-        length: data.length,
+        _metadata,
         data,
     });
 });

@@ -53,6 +53,41 @@ export function numericalRequired(field) {
 /**
  *
  * @param {String} field
+ * @param {Number} min
+ * @param {Number} max
+ * @returns
+ */
+export function intRequired(field, min, max) {
+    const options = {};
+    if (min !== undefined) options.min = min;
+    if (max !== undefined) options.max = max;
+    return check(field)
+        .notEmpty()
+        .withMessage(`${field} can't be empty`)
+        .isInt(options)
+        .withMessage(`${field} must be an integer`);
+}
+
+/**
+ *
+ * @param {String} field
+ * @param {Number} min
+ * @param {Number} max
+ * @returns
+ */
+export function intOptional(field, min, max) {
+    const options = {};
+    if (min !== undefined) options.min = min;
+    if (max !== undefined) options.max = max;
+    return check(field)
+        .optional()
+        .isInt(options)
+        .withMessage(`${field} must be an integer`);
+}
+
+/**
+ *
+ * @param {String} field
  * @returns
  */
 export function mobilePhoneOptional(field) {

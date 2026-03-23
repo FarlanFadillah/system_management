@@ -10,7 +10,7 @@ import db from "../../dbs/db.mjs";
 //     "luas" : 125,
 //     "jor" : "Ampang Gadang",
 //     "address_code" : "13.06.07.2005",
-//     "jenis_alas_hak" : 0,
+//     "jenis_hak_id" : 0,
 //      "ket" : "Proses Pemecahan"
 // }
 

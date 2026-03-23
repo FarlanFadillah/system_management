@@ -48,32 +48,9 @@ export async function updateAlasHak(id, model) {
  */
 export async function getAlasHak(id) {
     try {
-        const alas_hak = await alasHakRepo.get(id);
-        const {
-            cl_first_name,
-            cl_id,
-            cl_last_name,
-            kelurahan,
-            kecamatan,
-            kabupaten,
-            provinsi,
-            ...data
-        } = alas_hak[0];
-
-        return {
-            ...data,
-            address: {
-                kelurahan,
-                kecamatan,
-                kabupaten,
-                provinsi,
-            },
-            owners: alas_hak.map((row) => ({
-                id: row.cl_id,
-                first_name: row.cl_first_name,
-                last_name: row.cl_last_name,
-            })),
-        };
+        const data = await alasHakRepo.get(id);
+        if (data.length <= 0) throw new ExpressError("Alas Hak not found", 404);
+        return destructureData(data);
     } catch (error) {
         throw error;
     }
@@ -176,22 +153,71 @@ export async function searchByAddressCode(level, keyword, limit, currentpage) {
  * @param {Array} clients_id
  */
 export async function addAlasHakOwner(alas_hak_id, clients_id) {
-    let messages = [];
+    let result = {
+        id: alas_hak_id,
+        created: [],
+        skipped: [],
+        invalid: [],
+    };
     try {
         if (!(await mainRepo.isExists("alas_hak", alas_hak_id)))
             throw new ExpressError("Alas Hak not found");
-        for (let val of [...clients_id]) {
-            const exists = await mainRepo.isExists("clients", val);
-            if (exists) {
-                await mainRepo.create("alas_hak_clients", {
-                    alas_hak_id,
-                    client_id: val,
+        for (const cl_id of clients_id) {
+            if (!(await mainRepo.isExists("clients", cl_id))) {
+                result.invalid.push({
+                    client_id: cl_id,
+                    reason: "CLIENT_NOT_FOUND",
                 });
-            } else {
-                messages.push(`Clients with id ${val} does not exists`);
+                continue;
+            } else if (
+                await mainRepo.isRowExists("alas_hak_clients", {
+                    alas_hak_id: alas_hak_id,
+                    client_id: cl_id,
+                })
+            ) {
+                result.skipped.push({
+                    clients_id: cl_id,
+                    reason: "ENTRY_ALREDY_EXISTS",
+                });
+                continue;
             }
+            await mainRepo.create("alas_hak_clients", {
+                alas_hak_id,
+                client_id: cl_id,
+            });
+
+            result.created.push({ clients_id: cl_id, reason: "SUCCESS" });
         }
-        return messages;
+        return { result };
+    } catch (error) {
+        throw error;
+    }
+}
+
+/**
+ *
+ * @param {Number} alas_hak_id
+ * @param {Number} client_id
+ */
+export async function removeAlasHakOwner(alas_hak_id, client_id) {
+    try {
+        if (!(await mainRepo.isExists("alas_hak", alas_hak_id)))
+            throw new ExpressError("Alas Hak not found");
+        else if (!(await mainRepo.isExists("clients", client_id))) {
+            throw new ExpressError("Client not found");
+        } else if (
+            !(await mainRepo.isRowExists("alas_hak_clients", {
+                alas_hak_id: alas_hak_id,
+                client_id,
+            }))
+        ) {
+            throw new ExpressError("Alas Hak - Client relations not found");
+        }
+
+        await mainRepo.removeWhere("alas_hak_clients", {
+            alas_hak_id,
+            client_id,
+        });
     } catch (error) {
         throw error;
     }
@@ -208,4 +234,36 @@ export async function getOwners(id) {
     } catch (error) {
         throw error;
     }
+}
+
+// HELPER
+
+function destructureData(data) {
+    const {
+        cl_first_name,
+        cl_id,
+        cl_last_name,
+        kelurahan,
+        kecamatan,
+        kabupaten,
+        provinsi,
+        ...alas_hak
+    } = data[0];
+
+    const owners = data.map((row) => ({
+        id: row.cl_id,
+        first_name: row.cl_first_name,
+        last_name: row.cl_last_name,
+    }));
+
+    return {
+        ...alas_hak,
+        address: {
+            kelurahan,
+            kecamatan,
+            kabupaten,
+            provinsi,
+        },
+        owners: owners[0].id ? owners : [],
+    };
 }
