@@ -2,7 +2,9 @@ import * as validator from "../../utils/validators.mjs";
 
 export const addAlasHakValidationRules = [
     validator.stringRequired("no_alas_hak"),
-    ["no_surat_ukur", "jor", "ket"].map(validator.stringOptional),
+    validator.stringOptional("no_surat_ukur"),
+    validator.stringOptional("jor"),
+    validator.stringOptional("ket"),
     validator.dateOptional("tgl_alas_hak"),
     validator.dateOptional("tgl_surat_ukur"),
     validator.stringOptional("address_code"),
@@ -12,7 +14,9 @@ export const addAlasHakValidationRules = [
 
 export const updateAlasHakValidationRules = [
     validator.stringOptional("no_alas_hak"),
-    ["no_surat_ukur", "jor", "ket"].map(validator.stringOptional),
+    validator.stringOptional("no_surat_ukur"),
+    validator.stringOptional("jor"),
+    validator.stringOptional("ket"),
     validator.dateOptional("tgl_alas_hak"),
     validator.dateOptional("tgl_surat_ukur"),
     validator.stringOptional("address_code"),
