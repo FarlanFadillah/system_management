@@ -1,13 +1,20 @@
-import { check, validationResult } from "express-validator";
+import { body, check, param, query, validationResult } from "express-validator";
 import db from "../dbs/db.mjs";
 import { ExpressError } from "./custom.error.mjs";
 
+const validator = {
+    body,
+    param,
+    query,
+};
+
 /**
  *
  * @param {String} field
+ * @param {"body" | "param" | "query"} location
  */
-export function stringRequired(field) {
-    return check(field)
+export function stringRequired(field, location = "body") {
+    return validator[location](field)
         .trim()
         .notEmpty()
         .withMessage(`${field} can't be empty`)
@@ -18,9 +25,10 @@ export function stringRequired(field) {
 /**
  *
  * @param {String} field
+ * @param {"body" | "param" | "query"} location
  */
-export function stringOptional(field) {
-    return check(field)
+export function stringOptional(field, location = "body") {
+    return validator[location](field)
         .optional()
         .trim()
         .matches(/^[^<>]*$/)
@@ -30,9 +38,10 @@ export function stringOptional(field) {
 /**
  *
  * @param {String} field
+ * @param {"body" | "param" | "query"} location
  */
-export function numericalOptional(field) {
-    return check(field)
+export function numericalOptional(field, location = "body") {
+    return validator[location](field)
         .optional()
         .isNumeric()
         .withMessage(`${field} must be a numeric`);
@@ -41,9 +50,10 @@ export function numericalOptional(field) {
 /**
  *
  * @param {String} field
+ * @param {"body" | "param" | "query"} location
  */
-export function numericalRequired(field) {
-    return check(field)
+export function numericalRequired(field, location = "body") {
+    return validator[location](field)
         .notEmpty()
         .withMessage(`${field} can't be empty`)
         .isNumeric()
@@ -53,15 +63,16 @@ export function numericalRequired(field) {
 /**
  *
  * @param {String} field
+ * @param {"body" | "param" | "query"} location
  * @param {Number} min
  * @param {Number} max
  * @returns
  */
-export function intRequired(field, min, max) {
+export function intRequired(field, location = "body", min, max) {
     const options = {};
     if (min !== undefined) options.min = min;
     if (max !== undefined) options.max = max;
-    return check(field)
+    return validator[location](field)
         .notEmpty()
         .withMessage(`${field} can't be empty`)
         .isInt(options)
@@ -71,15 +82,16 @@ export function intRequired(field, min, max) {
 /**
  *
  * @param {String} field
+ * @param {"body" | "param" | "query"} location
  * @param {Number} min
  * @param {Number} max
  * @returns
  */
-export function intOptional(field, min, max) {
+export function intOptional(field, location = "body", min, max) {
     const options = {};
     if (min !== undefined) options.min = min;
     if (max !== undefined) options.max = max;
-    return check(field)
+    return validator[location](field)
         .optional()
         .isInt(options)
         .withMessage(`${field} must be an integer`);
@@ -88,10 +100,11 @@ export function intOptional(field, min, max) {
 /**
  *
  * @param {String} field
+ * @param {"body" | "param" | "query"} location
  * @returns
  */
-export function mobilePhoneOptional(field) {
-    return check(field)
+export function mobilePhoneOptional(field, location = "body") {
+    return validator[location](field)
         .optional()
         .isMobilePhone()
         .withMessage(`Invalid ${field} value`);
@@ -100,10 +113,11 @@ export function mobilePhoneOptional(field) {
 /**
  *
  * @param {String} field
+ * @param {"body" | "param" | "query"} location
  * @returns
  */
-export function mobilePhoneRequired(field) {
-    return check(field)
+export function mobilePhoneRequired(field, location = "body") {
+    return validator[location](field)
         .notEmpty()
         .withMessage(`${field} can't be empty`)
         .isMobilePhone()
@@ -113,10 +127,11 @@ export function mobilePhoneRequired(field) {
 /**
  *
  * @param {String} field
+ * @param {"body" | "param" | "query"} location
  * @returns
  */
-export function emailOptional(field = "email") {
-    return check(field)
+export function emailOptional(field = "email", location = "body") {
+    return validator[location](field)
         .optional()
         .isEmail()
         .withMessage("Invalid email address")
@@ -126,10 +141,11 @@ export function emailOptional(field = "email") {
 /**
  *
  * @param {String} field
+ * @param {"body" | "param" | "query"} location
  * @returns
  */
-export function emailRequired(field = "email") {
-    return check(field)
+export function emailRequired(field = "email", location = "body") {
+    return validator[location](field)
         .notEmpty()
         .withMessage(`${field} can't be empty`)
         .isEmail()
@@ -140,28 +156,37 @@ export function emailRequired(field = "email") {
 /**
  *
  * @param {String} field
+ * @param {"body" | "param" | "query"} location
  * @returns
  */
-export function dateOptional(field) {
-    return check(field).optional().isDate().withMessage("Invalid date");
+export function dateOptional(field, location = "body") {
+    return validator[location](field)
+        .optional()
+        .isDate()
+        .withMessage("Invalid date");
 }
 
 /**
  *
  * @param {String} field
+ * @param {"body" | "param" | "query"} location
  * @returns
  */
-export function dateRequired(field) {
-    return check(field).optional().isDate().withMessage("Invalid date");
+export function dateRequired(field, location = "body") {
+    return validator[location](field)
+        .optional()
+        .isDate()
+        .withMessage("Invalid date");
 }
 
 /**
  *
  * @param {String} field
+ * @param {"body" | "param" | "query"} location
  * @returns
  */
-export function addressRequired(field) {
-    return check(field).custom(async (value) => {
+export function addressRequired(field, location = "body") {
+    return validator[location](field).custom(async (value) => {
         const address = await db("kelurahan").where({ id: value });
         if (address.length <= 0) throw new Error("Invalid address code");
     });
@@ -170,10 +195,11 @@ export function addressRequired(field) {
 /**
  *
  * @param {String} field
+ * @param {"body" | "param" | "query"} location
  * @returns
  */
-export function addressOptional(field) {
-    return check(field)
+export function addressOptional(field, location = "body") {
+    return validator[location](field)
         .optional()
         .custom(async (value) => {
             const address = await db("kelurahan").where({ id: value });
@@ -184,10 +210,11 @@ export function addressOptional(field) {
 /**
  *
  * @param {String} field
+ * @param {"body" | "param" | "query"} location
  * @returns
  */
-export function arrayOfNumberRequired(field) {
-    return check(field)
+export function arrayOfNumberRequired(field, location = "body") {
+    return validator[location](field)
         .notEmpty()
         .withMessage(`${field} can't be empty`)
         .isArray({ min: 1 })
@@ -204,8 +231,15 @@ export function arrayOfNumberRequired(field) {
         });
 }
 
-export function stringIncludeRequired(field, arr) {
-    return check(field)
+/**
+ *
+ * @param {String} field
+ * @param {Array} arr
+ * @param {"body" | "param" | "query"} location
+ * @returns
+ */
+export function stringIncludeRequired(field, arr, location = "body") {
+    return validator[location](field)
         .notEmpty()
         .withMessage(`${field} can't empty`)
         .custom(async (value, { req }) => {
@@ -214,8 +248,15 @@ export function stringIncludeRequired(field, arr) {
         });
 }
 
-export function stringIncludeOptional(field, arr) {
-    return check(field)
+/**
+ *
+ * @param {String} field
+ * @param {Array} arr
+ * @param {"body" | "param" | "query"} location
+ * @returns
+ */
+export function stringIncludeOptional(field, arr, location = "body") {
+    return validator[location](field)
         .optional()
         .custom(async (value, { req }) => {
             if (!arr.includes(value))

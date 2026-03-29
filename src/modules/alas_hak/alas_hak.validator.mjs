@@ -21,15 +21,15 @@ export const updateAlasHakValidationRules = [
 ];
 
 export const searchAlasHakValidationRules = [
-    validator.stringRequired("keyword"),
-    validator.stringOptional("level"),
+    validator.stringRequired("keyword", "query"),
+    validator.stringOptional("level", "query"),
 ];
 
-export const IDValidatorRules = [validator.numericalRequired("id")];
+export const IDValidatorRules = [validator.numericalRequired("id", "param")];
 
 export const paginationValidationRules = [
-    validator.numericalRequired("currentpage"),
-    validator.numericalRequired("limit"),
+    validator.numericalRequired("currentpage", "query"),
+    validator.numericalRequired("limit", "query"),
 ];
 
 export const addAlasHakOwnerValidationRules = [
@@ -37,6 +37,6 @@ export const addAlasHakOwnerValidationRules = [
 ];
 
 export const removeAlasHakOwnerValidationRules = [
-    validator.numericalRequired("id"),
-    validator.numericalRequired("client_id"),
+    validator.numericalRequired("id", "param"),
+    validator.numericalRequired("client_id", "param"),
 ];

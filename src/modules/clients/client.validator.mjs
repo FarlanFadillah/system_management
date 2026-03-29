@@ -35,11 +35,13 @@ export const patchClientValidationRules = [
     validator.mobilePhoneOptional("phone_number"),
 ];
 
-export const IDValidationRules = [validator.numericalRequired("id")];
+export const IDValidationRules = [validator.numericalRequired("id", "param")];
 
 export const paginationValidationRules = [
-    validator.numericalRequired("currentpage"),
-    validator.numericalRequired("limit"),
+    validator.numericalRequired("currentpage", "query"),
+    validator.numericalRequired("limit", "query"),
 ];
 
-export const searchValidationRules = [validator.stringRequired("keyword")];
+export const searchValidationRules = [
+    validator.stringRequired("keyword", "query"),
+];

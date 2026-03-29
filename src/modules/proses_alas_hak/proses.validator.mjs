@@ -25,20 +25,24 @@ export const clientRolesValidationRules = [
 ];
 
 export const removeClientRolesValidationRules = [
-    validator.numericalRequired("client_id"),
+    validator.numericalRequired("client_id", "param"),
 ];
 
 export const paginationValidationRules = [
-    validator.numericalRequired("currentpage"),
-    validator.numericalRequired("limit"),
+    validator.numericalRequired("currentpage", "query"),
+    validator.numericalRequired("limit", "query"),
 ];
 
 export const searchValidationRules = [
-    validator.dateRequired("from"),
-    validator.dateRequired("to"),
-    validator.stringOptional("number"),
+    validator.dateRequired("from", "query"),
+    validator.dateRequired("to", "query"),
+    validator.stringOptional("number", "query"),
 ];
 
-export const nomorSuratValidationRules = [validator.stringRequired("value")];
+export const nomorSuratValidationRules = [
+    validator.stringRequired("value", "param"),
+];
 
-export const rolesNameValidationRules = [validator.stringRequired("name")];
+export const rolesNameValidationRules = [
+    validator.stringRequired("name", "query"),
+];

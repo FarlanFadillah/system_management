@@ -34,4 +34,6 @@ export const updateAktaValidationRules = [
     validator.numericalOptional("saksi2_id"),
 ];
 
-export const numberAktaValidationRules = [validator.stringRequired("value")];
+export const numberAktaValidationRules = [
+    validator.stringRequired("value", "param"),
+];
