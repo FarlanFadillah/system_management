@@ -34,6 +34,11 @@ export function generateCacheKey(resource) {
  * @param {import("express").NextFunction} next
  */
 export function cacheMiddleware(req, res, next) {
+    if (!req.cache || !req.cache.key) {
+        debug("No cache key found, skipping cache");
+        return next();
+    }
+
     const key = req.cache.key;
     const data = cache.get(key);
     if (data) {
@@ -42,10 +47,12 @@ export function cacheMiddleware(req, res, next) {
     }
 
     debug("CACHE MISS");
+
     const resJson = res.json;
     res.json = function (data) {
-        cache.set(key, data, process.env.CACHE_TTL || 60);
+        cache.set(key, data, Number(process.env.CACHE_TTL) || 60);
         return resJson.call(this, data);
     };
+    // mark as wrapped
     next();
 }

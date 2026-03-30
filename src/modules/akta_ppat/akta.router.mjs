@@ -15,6 +15,7 @@ import {
     searchByNomorAkta,
 } from "./akta.controller.mjs";
 import { validateToken } from "../../middlewares/jwt.middleware.mjs";
+import * as cache from "../../middlewares/caching.middleware.mjs";
 import {
     dateRangeValidationRules,
     IDValidationRules,
@@ -27,12 +28,20 @@ router.use(validateToken);
 router
     .route("/")
     .post(...createAktaValidationRules, validate, addAktaPPAT)
-    .get(...paginationValidationRules, validate, getAllAktaPPAT);
+    .get(
+        ...paginationValidationRules,
+        validate,
+        cache.generateCacheKey("akta-ppat"),
+        cache.cacheMiddleware,
+        getAllAktaPPAT,
+    );
 
 router.get(
     "/nomor-akta/:value",
     ...numberAktaValidationRules,
     validate,
+    cache.generateCacheKey("akta-ppat"),
+    cache.cacheMiddleware,
     searchByNomorAkta,
 );
 router.get(
@@ -40,12 +49,20 @@ router.get(
     ...paginationValidationRules,
     ...dateRangeValidationRules,
     validate,
+    cache.generateCacheKey("akta-ppat"),
+    cache.cacheMiddleware,
     getAktaPPATByDate,
 );
 
 router
     .route("/:id")
-    .get(...IDValidationRules, validate, getByID)
+    .get(
+        ...IDValidationRules,
+        validate,
+        cache.generateCacheKey("akta-ppat"),
+        cache.cacheMiddleware,
+        getByID,
+    )
     .patch(
         ...IDValidationRules,
         ...updateAktaValidationRules,

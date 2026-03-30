@@ -1,8 +1,12 @@
 import "../env.mjs";
-console.log(process.env.NODE_ENV);
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";
+
+process.on("uncaughtException", console.error);
+process.on("unhandledRejection", console.error);
+
+const PORT = process.env.PORT || 3030;
 
 // routes
 import authRouter from "./modules/auth/auth.router.mjs";
@@ -30,6 +34,24 @@ app.use("/api/v1/proses", prosesRouter);
 app.use("/api/v1/akta-ppat", aktaRouter);
 app.use(globalErrorHandler);
 
-app.listen(process.env.PORT, (error) => {
-    console.log(`Server listening on http://localhost:${process.env.PORT}`);
+const server = app.listen(PORT, (error) => {
+    if (error) console.log(error);
+    else console.log(`Server listening on http://localhost:${PORT}`);
 });
+
+// proper server shutdown function
+function shutdown() {
+    console.log("Shuting down server...");
+    server.close((err) => {
+        if (err) console.log(err);
+        console.log("Server closed");
+        process.exit(0);
+    });
+}
+
+// signal interupt
+process.on("SIGINT", shutdown);
+// signal terminate
+process.on("SIGTERM", shutdown);
+// signal user defined
+process.on("SIGUSR2", shutdown);
