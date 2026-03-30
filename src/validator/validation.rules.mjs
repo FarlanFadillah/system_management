@@ -1,6 +1,6 @@
 import * as validator from "../utils/validators.mjs";
 
-export const IDValidationRules = [validator.numericalRequired("id")];
+export const IDValidationRules = [validator.numericalRequired("id", "param")];
 
 export const paginationValidationRules = [
     validator.intRequired("currentpage", "query", 1),

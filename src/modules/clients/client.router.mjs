@@ -18,6 +18,7 @@ import {
 } from "./client.validator.mjs";
 import { validateToken } from "../../middlewares/jwt.middleware.mjs";
 import { validate } from "../../middlewares/validator.middleware.mjs";
+import * as cache from "../../middlewares/caching.middleware.mjs";
 
 const router = express.Router();
 router.use(validateToken);
@@ -25,19 +26,33 @@ router.use(validateToken);
 router
     .route("/")
     .post(...createClientValidationRules, validate, addClient)
-    .get(...paginationValidationRules, validate, getAllClientsLimitOffset);
+    .get(
+        ...paginationValidationRules,
+        validate,
+        cache.generateCacheKey("clients"),
+        cache.cacheMiddleware,
+        getAllClientsLimitOffset,
+    );
 
 router.get(
     "/search",
     ...paginationValidationRules,
     ...searchValidationRules,
     validate,
+    cache.generateCacheKey("clients"),
+    cache.cacheMiddleware,
     searchClient,
 );
 
 router
     .route("/:id")
-    .get(...IDValidationRules, validate, getClient)
+    .get(
+        ...IDValidationRules,
+        validate,
+        cache.generateCacheKey("clients"),
+        cache.cacheMiddleware,
+        getClient,
+    )
     .delete(...IDValidationRules, validate, deleteClient)
     .patch(
         ...IDValidationRules,
@@ -57,6 +72,8 @@ router
         ...IDValidationRules,
         ...paginationValidationRules,
         validate,
+        cache.generateCacheKey("clients"),
+        cache.cacheMiddleware,
         getAlasHak,
     );
 

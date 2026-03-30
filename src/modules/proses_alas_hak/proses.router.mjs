@@ -25,6 +25,7 @@ import {
 } from "./proses.validator.mjs";
 import { validate } from "../../middlewares/validator.middleware.mjs";
 import { validateToken } from "../../middlewares/jwt.middleware.mjs";
+import * as cache from "../../middlewares/caching.middleware.mjs";
 
 const router = express.Router();
 
@@ -32,23 +33,39 @@ router.use(validateToken);
 router
     .route("/")
     .post(...createProsesValidationRules, validate, createProsesAlasHak)
-    .get(...paginationValidationRules, validate, getAllProsesAlasHak);
+    .get(
+        ...paginationValidationRules,
+        validate,
+        cache.generateCacheKey("proses"),
+        cache.cacheMiddleware,
+        getAllProsesAlasHak,
+    );
 
 router.get(
     "/search",
     ...paginationValidationRules,
     ...searchValidationRules,
     validate,
+    cache.generateCacheKey("proses"),
+    cache.cacheMiddleware,
     searchByDate,
 );
 router.get(
     "/no-surat/:value",
     ...nomorSuratValidationRules,
     validate,
+    cache.generateCacheKey("proses"),
+    cache.cacheMiddleware,
     getByNoSurat,
 );
 
-router.get("/roles", ...rolesNameValidationRules, validate, getClientRoles);
+router.get(
+    "/roles",
+    ...rolesNameValidationRules,
+    validate,
+    cache.generateCacheKey("proses"),
+    getClientRoles,
+);
 
 router
     .route("/:id")
@@ -60,7 +77,13 @@ router
         update,
     )
     .put(...IDValidationRules, ...createProsesValidationRules, validate, update)
-    .get(...IDValidationRules, validate, getProsesAlasHak);
+    .get(
+        ...IDValidationRules,
+        validate,
+        cache.generateCacheKey("proses"),
+        cache.cacheMiddleware,
+        getProsesAlasHak,
+    );
 
 router
     .route("/:id/clients")
