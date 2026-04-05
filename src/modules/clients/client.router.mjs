@@ -1,80 +1,68 @@
 import express from "express";
-import {
-    addClient,
-    deleteClient,
-    updateClientData,
-    searchClient,
-    getAllClients,
-    getClient,
-    getAlasHak,
-    getAllClientsLimitOffset,
-} from "./client.controller.mjs";
-import {
-    patchClientValidationRules,
-    createClientValidationRules,
-    paginationValidationRules,
-    IDValidationRules,
-    searchValidationRules,
-} from "./client.validator.mjs";
+import * as ctrl from "./client.controller.mjs";
+import * as rules from "./client.validator.mjs";
+import * as mainRules from "../../validator/validation.rules.mjs";
+import * as cache from "../../middlewares/caching.middleware.mjs";
 import { validateToken } from "../../middlewares/jwt.middleware.mjs";
 import { validate } from "../../middlewares/validator.middleware.mjs";
-import * as cache from "../../middlewares/caching.middleware.mjs";
+import { pagination } from "../../middlewares/pagination.middleware.mjs";
+import { keyBuilder } from "../../utils/cachekeybuilder.mjs";
 
 const router = express.Router();
 router.use(validateToken);
 
 router
     .route("/")
-    .post(...createClientValidationRules, validate, addClient)
+    .post(...rules.createClientValidationRules, validate, ctrl.addClient)
     .get(
-        ...paginationValidationRules,
+        ...mainRules.paginationValidationRules,
         validate,
-        cache.generateCacheKey("clients"),
-        cache.cacheMiddleware,
-        getAllClientsLimitOffset,
+        pagination,
+        cache.cachingMiddleware(keyBuilder("clients:list")),
+        ctrl.getAllClientsLimitOffset,
     );
 
 router.get(
     "/search",
-    ...paginationValidationRules,
-    ...searchValidationRules,
+    ...mainRules.paginationValidationRules,
+    ...rules.searchValidationRules,
     validate,
-    cache.generateCacheKey("clients"),
-    cache.cacheMiddleware,
-    searchClient,
+    pagination,
+    cache.cachingMiddleware(keyBuilder("clients:list")),
+    ctrl.searchClient,
 );
 
 router
     .route("/:id")
     .get(
-        ...IDValidationRules,
+        ...mainRules.IDValidationRules,
         validate,
-        cache.generateCacheKey("clients"),
-        cache.cacheMiddleware,
-        getClient,
+        cache.cachingMiddleware(keyBuilder("clients")),
+        ctrl.getClient,
     )
-    .delete(...IDValidationRules, validate, deleteClient)
+    .delete(...mainRules.IDValidationRules, validate, ctrl.deleteClient)
     .patch(
-        ...IDValidationRules,
-        ...patchClientValidationRules,
+        ...mainRules.IDValidationRules,
+        ...rules.patchClientValidationRules,
         validate,
-        updateClientData,
+        pagination,
+        ctrl.updateClientData,
     )
     .put(
-        ...IDValidationRules,
-        ...createClientValidationRules,
+        ...mainRules.IDValidationRules,
+        ...rules.createClientValidationRules,
         validate,
-        updateClientData,
+        ctrl.updateClientData,
     );
 router
     .route("/:id/alas-hak")
     .get(
-        ...IDValidationRules,
-        ...paginationValidationRules,
+        ...mainRules.IDValidationRules,
+        ...mainRules.paginationValidationRules,
         validate,
-        cache.generateCacheKey("clients"),
-        cache.cacheMiddleware,
-        getAlasHak,
+        pagination,
+        cache.cachingMiddleware(keyBuilder("clients:alas-hak:list")),
+        ctrl.getAlasHak,
     );
 
 export { router as default };

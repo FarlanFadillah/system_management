@@ -1,10 +1,9 @@
-import { matchedData } from "express-validator";
 import { asyncHandler } from "../../utils/asyncHandler.mjs";
 import * as clientService from "./client.service.mjs";
-import { ExpressError } from "../../utils/custom.error.mjs";
 
 export const addClient = asyncHandler(async (req, res, next) => {
     const id = await clientService.addClient(req.matchedData);
+
     res.json({ success: true, msg: "Client added successfully", data: { id } });
 });
 
@@ -17,6 +16,7 @@ export const getClient = asyncHandler(async (req, res, next) => {
 export const deleteClient = asyncHandler(async (req, res, next) => {
     const { id } = req.matchedData;
     await clientService.removeClient(id);
+
     res.status(200).json({ success: true, msg: "User deleted successfully" });
 });
 
@@ -60,8 +60,7 @@ export const getAllClientsLimitOffset = asyncHandler(async (req, res, next) => {
 });
 
 export const searchClient = asyncHandler(async (req, res, next) => {
-    const { currentpage, limit, keyword } = req.matchedData;
-
+    const { keyword, currentpage, limit } = req.matchedData;
     const { clients, _metadata } = await clientService.searchClient(
         keyword,
         Number(limit),

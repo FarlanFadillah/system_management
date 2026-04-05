@@ -11,12 +11,19 @@ export const register = asyncHandler(async (req, res, next) => {
 export const login = asyncHandler(async (req, res, next) => {
     const { username, password } = req.matchedData;
 
-    const match = await authService.verifyPassword(username, password);
+    const { user, match } = await authService.verifyPassword(
+        username,
+        password,
+    );
     if (!match) return next(new ExpressError("Password missmatch", 400));
 
     const token = await authService.generateToken({ username });
 
-    res.json({ success: true, token });
+    res.json({
+        success: true,
+        token,
+        user: { username: user.username, role: user.role },
+    });
 });
 
 export const updateUser = asyncHandler(async (req, res, next) => {
@@ -31,4 +38,12 @@ export const deleteUser = asyncHandler(async (req, res, next) => {
     if (!id) return next(new ExpressError("Invalid id", 400));
     await authService.deleteUser(id, req.user.username);
     res.status(200).json({ success: true, msg: "User deleted successfully" });
+});
+
+export const verifyToken = asyncHandler(async (req, res, next) => {
+    res.status(200).json({
+        success: true,
+        msg: "Token Valid",
+        user: req.user,
+    });
 });

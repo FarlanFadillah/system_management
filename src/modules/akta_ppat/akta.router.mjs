@@ -1,74 +1,55 @@
 import express from "express";
-import {
-    createAktaValidationRules,
-    numberAktaValidationRules,
-    updateAktaValidationRules,
-} from "./akta.validator.mjs";
-import { validate } from "../../middlewares/validator.middleware.mjs";
-import {
-    addAktaPPAT,
-    getAktaPPATByDate,
-    getAllAktaPPAT,
-    getByID,
-    patchAktaPPAT,
-    removeAktaPPAT,
-    searchByNomorAkta,
-} from "./akta.controller.mjs";
-import { validateToken } from "../../middlewares/jwt.middleware.mjs";
+import * as rules from "./akta.validator.mjs";
+import * as ctrl from "./akta.controller.mjs";
 import * as cache from "../../middlewares/caching.middleware.mjs";
-import {
-    dateRangeValidationRules,
-    IDValidationRules,
-    paginationValidationRules,
-} from "../../validator/validation.rules.mjs";
+import * as mainRules from "../../validator/validation.rules.mjs";
+import { validateToken } from "../../middlewares/jwt.middleware.mjs";
+import { validate } from "../../middlewares/validator.middleware.mjs";
+import { keyBuilder } from "../../utils/cachekeybuilder.mjs";
 
 const router = express.Router();
 
 router.use(validateToken);
 router
     .route("/")
-    .post(...createAktaValidationRules, validate, addAktaPPAT)
+    .post(...rules.createAktaValidationRules, validate, ctrl.addAktaPPAT)
     .get(
-        ...paginationValidationRules,
+        ...mainRules.paginationValidationRules,
         validate,
-        cache.generateCacheKey("akta-ppat"),
-        cache.cacheMiddleware,
-        getAllAktaPPAT,
+        cache.cachingMiddleware(keyBuilder("akta-ppat")),
+        ctrl.getAllAktaPPAT,
     );
 
 router.get(
     "/nomor-akta/:value",
-    ...numberAktaValidationRules,
+    ...rules.numberAktaValidationRules,
     validate,
-    cache.generateCacheKey("akta-ppat"),
-    cache.cacheMiddleware,
-    searchByNomorAkta,
+    cache.cachingMiddleware(keyBuilder("akta-ppat")),
+    ctrl.searchByNomorAkta,
 );
 router.get(
     "/search",
-    ...paginationValidationRules,
-    ...dateRangeValidationRules,
+    ...mainRules.paginationValidationRules,
+    ...mainRules.dateRangeValidationRules,
     validate,
-    cache.generateCacheKey("akta-ppat"),
-    cache.cacheMiddleware,
-    getAktaPPATByDate,
+    cache.cachingMiddleware(keyBuilder("akta-ppat:list")),
+    ctrl.getAktaPPATByDate,
 );
 
 router
     .route("/:id")
     .get(
-        ...IDValidationRules,
+        ...mainRules.IDValidationRules,
         validate,
-        cache.generateCacheKey("akta-ppat"),
-        cache.cacheMiddleware,
-        getByID,
+        cache.cachingMiddleware(keyBuilder("akta-ppat")),
+        ctrl.getByID,
     )
     .patch(
-        ...IDValidationRules,
-        ...updateAktaValidationRules,
+        ...mainRules.IDValidationRules,
+        ...rules.updateAktaValidationRules,
         validate,
-        patchAktaPPAT,
+        ctrl.patchAktaPPAT,
     )
-    .delete(...IDValidationRules, validate, removeAktaPPAT);
+    .delete(...mainRules.IDValidationRules, validate, ctrl.removeAktaPPAT);
 
 export { router as default };

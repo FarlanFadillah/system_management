@@ -1,27 +1,13 @@
 import express from "express";
-import {
-    addAlasHak,
-    addAlasHakOwner,
-    getAlasHak,
-    getAlasHakOwners,
-    getAllAlasHak,
-    removeAlasHak,
-    removeAlasHakOwners,
-    searchAlasHak,
-    updateAlasHak,
-} from "./alas_hak.controller.mjs";
-import { validateToken } from "../../middlewares/jwt.middleware.mjs";
-import {
-    addAlasHakOwnerValidationRules,
-    addAlasHakValidationRules,
-    IDValidatorRules,
-    paginationValidationRules,
-    removeAlasHakOwnerValidationRules,
-    searchAlasHakValidationRules,
-    updateAlasHakValidationRules,
-} from "./alas_hak.validator.mjs";
-import { validate } from "../../middlewares/validator.middleware.mjs";
+import * as ctrl from "./alas_hak.controller.mjs";
+import * as rules from "./alas_hak.validator.mjs";
+
+import * as mainRules from "../../validator/validation.rules.mjs";
 import * as cache from "../../middlewares/caching.middleware.mjs";
+import { validateToken } from "../../middlewares/jwt.middleware.mjs";
+import { validate } from "../../middlewares/validator.middleware.mjs";
+import { pagination } from "../../middlewares/pagination.middleware.mjs";
+import { keyBuilder } from "../../utils/cachekeybuilder.mjs";
 
 const router = express.Router();
 
@@ -29,70 +15,68 @@ router.use(validateToken);
 
 router
     .route("/")
-    .post(...addAlasHakValidationRules, validate, addAlasHak)
+    .post(...rules.addAlasHakValidationRules, validate, ctrl.addAlasHak)
     .get(
-        ...paginationValidationRules,
+        ...mainRules.paginationValidationRules,
         validate,
-        cache.generateCacheKey("alas-hak"),
-        cache.cacheMiddleware,
-        getAllAlasHak,
+        pagination,
+        cache.cachingMiddleware(keyBuilder("alas-hak:list")),
+        ctrl.getAllAlasHak,
     );
 
 router.get(
     "/search",
-    ...searchAlasHakValidationRules,
-    ...paginationValidationRules,
-    cache.generateCacheKey("alas-hak"),
-    cache.cacheMiddleware,
+    ...rules.searchAlasHakValidationRules,
+    ...mainRules.paginationValidationRules,
     validate,
-    searchAlasHak,
+    pagination,
+    cache.cachingMiddleware(keyBuilder("alas-hak:list")),
+    ctrl.searchAlasHak,
 );
 
 router
     .route("/:id")
     .patch(
-        ...IDValidatorRules,
-        ...updateAlasHakValidationRules,
+        ...mainRules.IDValidationRules,
+        ...rules.updateAlasHakValidationRules,
         validate,
-        updateAlasHak,
+        ctrl.updateAlasHak,
     )
     .put(
-        ...IDValidatorRules,
-        ...addAlasHakValidationRules,
+        ...mainRules.IDValidationRules,
+        ...rules.addAlasHakValidationRules,
         validate,
-        updateAlasHak,
+        ctrl.updateAlasHak,
     )
-    .delete(...IDValidatorRules, validate, removeAlasHak)
+    .delete(...mainRules.IDValidationRules, validate, ctrl.removeAlasHak)
     .get(
-        ...IDValidatorRules,
+        ...mainRules.IDValidationRules,
         validate,
-        cache.generateCacheKey("alas-hak"),
-        cache.cacheMiddleware,
-        getAlasHak,
+        cache.cachingMiddleware(keyBuilder("alas-hak")),
+        ctrl.getAlasHak,
     );
 
 router
     .route("/:id/owners")
     .post(
-        ...IDValidatorRules,
-        ...addAlasHakOwnerValidationRules,
+        ...mainRules.IDValidationRules,
+        ...rules.addAlasHakOwnerValidationRules,
         validate,
-        addAlasHakOwner,
+        ctrl.addAlasHakOwner,
     )
     .get(
-        ...IDValidatorRules,
+        ...mainRules.IDValidationRules,
         validate,
-        cache.generateCacheKey("alas-hak"),
-        cache.cacheMiddleware,
-        getAlasHakOwners,
+        cache.cachingMiddleware(keyBuilder("alas-hak:clients")),
+        ctrl.getAlasHakOwners,
     );
 
 router
     .route("/:id/owners/:client_id")
     .delete(
-        ...removeAlasHakOwnerValidationRules,
+        ...rules.removeAlasHakOwnerValidationRules,
         validate,
-        removeAlasHakOwners,
+        ctrl.removeAlasHakOwners,
     );
 
 export { router as default };

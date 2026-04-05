@@ -2,6 +2,7 @@ import { ExpressError } from "../../utils/custom.error.mjs";
 import * as clientRepo from "./client.repository.mjs";
 import * as mainRepo from "../../utils/main.repository.mjs";
 import * as jsonHelper from "../../helper/json.helper.mjs";
+import * as cache from "../../utils/cache.mjs";
 
 /**
  *
@@ -10,7 +11,10 @@ import * as jsonHelper from "../../helper/json.helper.mjs";
  */
 export async function addClient(model) {
     try {
-        return await mainRepo.create("clients", model);
+        const data = await mainRepo.create("clients", model);
+
+        cache.delByPattern(":clients:list:");
+        return data;
     } catch (error) {
         throw error;
     }
@@ -25,6 +29,9 @@ export async function removeClient(id) {
         const user = await clientRepo.getById(id);
         if (!user) throw new ExpressError("User does not exists");
         await mainRepo.remove("clients", id);
+
+        cache.delByPattern(`clients:id:${id}`);
+        cache.delByPattern("clients:list");
     } catch (error) {
         throw error;
     }
@@ -38,6 +45,9 @@ export async function removeClient(id) {
 export async function updateClientData(id, model) {
     try {
         await mainRepo.update("clients", id, model);
+
+        cache.delByPattern(`:clients:id:${id}`);
+        cache.delByPattern(":clients:list:");
     } catch (error) {
         throw error;
     }
@@ -51,7 +61,8 @@ export async function updateClientData(id, model) {
 export async function getClient(id) {
     try {
         const clients = await clientRepo.getById(Number(id));
-        if (!clients) return {};
+        if (!clients || clients.length <= 0)
+            throw new ExpressError("Client Not Found", 404);
 
         const {
             alas_hak_id, //  to remove the data
@@ -71,10 +82,12 @@ export async function getClient(id) {
                 kabupaten,
                 provinsi,
             },
-            alas_hak: clients.map((row) => ({
-                id: row.alas_hak_id,
-                no_alas_hak: row.no_alas_hak,
-            })),
+            alas_hak: clients[0].alas_hak_id
+                ? clients.map((row) => ({
+                      id: row.alas_hak_id,
+                      no_alas_hak: row.no_alas_hak,
+                  }))
+                : [],
         };
     } catch (error) {
         throw error;

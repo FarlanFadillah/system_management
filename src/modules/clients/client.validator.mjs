@@ -2,9 +2,13 @@ import * as validator from "../../utils/validators.mjs";
 
 export const createClientValidationRules = [
     validator
-        .stringRequired("nik")
+        .numericalRequired("nik")
         .isLength({ min: 16, max: 16 })
         .withMessage("NIK lenght must be 16 characters"),
+    validator
+        .numericalOptional("nkk")
+        .isLength({ min: 16, max: 16 })
+        .withMessage("NKK lenght must be 16 characters"),
     validator.stringRequired("first_name"),
     validator.stringOptional("last_name"),
     validator.dateRequired("birth_date"),
@@ -20,7 +24,14 @@ export const createClientValidationRules = [
 ];
 
 export const patchClientValidationRules = [
-    validator.numericalOptional("nik").isLength({ min: 16, max: 16 }),
+    validator
+        .numericalOptional("nik")
+        .isLength({ min: 16, max: 16 })
+        .withMessage("NIK lenght must be 16 characters"),
+    validator
+        .numericalOptional("nkk")
+        .isLength({ min: 16, max: 16 })
+        .withMessage("NKK lenght must be 16 characters"),
     validator.stringOptional("first_name"),
     validator.stringOptional("last_name"),
     validator.dateOptional("birth_date"),
@@ -33,13 +44,6 @@ export const patchClientValidationRules = [
     validator.numericalOptional("rt"),
     validator.numericalOptional("rw"),
     validator.mobilePhoneOptional("phone_number"),
-];
-
-export const IDValidationRules = [validator.numericalRequired("id", "param")];
-
-export const paginationValidationRules = [
-    validator.numericalRequired("currentpage", "query"),
-    validator.numericalRequired("limit", "query"),
 ];
 
 export const searchValidationRules = [

@@ -3,6 +3,7 @@ import * as mainRepo from "../../utils/main.repository.mjs";
 import * as aktaRepo from "./akta.repository.mjs";
 import * as jsonHelper from "../../helper/json.helper.mjs";
 import * as aktaHelper from "./akta.helper.mjs";
+import * as cache from "../../utils/cache.mjs";
 
 export async function create(data) {
     try {
@@ -10,12 +11,14 @@ export async function create(data) {
         const proses = await mainRepo.get("proses_alas_hak", proses_id, [
             "produk_id",
         ]);
-        console.log(proses);
         if (produk_id !== proses.produk_id)
             throw new ExpressError(
                 "Produk Akta does not match with Produk Proses",
             );
-        return await mainRepo.create("akta_ppat", data);
+        const data = await mainRepo.create("akta_ppat", data);
+
+        cache.delByPattern(":akta-ppat:list:");
+        return data;
     } catch (error) {
         throw error;
     }
@@ -24,6 +27,9 @@ export async function create(data) {
 export async function remove(id) {
     try {
         await mainRepo.remove("akta_ppat", id);
+
+        cache.delByPattern(`:akta-ppat:id:${id}`);
+        cache.delByPattern(":akta-ppat:list:");
     } catch (error) {
         throw error;
     }
@@ -32,6 +38,9 @@ export async function remove(id) {
 export async function update(id, data) {
     try {
         await mainRepo.update("akta_ppat", id, data);
+
+        cache.delByPattern(`:akta-ppat:id:${id}`);
+        cache.delByPattern(":akta-ppat:list:");
     } catch (error) {
         throw error;
     }

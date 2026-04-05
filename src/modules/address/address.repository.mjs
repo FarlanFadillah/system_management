@@ -64,3 +64,35 @@ export async function getProvinsi(name) {
         throw new ExpressError(error.message);
     }
 }
+
+export async function getAllProvinsi() {
+    try {
+        return await db("provinsi");
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
+}
+
+export async function getAllKabupaten(id_provinsi) {
+    try {
+        return await db("kabupaten").where({ id_provinsi: id_provinsi });
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
+}
+
+export async function getAllKecamatan(id_kabupaten) {
+    try {
+        return await db("kecamatan").where({ id_kabupaten: id_kabupaten });
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
+}
+
+export async function getAllKelurahan(id_kecamatan) {
+    try {
+        return await db("kelurahan").where("id_kecamatan", "=", id_kecamatan);
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
+}

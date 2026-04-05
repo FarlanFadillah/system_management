@@ -15,3 +15,42 @@ export const getKelurahan = asyncHandler(async (req, res, next) => {
     );
     res.status(200).json({ success: true, address: kelurahan });
 });
+
+export const getAllProvinsi = asyncHandler(async (req, res, next) => {
+    const data = await addressService.getAllProvinsi();
+
+    res.status(200).json({
+        success: true,
+        data,
+    });
+});
+
+export const getAllKabupaten = asyncHandler(async (req, res, next) => {
+    const { id_provinsi } = req.query;
+    const data = await addressService.getAllKabupaten(id_provinsi);
+
+    res.status(200).json({
+        success: true,
+        data,
+    });
+});
+
+export const getAllKecamatan = asyncHandler(async (req, res, next) => {
+    const { id_kabupaten } = req.query;
+    const data = await addressService.getAllKecamatan(id_kabupaten);
+
+    res.status(200).json({
+        success: true,
+        data,
+    });
+});
+
+export const getAllKelurahan = asyncHandler(async (req, res, next) => {
+    const { id_kecamatan } = req.query;
+    const data = await addressService.getAllKelurahan(id_kecamatan);
+
+    res.status(200).json({
+        success: true,
+        data,
+    });
+});

@@ -10,7 +10,7 @@ import db from "../../dbs/db.mjs";
 //     "luas" : 125,
 //     "jor" : "Ampang Gadang",
 //     "address_code" : "13.06.07.2005",
-//     "jenis_hak_id" : 0,
+//     "type_id" : 1,
 //      "ket" : "Proses Pemecahan"
 // }
 
@@ -28,10 +28,11 @@ export async function get(id) {
             .leftJoin("provinsi as prov", "prov.id", "kab.id_provinsi")
             .leftJoin("alas_hak_clients as ahc", "ahc.alas_hak_id", id)
             .leftJoin("clients as cl", "cl.id", "ahc.client_id")
-            .leftJoin("jenis_hak as j", "j.id", "ah.jenis_hak_id")
+            .leftJoin("types", "types.id", "ah.type_id")
             .where("ah.id", id)
             .select([
                 "ah.*",
+                "types.name as jenis_hak",
                 "kel.name as kelurahan",
                 "kec.name as kecamatan",
                 "kab.name as kabupaten",
@@ -58,14 +59,14 @@ export async function getAll(limit, offset) {
             .leftJoin("kecamatan as kec", "kec.id", "kel.id_kecamatan")
             .leftJoin("kabupaten as kab", "kab.id", "kec.id_kabupaten")
             .leftJoin("provinsi as prov", "prov.id", "kab.id_provinsi")
-            .leftJoin("jenis_hak as j", "j.id", "ah.jenis_hak_id")
+            .leftJoin("types", "types.id", "ah.type_id")
             .select([
                 "ah.id",
                 "ah.no_alas_hak",
                 "ah.luas",
                 "ah.tgl_alas_hak",
                 "ah.ket",
-                "j.desc as Jenis Hak",
+                "types.name as jenis_hak",
                 "kel.name as kelurahan",
                 "kec.name as kecamatan",
                 "kab.name as kabupaten",
@@ -103,14 +104,14 @@ export async function search(columns, keyword, limit, offset) {
             .leftJoin("kecamatan as kec", "kec.id", "kel.id_kecamatan")
             .leftJoin("kabupaten as kab", "kab.id", "kec.id_kabupaten")
             .leftJoin("provinsi as prov", "prov.id", "kab.id_provinsi")
-            .leftJoin("jenis_hak as j", "j.id", "ah.jenis_hak_id")
+            .leftJoin("types", "types.id", "ah.type_id")
             .select([
                 "ah.id",
                 "ah.no_alas_hak",
                 "ah.luas",
                 "ah.tgl_alas_hak",
                 "ah.ket",
-                "j.desc as Jenis Hak",
+                "types.name as jenis_hak",
                 "kel.name as kelurahan",
                 "kec.name as kecamatan",
                 "kab.name as kabupaten",
@@ -150,14 +151,14 @@ export async function getByAddressCode(address_code, limit, offset) {
             .leftJoin("kecamatan as kec", "kec.id", "kel.id_kecamatan")
             .leftJoin("kabupaten as kab", "kab.id", "kec.id_kabupaten")
             .leftJoin("provinsi as prov", "prov.id", "kab.id_provinsi")
-            .leftJoin("jenis_hak as j", "j.id", "ah.jenis_hak_id")
+            .leftJoin("types", "types.id", "ah.type_id")
             .select([
                 "ah.id",
                 "ah.no_alas_hak",
                 "ah.luas",
                 "ah.tgl_alas_hak",
                 "ah.ket",
-                "j.desc as Jenis Hak",
+                "types.name as jenis_hak",
                 "kel.name as kelurahan",
                 "kec.name as kecamatan",
                 "kab.name as kabupaten",
@@ -187,7 +188,7 @@ export async function getByAddressCode(address_code, limit, offset) {
 export async function searchMultipleKeywords(column, keyword, limit, offset) {
     try {
         return await db("alas_hak as a")
-            .leftJoin("jenis_hak as j", "j.id", "a.jenis_hak_id")
+            .leftJoin("types", "types.id", "ah.type_id")
             .select([
                 "a.id",
                 "a.no_alas_hak",
@@ -195,7 +196,7 @@ export async function searchMultipleKeywords(column, keyword, limit, offset) {
                 "a.tgl_alas_hak",
                 "a.address_code",
                 "a.ket",
-                "j.desc as Jenis Hak",
+                "types.name as jenis_hak",
             ])
             .where({ [column]: keyword })
             .limit(limit)

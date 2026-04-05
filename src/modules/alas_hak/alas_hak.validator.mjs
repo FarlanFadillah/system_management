@@ -8,7 +8,7 @@ export const addAlasHakValidationRules = [
     validator.dateOptional("tgl_alas_hak"),
     validator.dateOptional("tgl_surat_ukur"),
     validator.stringOptional("address_code"),
-    validator.numericalRequired("jenis_hak_id"),
+    validator.numericalRequired("type_id"),
     validator.numericalRequired("luas"),
 ];
 
@@ -20,20 +20,13 @@ export const updateAlasHakValidationRules = [
     validator.dateOptional("tgl_alas_hak"),
     validator.dateOptional("tgl_surat_ukur"),
     validator.stringOptional("address_code"),
-    validator.numericalOptional("jenis_hak_id"),
+    validator.numericalOptional("type_id"),
     validator.numericalOptional("luas"),
 ];
 
 export const searchAlasHakValidationRules = [
     validator.stringRequired("keyword", "query"),
     validator.stringOptional("level", "query"),
-];
-
-export const IDValidatorRules = [validator.numericalRequired("id", "param")];
-
-export const paginationValidationRules = [
-    validator.numericalRequired("currentpage", "query"),
-    validator.numericalRequired("limit", "query"),
 ];
 
 export const addAlasHakOwnerValidationRules = [

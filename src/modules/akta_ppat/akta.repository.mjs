@@ -13,20 +13,20 @@ export async function getByID(id) {
     try {
         return await db("akta_ppat as ap")
             .where("ap.id", id)
-            .leftJoin("proses_alas_hak as p", "p.id", "ap.proses_id")
-            .leftJoin("produk as prd", "prd.id", "ap.produk_id")
-            .leftJoin("alas_hak as ah", "ah.id", "p.alas_hak_id")
-            .leftJoin("proses_clients as pc", "pc.pah_id", "p.id")
-            .leftJoin("clients as cl", "cl.id", "pc.client_id")
+            .leftJoin("cases as c", "c.id", "ap.case_id")
+            .leftJoin("products as prd", "prd.id", "ap.prd_id")
+            .leftJoin("alas_hak as ah", "ah.id", "c.ah_id")
+            .leftJoin("case_clients as cc", "cc.case_id", "c.id")
+            .leftJoin("clients as cl", "cl.id", "cc.client_id")
             .select([
                 "ap.*",
                 "ah.id as alas_hak_id",
                 "ah.no_alas_hak",
                 "ah.luas",
-                "p.no_surat",
-                "p.tgl_surat",
-                "p.status",
-                "prd.desc",
+                "c.case_num",
+                "c.case_date",
+                "c.status",
+                "prd.name",
                 "cl.id as client_id",
                 "cl.first_name",
                 "cl.last_name",
@@ -39,17 +39,17 @@ export async function getByID(id) {
 export async function getAll(limit, offset) {
     try {
         const data = await db("akta_ppat as ap")
-            .leftJoin("proses_alas_hak as p", "p.id", "ap.proses_id")
-            .leftJoin("produk as prd", "prd.id", "ap.produk_id")
+            .leftJoin("cases as c", "c.id", "ap.case_id")
+            .leftJoin("products as prd", "prd.id", "ap.case_id")
             .select([
                 "ap.id",
                 "ap.no_akta",
                 "ap.tahun_akta",
                 "ap.tgl_akta",
-                "p.no_surat",
-                "p.tgl_surat",
-                "p.status",
-                "prd.desc",
+                "c.case_num",
+                "c.case_date",
+                "c.status",
+                "prd.name",
             ])
             .limit(limit)
             .offset(offset);
@@ -72,16 +72,16 @@ export async function getAktaByNomorTahun(number, year) {
         return await db("akta_ppat as ap")
             .where(`ap.no_akta`, "like", `%${number}%`)
             .andWhere("ap.tahun_akta", "like", `%${year}%`)
-            .leftJoin("proses_alas_hak as p", "p.id", "ap.proses_id")
-            .leftJoin("produk as prd", "prd.id", "ap.produk_id")
+            .leftJoin("cases as c", "c.id", "ap.case_id")
+            .leftJoin("products as prd", "prd.id", "ap.prd_id")
             .select([
                 "ap.no_akta",
                 "ap.tahun_akta",
                 "ap.tgl_akta",
-                "p.no_surat",
-                "p.tgl_surat",
-                "p.status",
-                "prd.desc",
+                "c.case_num",
+                "c.case_date",
+                "c.status",
+                "prd.name",
             ])
             .first();
     } catch (error) {
@@ -93,16 +93,16 @@ export async function getByDate(limit, offset, from, to) {
     try {
         const data = await db("akta_ppat as ap")
             .whereBetween("ap.tgl_akta", [from, to])
-            .leftJoin("proses_alas_hak as p", "p.id", "ap.proses_id")
-            .leftJoin("produk as prd", "prd.id", "ap.produk_id")
+            .leftJoin("cases as c", "c.id", "ap.case_id")
+            .leftJoin("products as prd", "prd.id", "ap.prd_id")
             .select([
                 "ap.no_akta",
                 "ap.tahun_akta",
                 "ap.tgl_akta",
-                "p.no_surat",
-                "p.tgl_surat",
-                "p.status",
-                "prd.desc",
+                "c.case_num",
+                "c.case_num",
+                "c.status",
+                "prd.name",
             ])
             .limit(limit)
             .offset(offset);

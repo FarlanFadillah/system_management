@@ -7,6 +7,7 @@ export async function up(knex) {
     return knex.schema.createTable("clients", (table) => {
         table.increments("id").primary();
         table.string("nik", 255).unique().notNullable();
+        table.string("nkk", 255);
         table.string("first_name", 255).notNullable();
         table.string("last_name", 255);
         table.date("birth_date").notNullable();
@@ -17,8 +18,7 @@ export async function up(knex) {
         table.string("rt", 255);
         table.string("rw", 255);
         table.string("phone_number", 20);
-        table.datetime("created_at").defaultTo(knex.fn.now());
-        table.datetime("updated_at").defaultTo(knex.fn.now());
+        table.timestamps(true, true);
         table
             .enu("marriage_status", [
                 "kawin",

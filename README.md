@@ -112,23 +112,39 @@ Ensure that a corresponding `.env` file exists for each environment (e.g., `.env
 ### 4️⃣ Run Database Migration
 
 ```bash
-npx knex migrate:latest
+npx knex migrate:latest --knexfile ./knexfile.mjs
 or
 npm run migrate
 ```
 
-Fetch wilayah/address and necessary data to your database
+## 🌱 Run Database Seeds
 
-Make sure to install MySQL tools on your device.
+To populate the database with initial or required data, run:
 
 ```bash
-mysql -u [username] -p [db_name] < ./dump.sql
+npx knex seed:run --knexfile ./knexfile.mjs
 ```
 
-If using seeds:
+Or using npm script:
 
 ```bash
-npx knex seed:run
+npm run seed
+```
+
+This command will execute all available seed files in the configured seeds directory.
+
+---
+
+## 📥 Import Database
+
+Create database:
+
+```bash
+mysql -u root -p -e "CREATE DATABASE myapp;"
+```
+
+```bash
+mysql -u root -p myapp < ./sql/dump.sql
 ```
 
 ---

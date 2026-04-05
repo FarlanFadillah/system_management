@@ -10,12 +10,12 @@ export async function up(knex) {
     });
 
     // --- TABLE: proses_client ---
-    await knex.schema.createTable("proses_clients", (table) => {
+    await knex.schema.createTable("case_clients", (table) => {
         table
-            .integer("pah_id")
+            .integer("case_id")
             .unsigned()
             .references("id")
-            .inTable("proses_alas_hak")
+            .inTable("cases")
             .onDelete("CASCADE");
         table
             .integer("client_id")
@@ -30,7 +30,7 @@ export async function up(knex) {
             .inTable("client_roles")
             .onDelete("CASCADE");
 
-        table.primary(["pah_id", "client_id"]);
+        table.primary(["case_id", "client_id"]);
 
         // indexes
         table.index("client_id");
@@ -43,6 +43,6 @@ export async function up(knex) {
  * @returns { Promise<void> }
  */
 export async function down(knex) {
-    await knex.schema.dropTable("proses_clients");
+    await knex.schema.dropTable("case_clients");
     await knex.schema.dropTable("client_roles");
 }

@@ -57,7 +57,7 @@ export const getAllAlasHak = asyncHandler(async (req, res, next) => {
 });
 
 export const searchAlasHak = asyncHandler(async (req, res, next) => {
-    const { keyword, currentpage, limit, level } = req.matchedData;
+    const { keyword, level, currentpage, limit } = req.matchedData;
 
     const { alas_hak, _metadata } = level
         ? await alasHakService.searchByAddressCode(

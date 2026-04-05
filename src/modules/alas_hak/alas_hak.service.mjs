@@ -3,14 +3,17 @@ import * as mainRepo from "../../utils/main.repository.mjs";
 import * as alasHakRepo from "./alas_hak.repository.mjs";
 import * as addressRepo from "../address/address.repository.mjs";
 import * as jsonHelper from "../../helper/json.helper.mjs";
-
+import * as cache from "../../utils/cache.mjs";
 /**
  *
  * @param {Object} model
  */
 export async function addAlasHak(model) {
     try {
-        return await mainRepo.create("alas_hak", model);
+        const data = await mainRepo.create("alas_hak", model);
+
+        cache.delByPattern(":alas-hak:list:");
+        return data;
     } catch (error) {
         throw error;
     }
@@ -23,6 +26,9 @@ export async function addAlasHak(model) {
 export async function removeAlasHak(id) {
     try {
         await mainRepo.remove("alas_hak", id);
+
+        cache.delByPattern(`:alas-hak:id:${id}`);
+        cache.delByPattern(":alas-hak:list:");
     } catch (error) {
         throw error;
     }
@@ -36,6 +42,9 @@ export async function removeAlasHak(id) {
 export async function updateAlasHak(id, model) {
     try {
         await mainRepo.update("alas_hak", id, model);
+
+        cache.delByPattern(`:alas-hak:id:${id}`);
+        cache.delByPattern(":alas-hak:list:");
     } catch (error) {
         throw error;
     }
@@ -186,8 +195,14 @@ export async function addAlasHakOwner(alas_hak_id, clients_id) {
                 client_id: cl_id,
             });
 
+            cache.delByPattern(`:clients:id:${cl_id}`);
             result.created.push({ clients_id: cl_id, reason: "SUCCESS" });
         }
+
+        cache.delByPattern(":alas-hak:clients:");
+        cache.delByPattern(`:alas-hak:id:${alas_hak_id}`);
+        cache.delByPattern(":alas-hak:list:");
+
         return { result };
     } catch (error) {
         throw error;
@@ -218,6 +233,11 @@ export async function removeAlasHakOwner(alas_hak_id, client_id) {
             alas_hak_id,
             client_id,
         });
+
+        cache.delByPattern(":alas-hak:clients:");
+        cache.delByPattern(`:alas-hak:id:${alas_hak_id}`);
+        cache.delByPattern(":alas-hak:list:");
+        cache.delByPattern(`:clients:id:${client_id}`);
     } catch (error) {
         throw error;
     }
@@ -230,7 +250,15 @@ export async function removeAlasHakOwner(alas_hak_id, client_id) {
  */
 export async function getOwners(id) {
     try {
-        return await alasHakRepo.getOwners(id);
+        let owners = await alasHakRepo.getOwners(id);
+        owners = owners.map((val) => {
+            return {
+                ...val,
+                link: `/api/v1/clients/${val.id}`,
+            };
+        });
+
+        return owners;
     } catch (error) {
         throw error;
     }

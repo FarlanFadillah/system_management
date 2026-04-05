@@ -13,13 +13,15 @@ import authRouter from "./modules/auth/auth.router.mjs";
 import addressRouter from "./modules/address/address.router.mjs";
 import clientsRouter from "./modules/clients/client.router.mjs";
 import alasHakRouter from "./modules/alas_hak/alas_hak.router.mjs";
-import prosesRouter from "./modules/proses_alas_hak/proses.router.mjs";
+import casesRouter from "./modules/cases/case.router.mjs";
 import aktaRouter from "./modules/akta_ppat/akta.router.mjs";
+import statsRouter from "./modules/stats/stats.router.mjs";
 
 // middlewares
 import { globalErrorHandler } from "./middlewares/error.middleware.mjs";
 
 const app = express();
+app.set("etag", false);
 
 app.use(express.json({ type: "application/json" }));
 app.use(express.urlencoded({ extended: true }));
@@ -30,8 +32,10 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/address", addressRouter);
 app.use("/api/v1/clients", clientsRouter);
 app.use("/api/v1/alas-hak", alasHakRouter);
-app.use("/api/v1/proses", prosesRouter);
+app.use("/api/v1/cases", casesRouter);
 app.use("/api/v1/akta-ppat", aktaRouter);
+app.use("/api/v1/stats", statsRouter);
+
 app.use(globalErrorHandler);
 
 const server = app.listen(PORT, (error) => {

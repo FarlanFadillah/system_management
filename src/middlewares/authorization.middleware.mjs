@@ -15,7 +15,7 @@ export const adminAuthorization = asyncHandler(async (req, res, next) => {
 export const superUserAuthorization = asyncHandler(async (req, res, next) => {
     if (req.user.role !== "superuser")
         return next(
-            new Error(
+            new ExpressError(
                 "Unauthorized access, only superuser can access this endpoint",
                 403,
             ),

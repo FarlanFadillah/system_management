@@ -6,6 +6,7 @@ import { ExpressError } from "../../utils/custom.error.mjs";
 //     "first_name": "Farlan",
 //     "last_name" : "Fadillah",
 //     "nik": 1305xxxxxxxxxxxx,
+//     "nkk": 1307xxxxxxxxxxxx,
 //     "birth_date": "2001-08-29",
 //     "birth_place" : "Duri",
 //     "job_name" : "Pelajar/Mahasiswa",

@@ -6,7 +6,7 @@ export const registerValidationRules = [
     validator.stringRequired("password"),
     validator.stringRequired("first_name"),
     validator.stringOptional("last_name"),
-    validator.stringOptional("role").custom((val, { req }) => {
+    validator.stringOptional("role", "body").custom((val, { req }) => {
         if (
             (val === "admin" || val === "superuser") &&
             req.user.role !== "superuser"

@@ -12,10 +12,15 @@ export default {
             password: process.env.DB_PASS,
             database: process.env.DB_NAME,
             timezone: "Z",
+            dateStrings: true,
         },
         useNullAsDefault: true,
         migrations: {
             directory: "./src/migrations",
+            loadExtensions: [".mjs", ".js"],
+        },
+        seeds: {
+            directory: "./src/seeds",
             loadExtensions: [".mjs", ".js"],
         },
     },

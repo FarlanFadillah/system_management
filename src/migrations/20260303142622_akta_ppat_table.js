@@ -7,32 +7,31 @@ export async function up(knex) {
     return knex.schema.createTable("akta_ppat", (table) => {
         // columns
         table.increments("id").primary();
-        table.string("no_akta", 50);
-        table.string("tahun_akta", 4);
-        table.date("tgl_akta");
-        table.datetime("created_at").defaultTo(knex.fn.now());
-        table.datetime("updated_at").defaultTo(knex.fn.now());
+        table.string("number", 50);
+        table.string("year", 4);
+        table.date("date");
+        table.timestamps(true, true);
 
-        table.unique(["no_akta", "tahun_akta"]);
+        table.unique(["number", "year"]);
         // foreign keys
         table
-            .integer("proses_id")
+            .integer("case_id")
             .unsigned()
             .references("id")
-            .inTable("proses_alas_hak")
+            .inTable("cases")
             .onDelete("SET NULL")
             .nullable();
         table
-            .integer("produk_id")
+            .integer("prd_id")
             .unsigned()
             .references("id")
-            .inTable("produk")
+            .inTable("products")
             .onDelete("SET NULL");
         // indexes
-        table.index("proses_id");
-        table.index("produk_id");
-        table.index("no_akta");
-        table.index("tgl_akta");
+        table.index("case_id");
+        table.index("prd_id");
+        table.index("number");
+        table.index("date");
     });
 }
 

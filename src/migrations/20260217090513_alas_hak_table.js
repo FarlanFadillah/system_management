@@ -4,9 +4,9 @@
  */
 export async function up(knex) {
     // --- TABLE: jenis_hak ---
-    await knex.schema.createTable("jenis_hak", (table) => {
+    await knex.schema.createTable("types", (table) => {
         table.increments("id").primary();
-        table.string("desc", 20);
+        table.string("name", 20);
     });
 
     // --- TABLE: alas_hak ---
@@ -19,8 +19,7 @@ export async function up(knex) {
         table.string("no_surat_ukur", 255);
         table.date("tgl_surat_ukur");
         table.string("ket", 255);
-        table.datetime("created_at").defaultTo(knex.fn.now());
-        table.datetime("updated_at").defaultTo(knex.fn.now());
+        table.timestamps(true, true);
 
         // columns not nullable
         table.integer("luas").notNullable();
@@ -28,15 +27,15 @@ export async function up(knex) {
 
         // foreign keys
         table
-            .integer("jenis_hak_id")
+            .integer("type_id")
             .unsigned()
             .notNullable()
             .references("id")
-            .inTable("jenis_hak")
+            .inTable("types")
             .onDelete("CASCADE");
 
         // indexes
-        table.index("jenis_hak_id");
+        table.index("type_id");
         table.index("address_code");
     });
 }
@@ -46,6 +45,6 @@ export async function up(knex) {
  * @returns { Promise<void> }
  */
 export async function down(knex) {
-    await knex.schema.dropTable("jenis_hak");
     await knex.schema.dropTable("alas_hak");
+    await knex.schema.dropTable("types");
 }

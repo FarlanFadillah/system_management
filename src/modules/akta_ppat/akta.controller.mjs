@@ -20,10 +20,10 @@ export const removeAktaPPAT = asyncHandler(async (req, res, next) => {
 });
 
 export const patchAktaPPAT = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    await aktaService.update(id, req.matchedData);
+    const { id, ...data } = req.matchedData;
+    await aktaService.update(id, data);
     res.status(200).json({
-        status: true,
+        success: true,
         msg: "Akta PPAT updated successfully",
     });
 });
@@ -39,7 +39,7 @@ export const getByID = asyncHandler(async (req, res, next) => {
 });
 
 export const getAllAktaPPAT = asyncHandler(async (req, res, next) => {
-    const { currentpage, limit } = req.query;
+    const { currentpage, limit } = req.matchedData;
     const { data, _metadata } = await aktaService.getAll(
         Number(currentpage),
         Number(limit),

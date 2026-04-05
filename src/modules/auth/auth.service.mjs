@@ -9,7 +9,8 @@ export async function verifyPassword(username, password) {
         const user = await authRepo.getUserByUsername(username);
         if (!user) throw new ExpressError("Username not found!");
 
-        return await crypt.compareHash(password, user.hash);
+        const match = await crypt.compareHash(password, user.hash);
+        return { user, match };
     } catch (error) {
         throw error;
     }

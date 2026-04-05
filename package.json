@@ -6,11 +6,13 @@
     "type": "module",
     "scripts": {
         "test": "cross-env NODE_ENV=development node --experimental-vm-modules node_modules/jest/bin/jest.js",
-        "start": "cross-env DEBUG=cache:middleware NODE_ENV=development nodemon --legacy-watch --exec node src/index.mjs",
+        "start": "cross-env DEBUG=app:*:* NODE_ENV=development nodemon --legacy-watch --exec node src/index.mjs",
         "makemigration": "cross-env NODE_ENV=development npx knex migrate:make --knexfile ./knexfile",
         "migrate": "cross-env NODE_ENV=development npx knex migrate:latest --knexfile ./knexfile",
         "rollback": "cross-env NODE_ENV=development npx knex migrate:rollback --knexfile ./knexfile",
-        "down": "cross-env NODE_ENV=development npx knex migrate:down --knexfile ./knexfile"
+        "down": "cross-env NODE_ENV=development npx knex migrate:down --knexfile ./knexfile",
+        "seed": "cross-env NODE_ENV=development npx knex seed:run --knexfile ./knexfile.mjs",
+        "seed:make": "cross-env NODE_ENV=development npx knex seed:make --knexfile ./knexfile.mjs"
     },
     "keywords": [],
     "author": "",

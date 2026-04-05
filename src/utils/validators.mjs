@@ -263,3 +263,15 @@ export function stringIncludeOptional(field, arr, location = "body") {
                 throw new ExpressError(`Value invalid [${arr}]`);
         });
 }
+
+/**
+ *
+ * @param {String} field
+ * @returns {Array}
+ */
+export function isArrayOfObjects(field) {
+    return [
+        validator.body(field).optional().isArray({ min: 1 }),
+        validator.body(`${field}.*`).optional().isObject({ strict: true }),
+    ];
+}

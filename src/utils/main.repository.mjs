@@ -71,6 +71,21 @@ export async function update(table, id, model) {
     }
 }
 
+export async function updateNoUpdatedAt(table, id, model) {
+    try {
+        await db(table)
+            .update({ ...model })
+            .where({ id });
+    } catch (error) {
+        if (error.code === "SQLITE_CONSTRAINT")
+            throw new ExpressError(error.sqlMessage, 409);
+        else if (error.code === "ER_DUP_ENTRY") {
+            throw new ExpressError(error.sqlMessage, 409);
+        }
+        throw new ExpressError(error.message);
+    }
+}
+
 /**
  *
  * @param {String} table

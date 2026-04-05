@@ -1,5 +1,11 @@
 import express from "express";
-import { deleteUser, login, register, updateUser } from "./auth.controller.mjs";
+import {
+    deleteUser,
+    login,
+    register,
+    updateUser,
+    verifyToken,
+} from "./auth.controller.mjs";
 import { authLimiter } from "../../middlewares/ratelimiter.middleware.mjs";
 import {
     registerValidationRules,
@@ -20,7 +26,16 @@ router
 
 router
     .route("/register")
-    .post(...registerValidationRules, validate, authLimiter, register);
+    .post(
+        validateToken,
+        ...registerValidationRules,
+        validate,
+        authLimiter,
+        superUserAuthorization,
+        register,
+    );
+
+router.get("/verify", validateToken, verifyToken);
 
 router
     .route("/:id")

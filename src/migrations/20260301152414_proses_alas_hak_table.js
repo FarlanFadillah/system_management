@@ -4,34 +4,33 @@
  */
 export async function up(knex) {
     // --- TABLE: produk ---
-    await knex.schema.createTable("produk", (table) => {
+    await knex.schema.createTable("products", (table) => {
         table.increments("id").primary();
-        table.string("desc", 20);
+        table.string("name", 20);
     });
 
-    const enumStatus = ["DRAFT", "PENDING", "ON PROCESS", "DONE"];
+    const enumStatus = ["DRAFT", "PENDING", "IN PROGRESS", "DONE", "REJECTED"];
 
     // --- TABLE: proses_alas_hak ---
-    await knex.schema.createTable("proses_alas_hak", (table) => {
+    await knex.schema.createTable("cases", (table) => {
         // columns nullable
         table.increments("id").primary();
-        table.string("no_surat", 50).unique();
-        table.date("tgl_surat");
-        table.datetime("created_at").defaultTo(knex.fn.now());
-        table.datetime("updated_at").defaultTo(knex.fn.now());
+        table.string("case_num", 50).unique();
+        table.date("case_date");
+        table.timestamps(true, true);
 
         // columns not nullable
         table.enu("status", enumStatus).notNullable();
 
         // foreign keys
         table
-            .integer("produk_id")
+            .integer("prd_id")
             .unsigned()
             .references("id")
-            .inTable("produk")
+            .inTable("products")
             .onDelete("SET NULL");
         table
-            .integer("alas_hak_id")
+            .integer("ah_id")
             .unsigned()
             .notNullable()
             .references("id")
@@ -39,10 +38,60 @@ export async function up(knex) {
             .onDelete("CASCADE");
 
         // indexes
-        table.index("tgl_surat");
-        table.index("produk_id");
-        table.index("alas_hak_id");
+        table.index("case_date");
+        table.index("prd_id");
+        table.index("ah_id");
         table.index("status");
+    });
+
+    await knex.schema.createTable("workflows", (table) => {
+        table.increments("id").primary();
+        table.string("name").notNullable();
+        table.integer("order").unsigned().notNullable();
+        table.string("version").notNullable().defaultTo("v1");
+        table
+            .integer("prd_id")
+            .unsigned()
+            .references("id")
+            .inTable("products")
+            .onDelete("SET NULL");
+
+        table.index("prd_id");
+    });
+
+    await knex.schema.createTable("case_steps", (table) => {
+        table.increments("id").primary();
+        table
+            .integer("case_id")
+            .unsigned()
+            .notNullable()
+            .references("id")
+            .inTable("cases")
+            .onDelete("CASCADE");
+
+        table
+            .integer("step_id")
+            .unsigned()
+            .notNullable()
+            .references("id")
+            .inTable("workflows")
+            .onDelete("CASCADE");
+
+        table.enum("status", enumStatus);
+        table.string("note");
+        table.timestamp("started_at").defaultTo(knex.fn.now());
+        table.timestamp("completed_at");
+
+        table.index(["case_id", "step_id"]);
+    });
+
+    await knex.schema.alterTable("cases", (table) => {
+        table
+            .integer("current_step")
+            .unsigned()
+            .references("id")
+            .inTable("case_steps")
+            .onDelete("SET NULL");
     });
 }
 
@@ -51,6 +100,12 @@ export async function up(knex) {
  * @returns { Promise<void> }
  */
 export async function down(knex) {
-    await knex.schema.dropTable("produk");
-    await knex.schema.dropTable("proses_alas_hak");
+    await knex.schema.alterTable("cases", (table) => {
+        table.dropForeign("current_step");
+        table.dropColumn("current_step");
+    });
+    await knex.schema.dropTable("case_steps");
+    await knex.schema.dropTable("workflows");
+    await knex.schema.dropTable("cases");
+    await knex.schema.dropTable("products");
 }
