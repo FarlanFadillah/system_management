@@ -15,6 +15,31 @@ import { ExpressError } from "../../utils/custom.error.mjs";
 //     "gender" : "pria"
 // }
 
+export async function getByCLientId(id) {
+    return db.raw(`
+        SELECT c.id, c.nik, c.nkk, c.first_name, c.last_name, c.birth_date, c.birth_place, 
+        
+        (SELECT JSON_OBJECT("provinsi", prov.name, "kabupaten", kab.name, "kecamatan", kec.name, "kelurahan", kel.name)
+        FROM provinsi AS prov LEFT JOIN kabupaten AS kab on kab.id_provinsi = prov.id
+        LEFT JOIN kecamatan AS kec on kec.id_kabupaten = kab.id
+        LEFT JOIN kelurahan AS kel on kel.id_kecamatan = kec.id
+        WHERE kel.id = c.address_code
+        ) AS address,
+        
+        (SELECT JSON_ARRAYAGG(JSON_OBJECT("id", ah.id, "no_alas_hak", ah.no_alas_hak)) FROM alas_hak AS ah
+        LEFT JOIN alas_hak_clients AS ahc on ahc.client_id = c.id WHERE ah.id = ahc.alas_hak_id) AS alas_hak,
+        
+        (SELECT JSON_ARRAYAGG(JSON_OBJECT("id", cases.id, "product", prd.name, "alas_hak", ah.no_alas_hak)) FROM cases 
+        LEFT JOIN products AS prd ON prd.id = cases.prd_id
+        LEFT JOIN alas_hak AS ah ON ah.id = cases.ah_id
+        LEFT JOIN case_clients AS cc on cc.client_id = c.id
+        WHERE cc.case_id = cases.id 
+        ) AS cases
+        FROM clients AS c WHERE c.id = ${id};
+        
+    `);
+}
+
 /**
  *
  * @param {Number} id

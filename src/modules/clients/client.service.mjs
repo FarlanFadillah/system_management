@@ -60,35 +60,36 @@ export async function updateClientData(id, model) {
  */
 export async function getClient(id) {
     try {
-        const clients = await clientRepo.getById(Number(id));
+        const [[clients]] = await clientRepo.getByCLientId(Number(id));
         if (!clients || clients.length <= 0)
             throw new ExpressError("Client Not Found", 404);
 
-        const {
-            alas_hak_id, //  to remove the data
-            no_alas_hak, // to remove the data
-            kelurahan,
-            kecamatan,
-            kabupaten,
-            provinsi,
-            ...clientData
-        } = clients[0];
+        // const {
+        //     alas_hak_id, //  to remove the data
+        //     no_alas_hak, // to remove the data
+        //     kelurahan,
+        //     kecamatan,
+        //     kabupaten,
+        //     provinsi,
+        //     ...clientData
+        // } = clients[0];
 
-        return {
-            ...clientData,
-            address: {
-                kelurahan,
-                kecamatan,
-                kabupaten,
-                provinsi,
-            },
-            alas_hak: clients[0].alas_hak_id
-                ? clients.map((row) => ({
-                      id: row.alas_hak_id,
-                      no_alas_hak: row.no_alas_hak,
-                  }))
-                : [],
-        };
+        // return {
+        //     ...clientData,
+        //     address: {
+        //         kelurahan,
+        //         kecamatan,
+        //         kabupaten,
+        //         provinsi,
+        //     },
+        //     alas_hak: clients[0].alas_hak_id
+        //         ? clients.map((row) => ({
+        //               id: row.alas_hak_id,
+        //               no_alas_hak: row.no_alas_hak,
+        //           }))
+        //         : [],
+        // };
+        return clients;
     } catch (error) {
         throw error;
     }
