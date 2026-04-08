@@ -1,3 +1,4 @@
+import TABLE from "../../configs/table.config.mjs";
 import db from "../../dbs/db.mjs";
 import { ExpressError } from "../../utils/custom.error.mjs";
 
@@ -20,22 +21,22 @@ export async function getByCLientId(id) {
         SELECT c.id, c.nik, c.nkk, c.first_name, c.last_name, c.birth_date, c.birth_place, 
         
         (SELECT JSON_OBJECT("provinsi", prov.name, "kabupaten", kab.name, "kecamatan", kec.name, "kelurahan", kel.name)
-        FROM provinsi AS prov LEFT JOIN kabupaten AS kab on kab.id_provinsi = prov.id
-        LEFT JOIN kecamatan AS kec on kec.id_kabupaten = kab.id
-        LEFT JOIN kelurahan AS kel on kel.id_kecamatan = kec.id
+        FROM ${TABLE.$ADDRESS.PROV} AS prov LEFT JOIN ${TABLE.$ADDRESS.KAB} AS kab on kab.id_provinsi = prov.id
+        LEFT JOIN ${TABLE.$ADDRESS.KEC} AS kec on kec.id_kabupaten = kab.id
+        LEFT JOIN ${TABLE.$ADDRESS.KEL} AS kel on kel.id_kecamatan = kec.id
         WHERE kel.id = c.address_code
         ) AS address,
         
-        (SELECT JSON_ARRAYAGG(JSON_OBJECT("id", ah.id, "no_alas_hak", ah.no_alas_hak)) FROM alas_hak AS ah
-        LEFT JOIN alas_hak_clients AS ahc on ahc.client_id = c.id WHERE ah.id = ahc.alas_hak_id) AS alas_hak,
+        (SELECT JSON_ARRAYAGG(JSON_OBJECT("id", ah.id, "no_alas_hak", ah.no_alas_hak)) FROM ${TABLE.ALASHAK} AS ah
+        LEFT JOIN ${TABLE.$ALASHAK.CLIENTS} AS ahc on ahc.client_id = c.id WHERE ah.id = ahc.alas_hak_id) AS alas_hak,
         
-        (SELECT JSON_ARRAYAGG(JSON_OBJECT("id", cases.id, "product", prd.name, "alas_hak", ah.no_alas_hak)) FROM cases 
-        LEFT JOIN products AS prd ON prd.id = cases.prd_id
-        LEFT JOIN alas_hak AS ah ON ah.id = cases.ah_id
-        LEFT JOIN case_clients AS cc on cc.client_id = c.id
+        (SELECT JSON_ARRAYAGG(JSON_OBJECT("id", cases.id, "product", prd.name, "alas_hak", ah.no_alas_hak)) FROM ${TABLE.CASES}
+        LEFT JOIN ${TABLE.$CASES.PRD} AS prd ON prd.id = ${TABLE.CASES}.prd_id
+        LEFT JOIN ${TABLE.ALASHAK} AS ah ON ah.id = ${TABLE.CASES}.ah_id
+        LEFT JOIN ${TABLE.$CASES.CLIENTS} AS cc on cc.client_id = c.id
         WHERE cc.case_id = cases.id 
         ) AS cases
-        FROM clients AS c WHERE c.id = ${id};
+        FROM ${TABLE.CLIENTS} AS c WHERE c.id = ${id};
         
     `);
 }
@@ -47,13 +48,29 @@ export async function getByCLientId(id) {
  */
 export async function getById(id) {
     try {
-        return await db("clients as cl")
-            .leftJoin("kelurahan as kel", "kel.id", "cl.address_code")
-            .leftJoin("kecamatan as kec", "kec.id", "kel.id_kecamatan")
-            .leftJoin("kabupaten as kab", "kab.id", "kec.id_kabupaten")
-            .leftJoin("provinsi as prov", "prov.id", "kab.id_provinsi")
-            .leftJoin("alas_hak_clients as ahc", "ahc.client_id", id)
-            .leftJoin("alas_hak as ah", "ah.id", "ahc.alas_hak_id")
+        return await db(`${TABLE.CLIENTS} as cl`)
+            .leftJoin(
+                `${TABLE.$ADDRESS.KEL} as kel`,
+                "kel.id",
+                "cl.address_code",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.KEC}as kec`,
+                "kec.id",
+                "kel.id_kecamatan",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.KAB} as kab`,
+                "kab.id",
+                "kec.id_kabupaten",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.PROV} as prov`,
+                "prov.id",
+                "kab.id_provinsi",
+            )
+            .leftJoin(`${TABLE.$ALASHAK.CLIENTS} as ahc`, "ahc.client_id", id)
+            .leftJoin(`${TABLE.ALASHAK} as ah`, "ah.id", "ahc.alas_hak_id")
             .where("cl.id", id)
             .select([
                 "cl.*",

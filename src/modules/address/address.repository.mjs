@@ -1,5 +1,6 @@
 import db from "../../dbs/db.mjs";
 import { ExpressError } from "../../utils/custom.error.mjs";
+import TABLE from "../../configs/table.config.mjs";
 
 /**
  *
@@ -22,7 +23,7 @@ export async function get(table, name) {
 
 export async function getKelurahan(name, limit, offset) {
     try {
-        const addresses = await db("kelurahan")
+        const addresses = await db(TABLE.$ADDRESS.KEL)
             .where("name", "like", `%${name}%`)
             .select("id", "name")
             .limit(limit)
@@ -34,7 +35,7 @@ export async function getKelurahan(name, limit, offset) {
 }
 export async function getKecamatan(name) {
     try {
-        const code = await db("kecamatan")
+        const code = await db(TABLE.$ADDRESS.KEC)
             .where("name", "like", `%${name}%`)
             .first();
         return code;
@@ -45,7 +46,7 @@ export async function getKecamatan(name) {
 
 export async function getKabupaten(name) {
     try {
-        const code = await db("kabupaten")
+        const code = await db(TABLE.$ADDRESS.KAB)
             .where("name", "like", `%${name}%`)
             .first();
         return code;
@@ -56,7 +57,7 @@ export async function getKabupaten(name) {
 
 export async function getProvinsi(name) {
     try {
-        const code = await db("provinsi")
+        const code = await db(TABLE.$ADDRESS.PROV)
             .where("name", "like", `%${name}%`)
             .first();
         return code;
@@ -67,7 +68,7 @@ export async function getProvinsi(name) {
 
 export async function getAllProvinsi() {
     try {
-        return await db("provinsi");
+        return await db(TABLE.$ADDRESS.PROV);
     } catch (error) {
         throw new ExpressError(error.message);
     }
@@ -75,7 +76,7 @@ export async function getAllProvinsi() {
 
 export async function getAllKabupaten(id_provinsi) {
     try {
-        return await db("kabupaten").where({ id_provinsi: id_provinsi });
+        return await db(TABLE.$ADDRESS.KAB).where({ id_provinsi: id_provinsi });
     } catch (error) {
         throw new ExpressError(error.message);
     }
@@ -83,7 +84,9 @@ export async function getAllKabupaten(id_provinsi) {
 
 export async function getAllKecamatan(id_kabupaten) {
     try {
-        return await db("kecamatan").where({ id_kabupaten: id_kabupaten });
+        return await db(TABLE.$ADDRESS.KEC).where({
+            id_kabupaten: id_kabupaten,
+        });
     } catch (error) {
         throw new ExpressError(error.message);
     }
@@ -91,7 +94,11 @@ export async function getAllKecamatan(id_kabupaten) {
 
 export async function getAllKelurahan(id_kecamatan) {
     try {
-        return await db("kelurahan").where("id_kecamatan", "=", id_kecamatan);
+        return await db(TABLE.$ADDRESS.KEL).where(
+            "id_kecamatan",
+            "=",
+            id_kecamatan,
+        );
     } catch (error) {
         throw new ExpressError(error.message);
     }
