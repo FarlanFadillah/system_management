@@ -33,7 +33,17 @@ export async function create(table, model) {
  */
 export async function remove(table, id) {
     try {
-        await db(table).where({ id: id }).delete();
+        await db.transaction(async (trx) => {
+            const [{ count }] = await trx(table)
+                .where({ id: id })
+                .count("id as count");
+            if (count <= 0)
+                throw new ExpressError(
+                    "The resource you are trying to delete does not exist or has already been removed",
+                    404,
+                );
+            trx(table).delete({ id: id });
+        });
     } catch (error) {
         throw new ExpressError(error.message);
     }
@@ -41,7 +51,17 @@ export async function remove(table, id) {
 
 export async function removeWhere(table, model) {
     try {
-        await db(table).where(model).delete();
+        await db.transaction(async (trx) => {
+            const [{ count }] = await trx(table)
+                .where(model)
+                .count("* as count");
+            if (count <= 0)
+                throw new ExpressError(
+                    "The resource you are trying to delete does not exist or has already been removed",
+                    404,
+                );
+            await trx(table).where(model).delete();
+        });
     } catch (error) {
         throw new ExpressError(error.message);
     }
@@ -55,12 +75,15 @@ export async function removeWhere(table, model) {
  */
 export async function update(table, id, model) {
     try {
-        await db(table)
-            .update({
-                ...model,
-                updated_at: db.fn.now(),
-            })
-            .where({ id: id });
+        await db.transaction(async (trx) => {
+            await db(table).where({ id: id }).forUpdate();
+            await trx(table)
+                .update({
+                    ...model,
+                    updated_at: db.fn.now(),
+                })
+                .where({ id: id });
+        });
     } catch (error) {
         if (error.code === "SQLITE_CONSTRAINT")
             throw new ExpressError(error.sqlMessage, 409);
@@ -73,9 +96,12 @@ export async function update(table, id, model) {
 
 export async function updateNoUpdatedAt(table, id, model) {
     try {
-        await db(table)
-            .update({ ...model })
-            .where({ id });
+        await db.transaction(async (trx) => {
+            await trx(table).where({ id: id }).forUpdate();
+            await trx(table)
+                .update({ ...model })
+                .where({ id });
+        });
     } catch (error) {
         if (error.code === "SQLITE_CONSTRAINT")
             throw new ExpressError(error.sqlMessage, 409);
@@ -94,7 +120,10 @@ export async function updateNoUpdatedAt(table, id, model) {
  */
 export async function updateWhere(table, model, data) {
     try {
-        await db(table).where(model).update(data);
+        await db.transaction(async (trx) => {
+            await trx(table).where(model).forUpdate();
+            await trx(table).where(model).update(data);
+        });
     } catch (error) {
         throw new ExpressError(error.message);
     }

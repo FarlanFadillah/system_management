@@ -27,13 +27,7 @@ export async function getByCLientId(id) {
         WHERE kel.id = c.address_code
         ) AS address,
         
-        (SELECT 
-        CASE 
-            WHEN (SELECT COUNT(ah.id) FROM ${TABLE.ALASHAK} as ah
-                    LEFT JOIN ${TABLE.$ALASHAK.CLIENTS} as ahc on ahc.alas_hak_id = ah.id WHERE ahc.client_id = c.id) > 0 THEN
-            JSON_ARRAYAGG(JSON_OBJECT("id", ah.id, "no_alas_hak", ah.no_alas_hak)) 
-            ELSE JSON_ARRAY()
-        END
+        (SELECT COALESCE(JSON_ARRAYAGG(JSON_OBJECT("id", ah.id, "no_alas_hak", ah.no_alas_hak)) , JSON_ARRAY())
         FROM ${TABLE.ALASHAK} AS ah
         LEFT JOIN ${TABLE.$ALASHAK.CLIENTS} AS ahc on ahc.client_id = c.id 
         WHERE ah.id = ahc.alas_hak_id) 
@@ -64,39 +58,43 @@ export async function getByCLientId(id) {
  */
 export async function getById(id) {
     try {
-        return await db(`${TABLE.CLIENTS} as cl`)
+        const data = await db(`${TABLE.CLIENTS} AS cl`)
+            .select(["cl.*"])
+            .select(
+                db.raw(`JSON_OBJECT("kelurahan", kel.name, "kecamatan", kec.name, "kabupaten", kab.name, "provinsi", prov.name) AS address
+                `),
+            )
+            .select(
+                db.raw(
+                    `COALESCE(JSON_ARRAYAGG(JSON_OBJECT("id", ah.id, "nomor", ah.no_alas_hak)), JSON_ARRAY()) AS alas_hak`,
+                ),
+            )
             .leftJoin(
-                `${TABLE.$ADDRESS.KEL} as kel`,
+                `${TABLE.$ADDRESS.KEL} AS kel`,
                 "kel.id",
                 "cl.address_code",
             )
             .leftJoin(
-                `${TABLE.$ADDRESS.KEC}as kec`,
+                `${TABLE.$ADDRESS.KEC} AS kec`,
                 "kec.id",
                 "kel.id_kecamatan",
             )
             .leftJoin(
-                `${TABLE.$ADDRESS.KAB} as kab`,
+                `${TABLE.$ADDRESS.KAB} AS kab`,
                 "kab.id",
                 "kec.id_kabupaten",
             )
             .leftJoin(
-                `${TABLE.$ADDRESS.PROV} as prov`,
+                `${TABLE.$ADDRESS.PROV} AS prov`,
                 "prov.id",
                 "kab.id_provinsi",
             )
-            .leftJoin(`${TABLE.$ALASHAK.CLIENTS} as ahc`, "ahc.client_id", id)
-            .leftJoin(`${TABLE.ALASHAK} as ah`, "ah.id", "ahc.alas_hak_id")
+            .leftJoin(`${TABLE.$ALASHAK.CLIENTS} AS ahc`, "ahc.client_id", id)
+            .leftJoin(`${TABLE.ALASHAK} AS ah`, "ah.id", "ahc.alas_hak_id")
             .where("cl.id", id)
-            .select([
-                "cl.*",
-                "kel.name as kelurahan",
-                "kec.name as kecamatan",
-                "kab.name as kabupaten",
-                "prov.name as provinsi",
-                "ah.id as alas_hak_id",
-                "ah.no_alas_hak",
-            ]);
+            .groupBy("cl.id")
+            .first();
+        return data;
     } catch (error) {
         throw new ExpressError(error.message);
     }
@@ -174,24 +172,24 @@ export async function getAll(limit, cursor, orderBy = "id", order = "asc") {
  */
 export async function search(columns, keyword, limit, offset) {
     try {
-        const data = await db(`${TABLE.CLIENTS}as cl`)
+        const data = await db(`${TABLE.CLIENTS} AS cl`)
             .leftJoin(
-                `${TABLE.$ADDRESS.KEL} as kel`,
+                `${TABLE.$ADDRESS.KEL} AS kel`,
                 "kel.id",
                 "cl.address_code",
             )
             .leftJoin(
-                `${TABLE.$ADDRESS.KEC} as kec`,
+                `${TABLE.$ADDRESS.KEC} AS kec`,
                 "kec.id",
                 "kel.id_kecamatan",
             )
             .leftJoin(
-                `${TABLE.$ADDRESS.KAB} as kab`,
+                `${TABLE.$ADDRESS.KAB} As kab`,
                 "kab.id",
                 "kec.id_kabupaten",
             )
             .leftJoin(
-                `${TABLE.$ADDRESS.PROV} as prov`,
+                `${TABLE.$ADDRESS.PROV} AS prov`,
                 "prov.id",
                 "kab.id_provinsi",
             )
@@ -202,20 +200,16 @@ export async function search(columns, keyword, limit, offset) {
                     else this.orWhere(`cl.${col}`, "like", `%${keyword}%`);
                 });
             })
+            .select("cl.id", "cl.nik", "cl.first_name", "cl.last_name")
             .select(
-                "cl.id",
-                "cl.nik",
-                "cl.first_name",
-                "cl.last_name",
-                "kel.name as kelurahan",
-                "kec.name as kecamatan",
-                "kab.name as kabupaten",
-                "prov.name as provinsi",
+                db.raw(
+                    `JSON_OBJECT("kelurahan", kel.name, "kecamatan", kec.name, "kabupaten", kab.name, "provinsi", prov.name) AS address`,
+                ),
             )
             .limit(limit || 10)
             .offset(offset || 0);
 
-        const [{ count }] = await db("clients")
+        const [{ count }] = await db(TABLE.CLIENTS)
             .where(function () {
                 columns.forEach((col, i) => {
                     if (i === 0) this.where(col, "like", `%${keyword}%`);
@@ -244,28 +238,39 @@ export async function search(columns, keyword, limit, offset) {
  */
 export async function getAlasHak(client_id, limit, offset) {
     try {
-        const data = await db("alas_hak_clients as ahc")
-            .leftJoin("alas_hak as ah", "ah.id", "ahc.alas_hak_id")
-            .leftJoin("kelurahan as kel", "kel.id", "ah.address_code")
-            .leftJoin("kecamatan as kec", "kec.id", "kel.id_kecamatan")
-            .leftJoin("kabupaten as kab", "kab.id", "kec.id_kabupaten")
-            .leftJoin("provinsi as prov", "prov.id", "kab.id_provinsi")
+        const data = await db(`${TABLE.$CLIENTS.ALASHAK} as ahc`)
+            .leftJoin(`${TABLE.ALASHAK} as ah`, "ah.id", "ahc.alas_hak_id")
+            .leftJoin(
+                `${TABLE.$ADDRESS.KEL} as kel`,
+                "kel.id",
+                "ah.address_code",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.KEC} as kec`,
+                "kec.id",
+                "kel.id_kecamatan",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.KAB} as kab`,
+                "kab.id",
+                "kec.id_kabupaten",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.PROV} as prov`,
+                "prov.id",
+                "kab.id_provinsi",
+            )
             .where("ahc.client_id", client_id)
+            .select("ah.id", "ah.no_alas_hak", "ah.no_surat_ukur", "ah.ket")
             .select(
-                "ah.id",
-                "ah.no_alas_hak",
-                "ah.no_surat_ukur",
-                "ah.ket",
-                "kel.name as kelurahan",
-                "kec.name as kecamatan",
-                "kab.name as kabupaten",
-                "prov.name as provinsi",
+                db.raw(`JSON_OBJECT("kelurahan", kel.name, "kecamatan", kec.name, "kabupaten", kab.name, "provinsi", prov.name)
+                AS address`),
             )
             .limit(limit || 10)
             .offset(offset || 0);
 
-        const [{ count }] = await db("alas_hak_clients as ahc")
-            .leftJoin("alas_hak as ah", "ah.id", "ahc.alas_hak_id")
+        const [{ count }] = await db(`${TABLE.$CLIENTS.ALASHAK} as ahc`)
+            .leftJoin(`${TABLE.ALASHAK} as ah`, "ah.id", "ahc.alas_hak_id")
             .where("ahc.client_id", client_id)
             .count("id as count");
 

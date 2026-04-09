@@ -26,8 +26,6 @@ export async function addClient(model) {
  */
 export async function removeClient(id) {
     try {
-        const user = await clientRepo.getById(id);
-        if (!user) throw new ExpressError("User does not exists");
         await mainRepo.remove("clients", id);
 
         cache.delByPattern(`clients:id:${id}`);
@@ -154,7 +152,7 @@ export async function searchClient(keyword, limit, currentpage) {
             limit,
             offset,
         );
-        const clients = jsonHelper.destructureAddressesDetails(data);
+        // const clients = jsonHelper.destructureAddressesDetails(data);
         const _metadata = jsonHelper.paginationMetadata(
             "clients/search",
             currentpage,
@@ -163,7 +161,7 @@ export async function searchClient(keyword, limit, currentpage) {
             [`keyword=${keyword}`],
         );
 
-        return { clients, _metadata };
+        return { clients: data, _metadata };
     } catch (error) {
         throw error;
     }
@@ -185,7 +183,7 @@ export async function getAlasHak(client_id, limit, currentpage) {
             offset,
         );
 
-        const alas_hak = jsonHelper.destructureAddressesDetails(data);
+        // const alas_hak = jsonHelper.destructureAddressesDetails(data);
         const _metadata = jsonHelper.paginationMetadata(
             `clients/${client_id}/alas-hak`,
             currentpage,
@@ -193,7 +191,7 @@ export async function getAlasHak(client_id, limit, currentpage) {
             count,
         );
 
-        return { alas_hak, _metadata };
+        return { alas_hak: data, _metadata };
     } catch (error) {
         throw error;
     }

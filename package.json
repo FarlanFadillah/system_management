@@ -7,6 +7,7 @@
     "scripts": {
         "test": "cross-env NODE_ENV=development node --experimental-vm-modules node_modules/jest/bin/jest.js",
         "start": "cross-env DEBUG=app:*:* NODE_ENV=development nodemon --legacy-watch --exec node src/index.mjs",
+        "dev": "cross-env DEBUG=app:*:* NODE_ENV=development nodemon --legacy-watch --exec node src/index.mjs",
         "makemigration": "cross-env NODE_ENV=development npx knex migrate:make --knexfile ./knexfile",
         "migrate": "cross-env NODE_ENV=development npx knex migrate:latest --knexfile ./knexfile",
         "rollback": "cross-env NODE_ENV=development npx knex migrate:rollback --knexfile ./knexfile",
