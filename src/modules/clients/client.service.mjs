@@ -131,8 +131,8 @@ export async function getAllClientsLimitOffset(limit, currentpage) {
             count,
         );
 
-        const clients = jsonHelper.destructureAddressesDetails(data);
-        return { clients, _metadata };
+        // const clients = jsonHelper.destructureAddressesDetails(data);
+        return { clients: data, _metadata };
     } catch (error) {
         throw error;
     }

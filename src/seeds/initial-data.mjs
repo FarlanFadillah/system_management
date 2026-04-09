@@ -105,6 +105,19 @@ export async function seed(knex) {
             marriage_status: "kawin",
             gender: "wanita",
         },
+        {
+            id: 3,
+            first_name: "Mike",
+            last_name: "Doe",
+            nik: 1307051212950003,
+            nkk: 1307050101010001,
+            birth_date: "1995-12-12",
+            birth_place: "Duri",
+            job_name: "Pelajar/Mahasiswa",
+            address_code: "13.07.05.2007",
+            marriage_status: "kawin",
+            gender: "pria",
+        },
     ]);
 
     await knex("alas_hak_clients").insert([
@@ -119,6 +132,28 @@ export async function seed(knex) {
         {
             client_id: 2,
             alas_hak_id: 2,
+        },
+    ]);
+
+    await knex("cases").insert([
+        {
+            id: 1,
+            ah_id: 1,
+            prd_id: 1,
+            status: "DRAFT",
+        },
+    ]);
+
+    await knex("case_clients").insert([
+        {
+            case_id: 1,
+            client_id: 1,
+            roles_id: 1,
+        },
+        {
+            case_id: 1,
+            client_id: 2,
+            roles_id: 2,
         },
     ]);
 }

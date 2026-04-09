@@ -17,7 +17,7 @@ import { ExpressError } from "../../utils/custom.error.mjs";
 // }
 
 export async function getByCLientId(id) {
-    return db.raw(`
+    return await db.raw(`
         SELECT c.id, c.nik, c.nkk, c.first_name, c.last_name, c.birth_date, c.birth_place, 
         
         (SELECT JSON_OBJECT("provinsi", prov.name, "kabupaten", kab.name, "kecamatan", kec.name, "kelurahan", kel.name)
@@ -27,10 +27,26 @@ export async function getByCLientId(id) {
         WHERE kel.id = c.address_code
         ) AS address,
         
-        (SELECT JSON_ARRAYAGG(JSON_OBJECT("id", ah.id, "no_alas_hak", ah.no_alas_hak)) FROM ${TABLE.ALASHAK} AS ah
-        LEFT JOIN ${TABLE.$ALASHAK.CLIENTS} AS ahc on ahc.client_id = c.id WHERE ah.id = ahc.alas_hak_id) AS alas_hak,
+        (SELECT 
+        CASE 
+            WHEN (SELECT COUNT(ah.id) FROM ${TABLE.ALASHAK} as ah
+                    LEFT JOIN ${TABLE.$ALASHAK.CLIENTS} as ahc on ahc.alas_hak_id = ah.id WHERE ahc.client_id = c.id) > 0 THEN
+            JSON_ARRAYAGG(JSON_OBJECT("id", ah.id, "no_alas_hak", ah.no_alas_hak)) 
+            ELSE JSON_ARRAY()
+        END
+        FROM ${TABLE.ALASHAK} AS ah
+        LEFT JOIN ${TABLE.$ALASHAK.CLIENTS} AS ahc on ahc.client_id = c.id 
+        WHERE ah.id = ahc.alas_hak_id) 
+        AS alas_hak,
         
-        (SELECT JSON_ARRAYAGG(JSON_OBJECT("id", cases.id, "product", prd.name, "alas_hak", ah.no_alas_hak)) FROM ${TABLE.CASES}
+        (SELECT
+        CASE 
+            WHEN (SELECT COUNT(cases.id) FROM ${TABLE.CASES} 
+                    LEFT JOIN ${TABLE.$CASES.CLIENTS} AS cc ON cc.case_id = cases.id WHERE c.id = cc.client_id) > 0 THEN  
+            JSON_ARRAYAGG(JSON_OBJECT("id", cases.id, "product", prd.name, "alas_hak", ah.no_alas_hak)) 
+            ELSE JSON_ARRAY()
+        END
+            FROM ${TABLE.CASES}
         LEFT JOIN ${TABLE.$CASES.PRD} AS prd ON prd.id = ${TABLE.CASES}.prd_id
         LEFT JOIN ${TABLE.ALASHAK} AS ah ON ah.id = ${TABLE.CASES}.ah_id
         LEFT JOIN ${TABLE.$CASES.CLIENTS} AS cc on cc.client_id = c.id
@@ -94,25 +110,37 @@ export async function getById(id) {
  */
 export async function getAllLimitOffset(limit, offset) {
     try {
-        const data = await db("clients as cl")
-            .leftJoin("kelurahan as kel", "kel.id", "cl.address_code")
-            .leftJoin("kecamatan as kec", "kec.id", "kel.id_kecamatan")
-            .leftJoin("kabupaten as kab", "kab.id", "kec.id_kabupaten")
-            .leftJoin("provinsi as prov", "prov.id", "kab.id_provinsi")
+        const data = await db(`${TABLE.CLIENTS} as cl`)
+            .leftJoin(
+                `${TABLE.$ADDRESS.KEL} as kel`,
+                "kel.id",
+                "cl.address_code",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.KEC} as kec`,
+                "kec.id",
+                "kel.id_kecamatan",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.KAB} as kab`,
+                "kab.id",
+                "kec.id_kabupaten",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.PROV} as prov`,
+                "prov.id",
+                "kab.id_provinsi",
+            )
+            .select("cl.id", "cl.nik", "cl.first_name", "cl.last_name")
             .select(
-                "cl.id",
-                "cl.nik",
-                "cl.first_name",
-                "cl.last_name",
-                "kel.name as kelurahan",
-                "kec.name as kecamatan",
-                "kab.name as kabupaten",
-                "prov.name as provinsi",
+                db.raw(
+                    "JSON_OBJECT('kelurahan', kel.name, 'kecamatan', kec.name, 'kabupaten', kab.name, 'provinsi', prov.name) AS address",
+                ),
             )
             .limit(limit || 10)
             .offset(offset || 0);
 
-        const [{ count }] = await db("clients").count("id as count");
+        const [{ count }] = await db(`${TABLE.CLIENTS}`).count("id as count");
         return { data, count };
     } catch (error) {
         if (offset < 0)
@@ -126,7 +154,7 @@ export async function getAllLimitOffset(limit, offset) {
 // Unused for now
 export async function getAll(limit, cursor, orderBy = "id", order = "asc") {
     try {
-        return await db("clients")
+        return await db(`${TABLE.CLIENTS}`)
             .select("id", "nik", "first_name", "last_name", "birth_place")
             .orderBy(orderBy, order)
             .limit(limit)
@@ -146,11 +174,27 @@ export async function getAll(limit, cursor, orderBy = "id", order = "asc") {
  */
 export async function search(columns, keyword, limit, offset) {
     try {
-        const data = await db("clients as cl")
-            .leftJoin("kelurahan as kel", "kel.id", "cl.address_code")
-            .leftJoin("kecamatan as kec", "kec.id", "kel.id_kecamatan")
-            .leftJoin("kabupaten as kab", "kab.id", "kec.id_kabupaten")
-            .leftJoin("provinsi as prov", "prov.id", "kab.id_provinsi")
+        const data = await db(`${TABLE.CLIENTS}as cl`)
+            .leftJoin(
+                `${TABLE.$ADDRESS.KEL} as kel`,
+                "kel.id",
+                "cl.address_code",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.KEC} as kec`,
+                "kec.id",
+                "kel.id_kecamatan",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.KAB} as kab`,
+                "kab.id",
+                "kec.id_kabupaten",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.PROV} as prov`,
+                "prov.id",
+                "kab.id_provinsi",
+            )
             .where(function () {
                 columns.forEach((col, i) => {
                     if (i === 0)
