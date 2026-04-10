@@ -135,25 +135,25 @@ export async function seed(knex) {
         },
     ]);
 
-    await knex("cases").insert([
-        {
-            id: 1,
-            ah_id: 1,
-            prd_id: 1,
-            status: "DRAFT",
-        },
-    ]);
+    // await knex("cases").insert([
+    //     {
+    //         id: 1,
+    //         ah_id: 1,
+    //         prd_id: 1,
+    //         status: "DRAFT",
+    //     },
+    // ]);
 
-    await knex("case_clients").insert([
-        {
-            case_id: 1,
-            client_id: 1,
-            roles_id: 1,
-        },
-        {
-            case_id: 1,
-            client_id: 2,
-            roles_id: 2,
-        },
-    ]);
+    // await knex("case_clients").insert([
+    //     {
+    //         case_id: 1,
+    //         client_id: 1,
+    //         roles_id: 1,
+    //     },
+    //     {
+    //         case_id: 1,
+    //         client_id: 2,
+    //         roles_id: 2,
+    //     },
+    // ]);
 }

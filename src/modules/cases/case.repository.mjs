@@ -1,8 +1,7 @@
 import db from "../../dbs/db.mjs";
 import { ExpressError } from "../../utils/custom.error.mjs";
 import createDebug from "debug";
-import { toISO } from "../../utils/date.mjs";
-
+import TABLE from "../../configs/table.config.mjs";
 const debug = new createDebug("app:repo:cases");
 
 // {
@@ -20,7 +19,7 @@ export async function createCase(model) {
         let result;
         await db.transaction(async (trx) => {
             debug("Check case conflicts");
-            const conflict = await trx("cases")
+            const conflict = await trx(TABLE.CASES)
                 .where({ ah_id: caseData.ah_id })
                 .andWhereRaw(`status IN ('IN PROGRESS', 'DRAFT')`)
                 .first();
@@ -33,10 +32,10 @@ export async function createCase(model) {
             }
 
             debug("creating case");
-            const [id] = await trx("cases").insert(caseData);
+            const [id] = await trx(TABLE.CASES).insert(caseData);
 
             debug("Get Workflows");
-            const workflows = await trx("workflows").where({
+            const workflows = await trx(TABLE.WORKFLOWS).where({
                 prd_id: caseData.prd_id,
             });
 
@@ -52,11 +51,11 @@ export async function createCase(model) {
                 );
 
             debug("Initiate steps");
-            const [insertedID] = await trx("case_steps").insert(steps);
+            const [insertedID] = await trx(TABLE.$CASES.STEPS).insert(steps);
 
             debug("Updating current step case");
             if (insertedID > 0)
-                await trx("cases")
+                await trx(TABLE.CASES)
                     .update({ current_step: insertedID })
                     .where({ id: id });
 
@@ -67,10 +66,10 @@ export async function createCase(model) {
                 client_id: val.id,
                 roles_id: val.roles_id,
             }));
-            await trx("case_clients").insert(case_clients);
+            await trx(TABLE.$CASES.CLIENTS).insert(case_clients);
 
             debug("Log activity");
-            await trx("activity_logs").insert({
+            await trx(TABLE.$CASES.LOGS).insert({
                 case_id: id,
                 action: "Case created",
             });
@@ -96,18 +95,18 @@ export async function updateCurrentCaseWorkflow(id, status) {
              * 3. Set the current step to IN PROGRESS
              */
             debug("Get case and lock for update");
-            const data = await trx("cases")
+            const data = await trx(TABLE.CASES)
                 .where({ id: id })
                 .forUpdate()
                 .first();
 
             debug("Get current step case");
-            const current_step = await trx("case_steps")
-                .leftJoin("workflows as w", "w.id", "case_steps.step_id")
-                .select(["case_steps.*", "w.name"])
+            const current_step = await trx(`${TABLE.$CASES.STEPS} as cs`)
+                .leftJoin(`${TABLE.WORKFLOWS} as w`, "w.id", "cs.step_id")
+                .select(["cs.*", "w.name"])
                 .where({
-                    "case_steps.id": data.current_step,
-                    "case_steps.case_id": data.id,
+                    "cs.id": data.current_step,
+                    "cs.case_id": data.id,
                 })
                 .first();
 
@@ -117,13 +116,13 @@ export async function updateCurrentCaseWorkflow(id, status) {
 
             if (status === "DONE") {
                 debug("Current Step completed");
-                await trx("case_steps")
+                await trx(TABLE.$CASES.STEPS)
                     .update({ status: status, completed_at: trx.fn.now() })
                     .where({ id: data.current_step, case_id: id });
                 await log(trx, data.id, `${current_step.name} : COMPLETED`);
             } else {
                 debug("Current Step updated");
-                await trx("case_steps")
+                await trx(TABLE.$CASES.STEPS)
                     .update({ status: status })
                     .where({ id: data.current_step, case_id: id });
 
@@ -132,22 +131,22 @@ export async function updateCurrentCaseWorkflow(id, status) {
 
             if (status === "DONE") {
                 debug("Get next step to check if it exists");
-                const next_step = await trx("case_steps")
-                    .leftJoin("workflows as w", "w.id", "case_steps.step_id")
+                const next_step = await trx(`${TABLE.$CASES.STEPS} as cs`)
+                    .leftJoin(`${TABLE.WORKFLOWS} as w`, "w.id", "cs.step_id")
                     .where("step_id", ">", current_step.step_id)
                     .andWhere({ case_id: data.id })
-                    .select(["case_steps.*", "w.name"])
-                    .orderBy("step_id", "asc")
+                    .select(["cs.*", "w.name"])
+                    .orderBy("cs.step_id", "asc")
                     .first();
 
                 if (next_step) {
                     debug("Move to the next step");
-                    await trx("cases")
+                    await trx(TABLE.CASES)
                         .where({ id: id })
                         .update({ current_step: next_step.id });
 
                     debug("Update current step status");
-                    await trx("case_steps")
+                    await trx(TABLE.CASES)
                         .where({ id: next_step.id, case_id: data.id })
                         .update({ status: "IN PROGRESS" });
 
@@ -158,7 +157,7 @@ export async function updateCurrentCaseWorkflow(id, status) {
                     );
                 } else {
                     debug("Case completed");
-                    await trx("cases")
+                    await trx(TABLE.CASES)
                         .where({ id: id })
                         .update({ status: "DONE" });
                     await log(trx, data.id, `Case Completed`);
@@ -172,7 +171,7 @@ export async function updateCurrentCaseWorkflow(id, status) {
 
 export async function log(trx, id, action) {
     try {
-        await trx("activity_logs").insert({
+        await trx(TABLE.$CASES.LOGS).insert({
             case_id: id,
             action: action,
         });
@@ -184,48 +183,33 @@ export async function log(trx, id, action) {
 export async function getById(id) {
     try {
         const [[data]] = await db.raw(`
-            SELECT cases.id, cases.case_num, cases.case_date, cases.status,
-                DATE_FORMAT(cases.created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
-                DATE_FORMAT(cases.updated_at, '%Y-%m-%d %H:%i:%s') AS updated_at,
+            SELECT c.id, c.case_num, c.case_date, c.status,
+                DATE_FORMAT(c.created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
+                DATE_FORMAT(c.updated_at, '%Y-%m-%d %H:%i:%s') AS updated_at,
             (SELECT JSON_OBJECT("id", ah.id, "no_alas_hak", ah.no_alas_hak) 
-                FROM alas_hak AS ah WHERE ah.id = cases.ah_id
+                FROM ${TABLE.ALASHAK} AS ah WHERE ah.id = c.ah_id
             ) AS alas_hak,
-            (SELECT JSON_ARRAYAGG(JSON_OBJECT("id", c.id, "first_name", c.first_name, "last_name", c.last_name, "role", cr.name))
-                FROM case_clients as cc LEFT JOIN clients AS c on c.id = cc.client_id 
-                LEFT JOIN client_roles as cr on cr.id = cc.roles_id
+            (SELECT JSON_ARRAYAGG(JSON_OBJECT("id", cl.id, "first_name", cl.first_name, "last_name", cl.last_name, "role", cr.name))
+                FROM ${TABLE.$CASES.CLIENTS} as cc LEFT JOIN ${TABLE.CLIENTS} AS cl on cl.id = cc.client_id 
+                LEFT JOIN ${TABLE.$CLIENTS.ROLES} as cr on cr.id = cc.roles_id
                 WHERE cc.case_id = 1
             ) AS clients,
             (SELECT JSON_ARRAYAGG(JSON_OBJECT("id", cs.id, "status", cs.status, "name", wf.name, "is_active",
                 CASE
-                    WHEN cs.id = cases.current_step THEN 1
+                    WHEN cs.id = c.current_step THEN 1
                     ELSE 0
                 END
-            )) FROM case_steps as cs
-                LEFT JOIN workflows AS wf on wf.id = cs.step_id
-                WHERE cs.case_id = cases.id
+            )) FROM ${TABLE.$CASES.STEPS} as cs
+                LEFT JOIN ${TABLE.WORKFLOWS} AS wf on wf.id = cs.step_id
+                WHERE cs.case_id = c.id
             ) as case_steps,
             (SELECT JSON_ARRAYAGG(JSON_OBJECT("action", al.action, "level", al.level, "timestamp", al.timestamp)) 
-            FROM activity_logs as al
-            WHERE al.case_id = cases.id
+            FROM ${TABLE.$CASES.LOGS} as al
+            WHERE al.case_id = c.id
             ) as activities
-            FROM cases WHERE cases.id = ${id} LIMIT 1;
+            FROM ${TABLE.CASES} AS c WHERE c.id = ${id} LIMIT 1;
         `);
 
-        // {
-        //     ...data,
-        //     created_at: toISO(data.created_at),
-        //     updated_at: toISO(data.updated_at),
-        //     activities: data.activities.map((val) => ({
-        //         level: val.level,
-        //         action: val.action,
-        //         timestamp: toISO(val.timestamp),
-        //     })),
-        // }
-
-        // console.log(typeof data.updated_at);
-        // console.log(data.updated_at);
-        // console.log(typeof data.activities[0].timestamp);
-        // console.log(data.activities[0].timestamp);
         return data;
     } catch (error) {
         throw new ExpressError(error.message);

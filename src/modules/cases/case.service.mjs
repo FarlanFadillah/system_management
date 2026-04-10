@@ -74,7 +74,7 @@ export async function updateCaseStep(id, status) {
 export async function get(id) {
     try {
         const data = await casesRepo.getById(id);
-        if (data.length <= 0) throw new ExpressError("Data not found");
+        if (!data) throw new ExpressError("Data not found");
         return data;
     } catch (error) {
         throw error;
