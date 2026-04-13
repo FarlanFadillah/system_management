@@ -92,7 +92,7 @@ export async function getAll(currentpage, limit) {
         const offset = (currentpage - 1) * limit;
         const { data, count } = await casesRepo.getAll(limit, offset);
         const _metadata = jsonHelper.paginationMetadata(
-            "proses",
+            "cases",
             currentpage,
             limit,
             count,
@@ -104,24 +104,24 @@ export async function getAll(currentpage, limit) {
     }
 }
 
-/**
- *
- * @param {Number} limit
- * @param {Number} offset
- * @param {String} from
- * @param {String} to
- * @param {String} number
- * @returns
- */
-export async function search(from, to, number, currentpage, limit) {
+export async function getFilteredCases(currentpage, limit, filters) {
     try {
         const offset = (currentpage - 1) * limit;
-        const { data, count } = await casesRepo.searchByDate(
+
+        if (filters.from) {
+            filters.from = new Date(filters.from).toISOString();
+        }
+
+        if (filters.to) {
+            const to = new Date(filters.to);
+            to.setUTCHours(23, 59, 59);
+            filters.to = to.toISOString();
+        }
+
+        const { data, count } = await casesRepo.getFilteredCases(
             limit,
             offset,
-            from,
-            to,
-            number,
+            filters,
         );
 
         const _metadata = jsonHelper.paginationMetadata(
@@ -130,41 +130,10 @@ export async function search(from, to, number, currentpage, limit) {
             limit,
             count,
             [
-                `from=${from}`,
-                `to=${to}`,
-                ...(number ? [`number=${number}`] : []),
+                filters.code ? `code=${filters.code}` : "",
+                filters.from ? `from=${filters.from}` : "",
+                filters.to ? `to=${filters.to}` : "",
             ],
-        );
-
-        return { data, _metadata };
-    } catch (error) {
-        throw error;
-    }
-}
-
-/**
- *
- * @param {String} no_surat
- * @param {Number} currentpage
- * @param {Number} limit
- * @returns
- */
-export async function searchByNoSurat(value, currentpage, limit) {
-    try {
-        const offset = (currentpage - 1) * limit;
-        value = value.replaceAll("_", "/");
-        const { data, count } = await casesRepo.searchBy(
-            "case_num",
-            value,
-            limit,
-            offset,
-        );
-        const _metadata = jsonHelper.paginationMetadata(
-            "cases/case_num",
-            currentpage,
-            limit,
-            count,
-            [`from=${from}`, `to=${to}`],
         );
 
         return { data, _metadata };

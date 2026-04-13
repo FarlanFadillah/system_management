@@ -1,7 +1,6 @@
 import { ExpressError } from "../../utils/custom.error.mjs";
 import * as mainRepo from "../../utils/main.repository.mjs";
 import * as alasHakRepo from "./alas_hak.repository.mjs";
-import * as addressRepo from "../address/address.repository.mjs";
 import * as jsonHelper from "../../helper/json.helper.mjs";
 import * as cache from "../../utils/cache.mjs";
 /**
@@ -59,7 +58,7 @@ export async function getAlasHak(id) {
     try {
         const data = await alasHakRepo.get(id);
         if (data.length <= 0) throw new ExpressError("Alas Hak not found", 404);
-        return destructureData(data);
+        return data;
     } catch (error) {
         throw error;
     }
@@ -75,7 +74,7 @@ export async function getAllAlasHak(limit, currentpage) {
     try {
         const offset = (currentpage - 1) * limit;
         const { data, count } = await alasHakRepo.getAll(limit, offset);
-        const alas_hak = jsonHelper.destructureAddressesDetails(data);
+        // const alas_hak = jsonHelper.destructureAddressesDetails(data);
         const _metadata = jsonHelper.paginationMetadata(
             "alas-hak",
             currentpage,
@@ -83,74 +82,33 @@ export async function getAllAlasHak(limit, currentpage) {
             count,
         );
 
-        return { alas_hak, _metadata };
+        return { alas_hak: data, _metadata };
     } catch (error) {
         throw error;
     }
 }
 
-/**
- *
- * @param {String} keyword
- * @param {Number} limit
- * @param {Number} currentpage
- * @returns
- */
-export async function searchAlasHak(keyword, limit, currentpage) {
+export async function getFilteredAlasHak(currentpage, limit, filters) {
     try {
         const offset = (currentpage - 1) * limit;
-        const { data, count } = await alasHakRepo.search(
-            ["no_alas_hak"],
-            keyword,
+        const { data, count } = await alasHakRepo.getFilteredAlasHak(
             limit,
             offset,
+            filters,
         );
 
-        const alas_hak = jsonHelper.destructureAddressesDetails(data);
         const _metadata = jsonHelper.paginationMetadata(
             "alas-hak/search",
             currentpage,
             limit,
             count,
-            [`keyword=${keyword}`],
+            Object.keys(filters).reduce((acc, cur) => {
+                if (filters[cur]) acc.push(`${cur}=${filters[cur]}`);
+                return acc;
+            }, []),
         );
 
-        return { alas_hak, _metadata };
-    } catch (error) {
-        throw error;
-    }
-}
-
-/**
- *
- * @param {String} level
- * @param {String} keyword
- * @param {Number} limit
- * @param {Number} currentpage
- * @returns
- */
-export async function searchByAddressCode(level, keyword, limit, currentpage) {
-    try {
-        const offset = (currentpage - 1) * limit;
-        let address_code = await addressRepo.get(level, keyword);
-        if (!address_code) throw new ExpressError("Address not found");
-
-        const { data, count } = await alasHakRepo.getByAddressCode(
-            address_code.id,
-            limit,
-            offset,
-        );
-
-        const alas_hak = jsonHelper.destructureAddressesDetails(data);
-        const _metadata = jsonHelper.paginationMetadata(
-            "alas-hak/search",
-            currentpage,
-            limit,
-            count,
-            [`keyword=${keyword}`, `level=${level}`],
-        );
-
-        return { alas_hak, _metadata };
+        return { alas_hak: data, _metadata };
     } catch (error) {
         throw error;
     }
@@ -262,36 +220,4 @@ export async function getOwners(id) {
     } catch (error) {
         throw error;
     }
-}
-
-// HELPER
-
-function destructureData(data) {
-    const {
-        cl_first_name,
-        cl_id,
-        cl_last_name,
-        kelurahan,
-        kecamatan,
-        kabupaten,
-        provinsi,
-        ...alas_hak
-    } = data[0];
-
-    const owners = data.map((row) => ({
-        id: row.cl_id,
-        first_name: row.cl_first_name,
-        last_name: row.cl_last_name,
-    }));
-
-    return {
-        ...alas_hak,
-        address: {
-            kelurahan,
-            kecamatan,
-            kabupaten,
-            provinsi,
-        },
-        owners: owners[0].id ? owners : [],
-    };
 }

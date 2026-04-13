@@ -25,8 +25,8 @@ export const updateAlasHakValidationRules = [
 ];
 
 export const searchAlasHakValidationRules = [
-    validator.stringRequired("keyword", "query"),
-    validator.stringOptional("level", "query"),
+    validator.stringOptional("address_code", "query"),
+    validator.numericalOptional("nomor", "query"),
 ];
 
 export const addAlasHakOwnerValidationRules = [

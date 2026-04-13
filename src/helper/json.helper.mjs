@@ -95,6 +95,11 @@ export function paginationMetadata(
 function genPaginationEndpoint(name, currentpage, limit, additions) {
     return (
         `/api/v1/${name}?currentpage=${currentpage}&limit=${limit}` +
-        (additions ? `&${additions.join("&")}` : "")
+        (additions
+            ? additions.reduce(
+                  (acc, cur) => (cur.length > 0 ? acc + "&" + cur : acc),
+                  "",
+              )
+            : "")
     );
 }

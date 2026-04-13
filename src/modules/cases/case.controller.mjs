@@ -52,8 +52,6 @@ export const updateStep = asyncHandler(async (req, res, next) => {
     });
 });
 
-export const getSteps = asyncHandler(async (req, res, next) => {});
-
 export const addClient = asyncHandler(async (req, res, next) => {
     const { id, clients_id, roles_id } = req.matchedData;
     const { result } = await casesService.addClientAndRoles(
@@ -103,26 +101,15 @@ export const getAllCases = asyncHandler(async (req, res, next) => {
 });
 
 export const searchByDate = asyncHandler(async (req, res, next) => {
-    const { currentpage, limit, from, to, number = null } = req.matchedData;
-    const { data, _metadata } = await casesService.search(
-        from,
-        to,
-        number,
+    const { currentpage, limit, from, to, code = null } = req.matchedData;
+    const { data, _metadata } = await casesService.getFilteredCases(
         Number(currentpage),
         Number(limit),
+        { from, to, code },
     );
     res.status(200).json({
         success: true,
         _metadata,
-        data,
-    });
-});
-
-export const getByNoSurat = asyncHandler(async (req, res, next) => {
-    let { value } = req.params;
-    const data = await casesService.getByNoSurat(value);
-    res.status(200).json({
-        success: true,
         data,
     });
 });

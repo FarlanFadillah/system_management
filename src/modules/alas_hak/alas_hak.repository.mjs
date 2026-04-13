@@ -1,5 +1,6 @@
 import { ExpressError } from "../../utils/custom.error.mjs";
 import db from "../../dbs/db.mjs";
+import TABLE from "../../configs/table.config.mjs";
 
 // EXAMPLE
 // {
@@ -21,26 +22,61 @@ import db from "../../dbs/db.mjs";
  */
 export async function get(id) {
     try {
-        return await db("alas_hak as ah")
-            .leftJoin("kelurahan as kel", "kel.id", "ah.address_code")
-            .leftJoin("kecamatan as kec", "kec.id", "kel.id_kecamatan")
-            .leftJoin("kabupaten as kab", "kab.id", "kec.id_kabupaten")
-            .leftJoin("provinsi as prov", "prov.id", "kab.id_provinsi")
-            .leftJoin("alas_hak_clients as ahc", "ahc.alas_hak_id", id)
-            .leftJoin("clients as cl", "cl.id", "ahc.client_id")
-            .leftJoin("types", "types.id", "ah.type_id")
+        return await db(`${TABLE.ALASHAK} as ah`)
+            .leftJoin(
+                `${TABLE.$ADDRESS.KEL} as kel`,
+                "kel.id",
+                "ah.address_code",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.KEC} as kec`,
+                "kec.id",
+                "kel.id_kecamatan",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.KAB} as kab`,
+                "kab.id",
+                "kec.id_kabupaten",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.PROV} as prov`,
+                "prov.id",
+                "kab.id_provinsi",
+            )
+            .leftJoin(
+                `${TABLE.$ALASHAK.CLIENTS} as ahc`,
+                "ahc.alas_hak_id",
+                "ah.id",
+            )
+            .leftJoin(`${TABLE.CLIENTS} as cl`, "cl.id", "ahc.client_id")
+            .leftJoin(`${TABLE.$ALASHAK.TYPES} as tp`, "tp.id", "ah.type_id")
             .where("ah.id", id)
             .select([
-                "ah.*",
-                "types.name as jenis_hak",
-                "kel.name as kelurahan",
-                "kec.name as kecamatan",
-                "kab.name as kabupaten",
-                "prov.name as provinsi",
-                "cl.id as cl_id",
-                "cl.first_name as cl_first_name",
-                "cl.last_name as cl_last_name",
-            ]);
+                "ah.id",
+                "ah.no_alas_hak",
+                "ah.no_surat_ukur",
+                "ah.tgl_alas_hak",
+                "ah.luas",
+                "ah.ket",
+                "ah.created_at",
+                "ah.updated_at",
+                "tp.name as jenis_hak",
+            ])
+            .select(
+                db.raw(`
+                JSON_OBJECT("jorong", ah.jor, "kelurahan", kel.name, "kecamatan", kec.name, "kabupaten", kab.name, "provinsi", prov.name) AS address
+                `),
+            )
+            .select(
+                db.raw(`
+                COALESCE(
+                    JSON_ARRAYAGG(JSON_OBJECT("id", cl.id, "nik", cl.nik, "nkk", cl.nkk, "first_name", cl.first_name, "last_name", cl.last_name)),
+                    JSON_ARRAY()
+                ) as owners
+                `),
+            )
+            .groupBy("ah.id")
+            .first();
     } catch (error) {
         throw new ExpressError(error.message);
     }
@@ -54,11 +90,27 @@ export async function get(id) {
  */
 export async function getAll(limit, offset) {
     try {
-        const data = await db("alas_hak as ah")
-            .leftJoin("kelurahan as kel", "kel.id", "ah.address_code")
-            .leftJoin("kecamatan as kec", "kec.id", "kel.id_kecamatan")
-            .leftJoin("kabupaten as kab", "kab.id", "kec.id_kabupaten")
-            .leftJoin("provinsi as prov", "prov.id", "kab.id_provinsi")
+        const data = await db(`${TABLE.ALASHAK} as ah`)
+            .leftJoin(
+                `${TABLE.$ADDRESS.KEL} as kel`,
+                "kel.id",
+                "ah.address_code",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.KEC} as kec`,
+                "kec.id",
+                "kel.id_kecamatan",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.KAB} as kab`,
+                "kab.id",
+                "kec.id_kabupaten",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.PROV} as prov`,
+                "prov.id",
+                "kab.id_provinsi",
+            )
             .leftJoin("types", "types.id", "ah.type_id")
             .select([
                 "ah.id",
@@ -67,43 +119,54 @@ export async function getAll(limit, offset) {
                 "ah.tgl_alas_hak",
                 "ah.ket",
                 "types.name as jenis_hak",
-                "kel.name as kelurahan",
-                "kec.name as kecamatan",
-                "kab.name as kabupaten",
-                "prov.name as provinsi",
             ])
+            .select(
+                db.raw(`
+                JSON_OBJECT("jorong", ah.jor, "kelurahan", kel.name, "kecamatan", kec.name, "kabupaten", kab.name, "provinsi", prov.name) AS address
+                `),
+            )
             .limit(limit || 10)
             .offset(offset || 0);
 
-        const [{ count }] = await db("alas_hak").count("id as count");
+        const [{ count }] = await db(TABLE.ALASHAK).count("id as count");
         return { data, count };
     } catch (error) {
         throw new ExpressError(error.message);
     }
 }
 
-/**
- *
- * @param {Array} columns
- * @param {String} keyword
- * @param {Number} limit
- * @param {Number} offset
- * @returns
- */
-export async function search(columns, keyword, limit, offset) {
+export async function getFilteredAlasHak(limit, offset, filters) {
     try {
-        const data = await db("alas_hak as ah")
-            .where(function () {
-                columns.forEach((col, i) => {
-                    if (i === 0)
-                        this.where(`ah.${col}`, "like", `%${keyword}%`);
-                    else this.orWhere(`ah.${col}`, "like", `%${keyword}%`);
-                });
+        const data = await db(`${TABLE.ALASHAK} as ah`)
+            .where("ah.no_alas_hak", "like", `%${filters.nomor || ""}%`)
+            .modify((queryBuilder) => {
+                if (filters.address_code)
+                    queryBuilder.andWhere(
+                        "ah.address_code",
+                        "like",
+                        `${filters.address_code}%`,
+                    );
             })
-            .leftJoin("kelurahan as kel", "kel.id", "ah.address_code")
-            .leftJoin("kecamatan as kec", "kec.id", "kel.id_kecamatan")
-            .leftJoin("kabupaten as kab", "kab.id", "kec.id_kabupaten")
-            .leftJoin("provinsi as prov", "prov.id", "kab.id_provinsi")
+            .leftJoin(
+                `${TABLE.$ADDRESS.KEL} as kel`,
+                "kel.id",
+                "ah.address_code",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.KEC} as kec`,
+                "kec.id",
+                "kel.id_kecamatan",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.KAB} as kab`,
+                "kab.id",
+                "kec.id_kabupaten",
+            )
+            .leftJoin(
+                `${TABLE.$ADDRESS.PROV} as prov`,
+                "prov.id",
+                "kab.id_provinsi",
+            )
             .leftJoin("types", "types.id", "ah.type_id")
             .select([
                 "ah.id",
@@ -112,97 +175,31 @@ export async function search(columns, keyword, limit, offset) {
                 "ah.tgl_alas_hak",
                 "ah.ket",
                 "types.name as jenis_hak",
-                "kel.name as kelurahan",
-                "kec.name as kecamatan",
-                "kab.name as kabupaten",
-                "prov.name as provinsi",
             ])
-            .orderBy("ah.id")
+            .select(
+                db.raw(`
+                JSON_OBJECT("jorong", ah.jor, "kelurahan", kel.name, "kecamatan", kec.name, "kabupaten", kab.name, "provinsi", prov.name) AS address
+                `),
+            )
+            .orderBy("ah.id", "asc")
             .limit(limit)
             .offset(offset);
 
-        const [{ count }] = await db("alas_hak")
-            .where(function () {
-                columns.forEach((col, i) => {
-                    if (i === 0) this.where(col, "like", `%${keyword}%`);
-                    else this.orWhere(col, "like", `%${keyword}%`);
-                });
+        const [{ count }] = await db(`${TABLE.ALASHAK} as ah`)
+            .where("ah.no_alas_hak", "like", `%${filters.nomor || ""}%`)
+            .modify((queryBuilder) => {
+                if (filters.address_code)
+                    queryBuilder.andWhere(
+                        "ah.address_code",
+                        "like",
+                        `${filters.address_code}%`,
+                    );
             })
-            .count("id as count");
+            .count("ah.id as count");
 
         return { data, count };
     } catch (error) {
-        throw new ExpressError(error.message);
-    }
-}
-
-/**
- *
- * @param {String} address_code
- * @param {Number} limit
- * @param {Number} offset
- * @returns
- */
-export async function getByAddressCode(address_code, limit, offset) {
-    try {
-        const data = await db("alas_hak as ah")
-            .where("ah.address_code", "like", `%${address_code}%`)
-            .leftJoin("kelurahan as kel", "kel.id", "ah.address_code")
-            .leftJoin("kecamatan as kec", "kec.id", "kel.id_kecamatan")
-            .leftJoin("kabupaten as kab", "kab.id", "kec.id_kabupaten")
-            .leftJoin("provinsi as prov", "prov.id", "kab.id_provinsi")
-            .leftJoin("types", "types.id", "ah.type_id")
-            .select([
-                "ah.id",
-                "ah.no_alas_hak",
-                "ah.luas",
-                "ah.tgl_alas_hak",
-                "ah.ket",
-                "types.name as jenis_hak",
-                "kel.name as kelurahan",
-                "kec.name as kecamatan",
-                "kab.name as kabupaten",
-                "prov.name as provinsi",
-            ])
-            .limit(limit || 10)
-            .offset(offset || 0);
-
-        const [{ count }] = await db("alas_hak")
-            .where("address_code", "like", `%${address_code}%`)
-            .count("id as count");
-
-        return { data, count };
-    } catch (error) {
-        throw new ExpressError(error.message);
-    }
-}
-
-/**
- *
- * @param {String} column
- * @param {String} keyword
- * @param {Number} limit
- * @param {Number} offset
- * @returns
- */
-export async function searchMultipleKeywords(column, keyword, limit, offset) {
-    try {
-        return await db("alas_hak as a")
-            .leftJoin("types", "types.id", "ah.type_id")
-            .select([
-                "a.id",
-                "a.no_alas_hak",
-                "a.luas",
-                "a.tgl_alas_hak",
-                "a.address_code",
-                "a.ket",
-                "types.name as jenis_hak",
-            ])
-            .where({ [column]: keyword })
-            .limit(limit)
-            .offset(offset);
-    } catch (error) {
-        throw new ExpressError(error.message);
+        throw error;
     }
 }
 
@@ -213,15 +210,10 @@ export async function searchMultipleKeywords(column, keyword, limit, offset) {
  */
 export async function getOwners(id) {
     try {
-        return await db("alas_hak_clients as ahc")
-            .leftJoin("clients", "clients.id", "ahc.client_id")
+        return await db(`${TABLE.$ALASHAK.CLIENTS} as ahc`)
+            .leftJoin(`${TABLE.CLIENTS} as cl`, "cl.id", "ahc.client_id")
             .where("ahc.alas_hak_id", id)
-            .select(
-                "clients.id",
-                "clients.nik",
-                "clients.first_name",
-                "clients.last_name",
-            )
+            .select("cl.id", "cl.nik", "cl.first_name", "cl.last_name")
             .limit(10)
             .offset(0);
     } catch (error) {

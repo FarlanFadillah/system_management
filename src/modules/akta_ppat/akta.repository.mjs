@@ -1,5 +1,6 @@
 import db from "../../dbs/db.mjs";
 import { ExpressError } from "../../utils/custom.error.mjs";
+import TABLE from "../../configs/table.config.mjs";
 
 // {
 //     "no_akta": "01",
@@ -11,13 +12,13 @@ import { ExpressError } from "../../utils/custom.error.mjs";
 
 export async function getByID(id) {
     try {
-        return await db("akta_ppat as ap")
+        return await db(`${TABLE.AKTAPPAT} as ap`)
             .where("ap.id", id)
-            .leftJoin("cases as c", "c.id", "ap.case_id")
-            .leftJoin("products as prd", "prd.id", "ap.prd_id")
-            .leftJoin("alas_hak as ah", "ah.id", "c.ah_id")
-            .leftJoin("case_clients as cc", "cc.case_id", "c.id")
-            .leftJoin("clients as cl", "cl.id", "cc.client_id")
+            .leftJoin(`${TABLE.CASES} as c`, "c.id", "ap.case_id")
+            .leftJoin(`${TABLE.$CASES.PRD} as prd`, "prd.id", "ap.prd_id")
+            .leftJoin(`${TABLE.ALASHAK} as ah`, "ah.id", "c.ah_id")
+            .leftJoin(`${TABLE.$CASES.CLIENTS} as cc`, "cc.case_id", "c.id")
+            .leftJoin(`${TABLE.CLIENTS} as cl`, "cl.id", "cc.client_id")
             .select([
                 "ap.*",
                 "ah.id as alas_hak_id",

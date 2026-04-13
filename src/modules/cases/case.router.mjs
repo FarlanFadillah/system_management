@@ -30,13 +30,6 @@ router.get(
     cache.cachingMiddleware(keyBuilder("cases")),
     ctrl.searchByDate,
 );
-router.get(
-    "/case-num/:value",
-    ...rules.nomorSuratValidationRules,
-    validate,
-    cache.cachingMiddleware(keyBuilder("cases")),
-    ctrl.getByNoSurat,
-);
 
 router.get(
     "/roles",

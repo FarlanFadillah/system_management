@@ -15,8 +15,8 @@ export async function up(knex) {
     await knex.schema.createTable("cases", (table) => {
         // columns nullable
         table.increments("id").primary();
-        table.string("case_num", 50).unique();
-        table.date("case_date");
+        table.string("code", 5).unique();
+        table.date("completed_at");
         table.timestamps(true, true);
 
         // columns not nullable
@@ -38,7 +38,7 @@ export async function up(knex) {
             .onDelete("CASCADE");
 
         // indexes
-        table.index("case_date");
+        table.index("code");
         table.index("prd_id");
         table.index("ah_id");
         table.index("status");

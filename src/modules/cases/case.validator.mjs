@@ -4,8 +4,6 @@ const status = ["DRAFT", "PENDING", "IN PROGRESS", "DONE", "REJECTED"];
 export const IDValidationRules = [validator.numericalRequired("id", "param")];
 
 export const createProsesValidationRules = [
-    validator.stringOptional("case_num"),
-    validator.dateOptional("case_date"),
     validator.stringIncludeRequired("status", status),
     validator.numericalRequired("prd_id"),
     validator.numericalRequired("ah_id"),
@@ -13,8 +11,6 @@ export const createProsesValidationRules = [
 ];
 
 export const patchProsesValidationRules = [
-    validator.stringOptional("no_surat"),
-    validator.dateOptional("tgl_surat"),
     validator.stringIncludeOptional("status", status),
     validator.numericalOptional("produk_id"),
     validator.numericalOptional("alas_hak_id"),
@@ -37,7 +33,7 @@ export const removeClientRolesValidationRules = [
 export const searchValidationRules = [
     validator.dateRequired("from", "query"),
     validator.dateRequired("to", "query"),
-    validator.stringOptional("number", "query"),
+    validator.stringOptional("code", "query"),
 ];
 
 export const nomorSuratValidationRules = [

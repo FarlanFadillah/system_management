@@ -6,8 +6,6 @@ import TABLE from "../../configs/table.config.mjs";
  *
  * @param {"provinsi" | "kabupaten" | "kecamatan" | "kelurahan"} table
  * @param {String} name
- * @param {Number} limit
- * @param {Number} offset
  * @returns
  */
 export async function get(table, name) {

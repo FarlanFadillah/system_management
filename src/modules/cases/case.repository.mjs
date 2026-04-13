@@ -2,6 +2,7 @@ import db from "../../dbs/db.mjs";
 import { ExpressError } from "../../utils/custom.error.mjs";
 import createDebug from "debug";
 import TABLE from "../../configs/table.config.mjs";
+import * as rand from "../../utils/randString.mjs";
 const debug = new createDebug("app:repo:cases");
 
 // {
@@ -32,7 +33,10 @@ export async function createCase(model) {
             }
 
             debug("creating case");
-            const [id] = await trx(TABLE.CASES).insert(caseData);
+            const [id] = await trx(TABLE.CASES).insert({
+                ...caseData,
+                code: rand.genStringCaps(5, 5),
+            });
 
             debug("Get Workflows");
             const workflows = await trx(TABLE.WORKFLOWS).where({
@@ -183,7 +187,7 @@ export async function log(trx, id, action) {
 export async function getById(id) {
     try {
         const [[data]] = await db.raw(`
-            SELECT c.id, c.case_num, c.case_date, c.status,
+            SELECT c.id, c.code, c.status,
                 DATE_FORMAT(c.created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
                 DATE_FORMAT(c.updated_at, '%Y-%m-%d %H:%i:%s') AS updated_at,
             (SELECT JSON_OBJECT("id", ah.id, "no_alas_hak", ah.no_alas_hak) 
@@ -216,29 +220,78 @@ export async function getById(id) {
     }
 }
 
-export async function getBy(key, value) {
+export async function getFilteredCases(limit, offset, filters) {
     try {
-        return await db("cases")
-            .leftJoin("case_clients as pc", "pc.case_id", "cases.id")
-            .leftJoin("clients as cl", "cl.id", "pc.client_id")
-            .leftJoin("client_roles as cr", "cr.id", "pc.roles_id")
-            .leftJoin("alas_hak as ah", "ah.id", "cases.ah_id")
-            .leftJoin("products", "products.id", "cases.prd_id")
-            .leftJoin("case_steps as cs", "cs.id", "cases.current_step")
-            .leftJoin("workflows as wf", "wf.id", "cs.step_id")
-            .select([
-                "cases.*",
-                "products.name as products",
-                "ah.no_alas_hak",
-                "ah.luas",
-                "cl.id as client_id",
-                "cl.first_name",
-                "cl.last_name",
-                "cr.name as roles_name",
-                "cs.status as step_status",
-                "wf.name as step_name",
-            ])
-            .where(`cases.${key}`, value);
+        const data = await db(`${TABLE.CASES} as c`)
+            .select(["c.id", "c.code", "c.status", "prd.name as products"])
+            .select(
+                db.raw(
+                    `JSON_OBJECT('id', ah.id, 'nomor', ah.no_alas_hak) as alas_hak`,
+                ),
+            )
+            .leftJoin(`${TABLE.$CASES.PRD} as prd`, "prd.id", "c.prd_id")
+            .leftJoin(`${TABLE.ALASHAK} as ah`, "ah.id", "c.ah_id")
+            .where("c.code", "like", `${filters.code || ""}%`)
+            .modify(function (queryBuilder) {
+                if (filters.from) {
+                    queryBuilder.andWhere(
+                        "c.created_at",
+                        ">=",
+                        `${filters.from}`,
+                    );
+                }
+                if (filters.to) {
+                    queryBuilder.andWhere(
+                        "c.created_at",
+                        "<=",
+                        `${filters.to}`,
+                    );
+                }
+            })
+            .limit(limit)
+            .offset(offset);
+
+        const [{ count }] = await db(`${TABLE.CASES} as c`)
+            .where("c.code", "like", `${filters.code || ""}%`)
+            .modify(function (queryBuilder) {
+                if (filters.from) {
+                    queryBuilder.andWhere(
+                        "c.created_at",
+                        ">=",
+                        `${filters.from}`,
+                    );
+                }
+                if (filters.to) {
+                    queryBuilder.andWhere(
+                        "c.created_at",
+                        "<=",
+                        `${filters.to}`,
+                    );
+                }
+            })
+            .count("id as count");
+        return { data, count };
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
+}
+
+/**
+ *
+ * @param {Number} limit
+ * @param {Number} offset
+ * @returns
+ */
+export async function getAll(limit, offset) {
+    try {
+        const data = await db(`${TABLE.CASES} as c`)
+            .leftJoin(`${TABLE.$CASES.PRD} as prd`, "prd.id", "c.prd_id")
+            .select(["c.id", "c.code", "c.status", "prd.name as products"])
+            .limit(limit)
+            .offset(offset);
+
+        const [{ count }] = await db(TABLE.CASES).count("id as count");
+        return { data, count };
     } catch (error) {
         throw new ExpressError(error.message);
     }
@@ -251,41 +304,22 @@ export async function getBy(key, value) {
  */
 export async function searchBy(key, value, limit, offset) {
     try {
-        const data = await db("cases")
-            .leftJoin("products", "products.id", "cases.products_id")
-            .where(`cases.${key}`, "like", `%${value}%`)
+        const data = await db(`${TABLE.CASES} as c`)
+            .leftJoin(`${TABLE.$CASES.PRD} as prd`, "prd.id", "c.prd_id")
+            .where(`c.${key}`, "like", `%${value}%`)
             .select([
-                "cases.id",
-                "cases.case_num",
-                "cases.case_date",
-                "products.name as products",
+                "c.id",
+                "c.case_num",
+                "c.case_date",
+                "prd.name as products",
             ])
             .limit(limit)
             .offset(offset);
 
-        const [{ count }] = await db("cases")
+        const [{ count }] = await db(TABLE.CASES)
             .where(key, "like", `%${value}%`)
             .count("* as count");
 
-        return { data, count };
-    } catch (error) {
-        throw new ExpressError(error.message);
-    }
-}
-
-export async function getAll(limit, offset) {
-    try {
-        const data = await db("cases")
-            .leftJoin("products", "products.id", "cases.prd_id")
-            .select([
-                "cases.id",
-                "cases.case_num",
-                "cases.case_date",
-                "products.name as products",
-            ])
-            .limit(limit)
-            .offset(offset);
-        const [{ count }] = await db("cases").count("id as count");
         return { data, count };
     } catch (error) {
         throw new ExpressError(error.message);
@@ -298,19 +332,14 @@ export async function getAll(limit, offset) {
  * @param {Number} offset
  * @param {String} from
  * @param {String} to
- * @param {String} number
+ * @param {String} code
  * @returns
  */
-export async function searchByDate(limit, offset, from, to, number) {
+export async function searchByDate(limit, offset, from, to, code) {
     try {
         const data = await db("cases")
-            .whereBetween("case_date", [from, to])
-            .modify(function (queryBuiler) {
-                if (number) {
-                    queryBuiler.andWhere("case_num", "like", `${number}%`);
-                }
-            })
-            .select(["id", "case_num", "case_date"])
+            .whereBetween("created_at", [from, to])
+            .select(["id", "code", "case_date"])
             .limit(limit)
             .offset(offset);
 

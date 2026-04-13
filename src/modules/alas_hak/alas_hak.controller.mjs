@@ -57,20 +57,13 @@ export const getAllAlasHak = asyncHandler(async (req, res, next) => {
 });
 
 export const searchAlasHak = asyncHandler(async (req, res, next) => {
-    const { keyword, level, currentpage, limit } = req.matchedData;
+    const { address_code, nomor, currentpage, limit } = req.matchedData;
 
-    const { alas_hak, _metadata } = level
-        ? await alasHakService.searchByAddressCode(
-              level,
-              keyword,
-              Number(limit),
-              Number(currentpage),
-          )
-        : await alasHakService.searchAlasHak(
-              keyword,
-              Number(limit),
-              Number(currentpage),
-          );
+    const { alas_hak, _metadata } = await alasHakService.getFilteredAlasHak(
+        Number(currentpage),
+        Number(limit),
+        { address_code, nomor },
+    );
     res.status(200).json({
         success: true,
         _metadata,
