@@ -45,7 +45,8 @@ export async function up(knex) {
             .unsigned()
             .notNullable()
             .references("id")
-            .inTable("products");
+            .inTable("products")
+            .onDelete("CASCADE");
         table
             .integer("client_id")
             .unsigned()

@@ -50,6 +50,13 @@ export async function remove(id) {
     }
 }
 
+export async function nextStep(id, data) {
+    try {
+    } catch (error) {
+        throw error;
+    }
+}
+
 /**
  *
  * @param {Number} case_id

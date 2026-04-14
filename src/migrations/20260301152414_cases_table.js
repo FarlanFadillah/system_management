@@ -49,6 +49,7 @@ export async function up(knex) {
         table.string("name").notNullable();
         table.integer("order").unsigned().notNullable();
         table.string("version").notNullable().defaultTo("v1");
+        table.json("required_fields").defaultTo(null);
         table
             .integer("prd_id")
             .unsigned()

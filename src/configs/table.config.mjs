@@ -25,4 +25,5 @@ export default {
         KEC: "kecamatan",
         KEL: "kelurahan",
     },
+    BPHTB: "bphtb",
 };

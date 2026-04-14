@@ -89,6 +89,63 @@ export async function createCase(model) {
     }
 }
 
+export async function nextStep(id, data) {
+    try {
+        await db.transaction(async (trx) => {
+            // TODO
+            /**
+             * 1. Get the case
+             * 2. Get current step
+             * 3. Check required field
+             * 4. Update necessary data
+             * 5. Update current step to the next if exists
+             *
+             */
+
+            const _case = await trx(TABLE.CASES).where({ id: id }).first();
+            const current_step = await trx(`${TABLE.$CASES.STEPS} as cs`)
+                .leftJoin(`${TABLE.WORKFLOWS} as wf`, "wf.id", "cs.step_id")
+                .where("cs.id", "=", _case.current_step)
+                .select("wf.required_fields", "wf.name");
+
+            if (current_step.required_fields) {
+                const { fields, name } = current_step;
+                const _data = {};
+                for (const value of Object.keys(fields)) {
+                    if (req[value]) _data[value] = data[value];
+                    else
+                        throw new ExpressError(
+                            `Required fields are missing. '${value}'`,
+                        );
+                }
+
+                if (name.includes("BPHTB")) {
+                    await trx(TABLE.BPHTB).where({ case_id: id }).update(_data);
+                }
+
+                await trx(TABLE.$CASES.STEPS)
+                    .where({ case_id: id })
+                    .update({ status: "DONE" });
+            }
+
+            const next_step = await trx(TABLE.$CASES.STEPS)
+                .where("order", ">", current_step.order)
+                .first();
+            if (next_step) {
+                // TODO
+                // SET CURRENT STEP TO NEXT STEP
+            } else {
+                // TODO
+                // CASE DONE
+                await trx(TABLE.CASES).where({ id: id }).update({
+                    status: "DONE",
+                    completed_at: new Date().now(),
+                });
+            }
+        });
+    } catch (error) {}
+}
+
 export async function updateCurrentCaseWorkflow(id, status) {
     try {
         await db.transaction(async (trx) => {
@@ -202,7 +259,8 @@ export async function getById(id) {
                 CASE
                     WHEN cs.id = c.current_step THEN 1
                     ELSE 0
-                END
+                END,
+                "required_fields", wf.required_fields
             )) FROM ${TABLE.$CASES.STEPS} as cs
                 LEFT JOIN ${TABLE.WORKFLOWS} AS wf on wf.id = cs.step_id
                 WHERE cs.case_id = c.id

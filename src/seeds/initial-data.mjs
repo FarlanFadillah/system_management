@@ -45,12 +45,26 @@ export async function seed(knex) {
 
     await knex("workflows").insert([
         { name: "Validasi Berkas", order: 1, prd_id: 1 },
-        { name: "BPHTB", order: 2, prd_id: 1 },
-        { name: "PPH", order: 3, prd_id: 1 },
-        { name: "ZNT", order: 4, prd_id: 1 },
-        { name: "CEKING", order: 5, prd_id: 1 },
-        { name: "Tanda Tangah AJB", order: 6, prd_id: 1 },
-        { name: "Validasi NOTARIS", order: 7, prd_id: 1 },
+        {
+            name: "BPHTB - Survei",
+            order: 2,
+            prd_id: 1,
+            required_fields: {
+                hasil_survei: {
+                    name: "hasil_survei",
+                    type: "number",
+                },
+                tgl_survei: {
+                    name: "tgl_survei",
+                    type: "date",
+                },
+            },
+        },
+        // { name: "PPH", order: 3, prd_id: 1 },
+        // { name: "ZNT", order: 4, prd_id: 1 },
+        // { name: "CEKING", order: 5, prd_id: 1 },
+        // { name: "Tanda Tangah AJB", order: 6, prd_id: 1 },
+        // { name: "Validasi NOTARIS", order: 7, prd_id: 1 },
     ]);
 
     await knex("alas_hak").insert([
