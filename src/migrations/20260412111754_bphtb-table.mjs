@@ -45,8 +45,7 @@ export async function up(knex) {
             .unsigned()
             .notNullable()
             .references("id")
-            .inTable("products")
-            .onDelete("SET NULL");
+            .inTable("products");
         table
             .integer("client_id")
             .unsigned()
@@ -56,10 +55,10 @@ export async function up(knex) {
             .onDelete("CASCADE");
 
         // indexes
-        table.index(["client_id", "alas_hak_id"]);
+        table.index(["client_id", "ah_id"]);
         table.index("case_id");
         table.index("client_id");
-        table.index("alas_hak_id");
+        table.index("ah_id");
         table.index("prd_id");
         table.index("tgl_survei");
     });

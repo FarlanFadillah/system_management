@@ -10,6 +10,7 @@
         "dev": "cross-env DEBUG=app:*:* NODE_ENV=development nodemon --legacy-watch --exec node src/index.mjs",
         "makemigration": "cross-env NODE_ENV=development npx knex migrate:make --knexfile ./knexfile",
         "migrate": "cross-env NODE_ENV=development npx knex migrate:latest --knexfile ./knexfile",
+        "migrate:list": "cross-env NODE_ENV=development npx knex migrate:list --knexfile ./knexfile",
         "rollback": "cross-env NODE_ENV=development npx knex migrate:rollback --knexfile ./knexfile",
         "down": "cross-env NODE_ENV=development npx knex migrate:down --knexfile ./knexfile",
         "seed": "cross-env NODE_ENV=development npx knex seed:run --knexfile ./knexfile.mjs",
