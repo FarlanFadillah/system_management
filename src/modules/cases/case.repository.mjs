@@ -103,16 +103,20 @@ export async function nextStep(id, data) {
              */
 
             const _case = await trx(TABLE.CASES).where({ id: id }).first();
+            if (!_case) throw new ExpressError("Case does not exist", 404);
+            else if (_case.status === "DONE")
+                throw new ExpressError("Case already finished");
+
             const current_step = await trx(`${TABLE.$CASES.STEPS} as cs`)
                 .leftJoin(`${TABLE.WORKFLOWS} as wf`, "wf.id", "cs.step_id")
                 .where("cs.id", "=", _case.current_step)
-                .select("wf.required_fields", "wf.name");
-
+                .select("wf.required_fields", "wf.name", "cs.step_id")
+                .first();
             if (current_step.required_fields) {
-                const { fields, name } = current_step;
+                const { required_fields, name } = current_step;
                 const _data = {};
-                for (const value of Object.keys(fields)) {
-                    if (req[value]) _data[value] = data[value];
+                for (const value of Object.keys(required_fields)) {
+                    if (!!data[value]) _data[value] = data[value];
                     else
                         throw new ExpressError(
                             `Required fields are missing. '${value}'`,
@@ -123,27 +127,43 @@ export async function nextStep(id, data) {
                     await trx(TABLE.BPHTB).where({ case_id: id }).update(_data);
                 }
 
+                // Set the current step status as 'DONE'
                 await trx(TABLE.$CASES.STEPS)
                     .where({ case_id: id })
                     .update({ status: "DONE" });
             }
 
-            const next_step = await trx(TABLE.$CASES.STEPS)
-                .where("order", ">", current_step.order)
+            const next_step = await trx(`${TABLE.$CASES.STEPS} as cs`)
+                .leftJoin(`${TABLE.WORKFLOWS} as wf`, "wf.id", "cs.step_id")
+                .where("cs.case_id", id)
+                .andWhere("cs.step_id", ">", current_step.step_id)
+                .select([
+                    "cs.id",
+                    "cs.step_id",
+                    "wf.required_fields",
+                    "wf.name",
+                ])
                 .first();
+
+            console.log(next_step);
             if (next_step) {
-                // TODO
-                // SET CURRENT STEP TO NEXT STEP
+                await trx(TABLE.CASES)
+                    .where({ id: id })
+                    .update({ current_step: next_step.id });
+
+                await trx(TABLE.$CASES.STEPS)
+                    .where({ id: next_step.id })
+                    .update({ status: "IN PROGRESS" });
             } else {
-                // TODO
-                // CASE DONE
                 await trx(TABLE.CASES).where({ id: id }).update({
                     status: "DONE",
-                    completed_at: new Date().now(),
+                    completed_at: trx.fn.now(),
                 });
             }
         });
-    } catch (error) {}
+    } catch (error) {
+        throw error;
+    }
 }
 
 export async function updateCurrentCaseWorkflow(id, status) {
@@ -244,7 +264,7 @@ export async function log(trx, id, action) {
 export async function getById(id) {
     try {
         const [[data]] = await db.raw(`
-            SELECT c.id, c.code, c.status,
+            SELECT c.id, c.code, c.status, c.completed_at,
                 DATE_FORMAT(c.created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
                 DATE_FORMAT(c.updated_at, '%Y-%m-%d %H:%i:%s') AS updated_at,
             (SELECT JSON_OBJECT("id", ah.id, "no_alas_hak", ah.no_alas_hak) 
@@ -253,7 +273,7 @@ export async function getById(id) {
             (SELECT JSON_ARRAYAGG(JSON_OBJECT("id", cl.id, "first_name", cl.first_name, "last_name", cl.last_name, "role", cr.name))
                 FROM ${TABLE.$CASES.CLIENTS} as cc LEFT JOIN ${TABLE.CLIENTS} AS cl on cl.id = cc.client_id 
                 LEFT JOIN ${TABLE.$CLIENTS.ROLES} as cr on cr.id = cc.roles_id
-                WHERE cc.case_id = 1
+                WHERE cc.case_id = c.id
             ) AS clients,
             (SELECT JSON_ARRAYAGG(JSON_OBJECT("id", cs.id, "status", cs.status, "name", wf.name, "is_active",
                 CASE

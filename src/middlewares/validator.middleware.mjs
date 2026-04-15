@@ -1,11 +1,14 @@
 import { matchedData, validationResult } from "express-validator";
 import { ExpressError } from "../utils/custom.error.mjs";
+import createDebug from "debug";
+
+const debug = createDebug("app:middleware:validator");
 
 export function validate(req, res, next) {
     const result = validationResult(req);
 
     if (result.isEmpty()) {
-        console.log("[REQUEST VALID]");
+        debug("[REQUEST VALID]");
         req.matchedData = matchedData(req);
         return next();
     }

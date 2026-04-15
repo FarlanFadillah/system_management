@@ -4,7 +4,6 @@ const status = ["DRAFT", "PENDING", "IN PROGRESS", "DONE", "REJECTED"];
 export const IDValidationRules = [validator.numericalRequired("id", "param")];
 
 export const createProsesValidationRules = [
-    validator.stringIncludeRequired("status", status),
     validator.numericalRequired("prd_id"),
     validator.numericalRequired("ah_id"),
     ...validator.isArrayOfObjects("clients"),
@@ -15,6 +14,11 @@ export const patchProsesValidationRules = [
     validator.numericalOptional("produk_id"),
     validator.numericalOptional("alas_hak_id"),
     validator.numericalOptional("current_step"),
+];
+
+export const nextStepValidationRules = [
+    validator.dateOptional("tgl_survei"),
+    validator.numericalOptional("hasil_survei"),
 ];
 
 export const stepsValidationRules = [

@@ -1,5 +1,8 @@
+import createDebug from "debug";
+const debug = createDebug("app:middleware:errors");
+
 export function globalErrorHandler(err, req, res, next) {
-    console.log("[GLOBAL ERROR HANDLER]");
+    debug("[GLOBAL ERROR HANDLER]");
     // console.error("SQL : ", err.sqlMessage);
     console.error(err.message);
     console.error(err.stack);

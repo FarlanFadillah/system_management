@@ -40,6 +40,12 @@ router.get(
 router
     .route("/:id")
     .delete(...mainRules.IDValidationRules, validate, ctrl.removeCase)
+    .post(
+        ...mainRules.IDValidationRules,
+        ...rules.nextStepValidationRules,
+        validate,
+        ctrl.nextStep,
+    )
     .patch(
         ...mainRules.IDValidationRules,
         ...rules.patchProsesValidationRules,

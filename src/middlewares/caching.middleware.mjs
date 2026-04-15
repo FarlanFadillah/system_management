@@ -74,7 +74,7 @@ export function cachingMiddleware(keyBuilder) {
 
         const resJson = res.json;
         res.json = function (data) {
-            cache.set(key, data);
+            cache.set(key, data, res.statusCode);
             return resJson.call(this, data);
         };
 

@@ -52,6 +52,16 @@ export const updateStep = asyncHandler(async (req, res, next) => {
     });
 });
 
+export const nextStep = asyncHandler(async (req, res, next) => {
+    const { id, ...data } = req.matchedData;
+    await casesService.nextStep(id, data);
+
+    res.status(200).json({
+        success: true,
+        msg: "Case is processed to the next step",
+    });
+});
+
 export const addClient = asyncHandler(async (req, res, next) => {
     const { id, clients_id, roles_id } = req.matchedData;
     const { result } = await casesService.addClientAndRoles(

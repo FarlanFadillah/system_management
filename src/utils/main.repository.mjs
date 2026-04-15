@@ -42,7 +42,7 @@ export async function remove(table, id) {
                     "The resource you are trying to delete does not exist or has already been removed",
                     404,
                 );
-            trx(table).delete({ id: id });
+            await trx(table).where({ id: id }).delete();
         });
     } catch (error) {
         throw new ExpressError(error.message);

@@ -78,7 +78,7 @@ export async function up(knex) {
             .inTable("workflows")
             .onDelete("CASCADE");
 
-        table.enum("status", enumStatus);
+        table.enum("status", enumStatus).defaultTo(enumStatus[0]);
         table.string("note");
         table.timestamp("started_at").defaultTo(knex.fn.now());
         table.timestamp("completed_at");

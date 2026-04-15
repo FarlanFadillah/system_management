@@ -52,6 +52,10 @@ export async function remove(id) {
 
 export async function nextStep(id, data) {
     try {
+        await casesRepo.nextStep(id, data);
+
+        cache.delByPattern(`:cases:id:${id}`);
+        cache.delByPattern(`:cases:list:`);
     } catch (error) {
         throw error;
     }
@@ -81,7 +85,8 @@ export async function updateCaseStep(id, status) {
 export async function get(id) {
     try {
         const data = await casesRepo.getById(id);
-        if (!data) throw new ExpressError("Data not found");
+        if (!data) throw new ExpressError("Data not found", 404);
+
         return data;
     } catch (error) {
         throw error;
