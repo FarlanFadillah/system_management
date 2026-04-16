@@ -34,11 +34,11 @@ export async function seed(knex) {
     ]);
 
     await knex("client_roles").insert([
-        { id: 1, name: "PENJUAL" },
-        { id: 2, name: "PEMBELI" },
+        { id: 1, name: "PEMBERI HAK" },
+        { id: 2, name: "PENERIMAH HAK" },
         { id: 3, name: "PIHAK PERSETUJUAN" },
-        { id: 4, name: "KUASA PENJUAL" },
-        { id: 5, name: "KUASA PEMBELI" },
+        { id: 4, name: "KUASA PEMBERI" },
+        { id: 5, name: "KUASA PENERIMA" },
         { id: 6, name: "PEMOHON" },
         { id: 7, name: "SAKSI" },
     ]);
@@ -56,6 +56,21 @@ export async function seed(knex) {
                 },
                 tgl_survei: {
                     name: "tgl_survei",
+                    type: "date",
+                },
+            },
+        },
+        {
+            name: "BPHTB - Perintah Bayar",
+            order: 3,
+            prd_id: 1,
+            required_fields: {
+                hasil_survei: {
+                    name: "total_bayar",
+                    type: "number",
+                },
+                tgl_survei: {
+                    name: "tgl_perintah_bayar",
                     type: "date",
                 },
             },

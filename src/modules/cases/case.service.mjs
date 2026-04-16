@@ -3,20 +3,82 @@ import * as casesRepo from "./case.repository.mjs";
 import * as jsonHelper from "../../helper/json.helper.mjs";
 import { ExpressError } from "../../utils/custom.error.mjs";
 import * as cache from "../../utils/cache.mjs";
+import db from "../../dbs/db.mjs";
+import * as dshelper from "../../utils/ds.mjs";
+import roles from "../../configs/roles.config.mjs";
+import * as bphtbRepo from "../../shared/bphtb/bphtb.repository.mjs";
 /**
  *
- * @param {Object} model
+ * @param {Object} data
  * @returns
  */
-export async function create(model) {
+export async function create(data) {
     try {
-        const data = await casesRepo.createCase(model);
+        const id = await db.transaction(async (trx) => {
+            const { clients } = data;
+            const case_id = await casesRepo.createCase(data, trx);
+            await casesRepo.setClients(case_id, clients, trx);
+
+            const step_id = await casesRepo.createSteps(
+                case_id,
+                data.prd_id,
+                trx,
+            );
+            await casesRepo.updateCase(case_id, { current_step: step_id }, trx);
+
+            await validateStep(case_id, step_id, data, trx);
+            return case_id;
+        });
 
         cache.delByPattern(":cases:list:");
-        return data;
+        return id;
     } catch (error) {
         throw error;
     }
+}
+/**
+ *
+ * @param {Number} case_id
+ * @param {Number} step_id
+ * @param {Object} data
+ * @param {import("knex").Knex.Transaction} trx
+ */
+async function validateStep(case_id, step_id, data, trx) {
+    const current_step = await casesRepo.getStep(step_id, trx);
+    if (!current_step.workflow.required_fields) return;
+    // BPHTB
+    if (current_step.workflow.name.includes("BPHTB")) {
+        if (!(await bphtbRepo.isExists({ case_id: case_id }, trx))) {
+            console.log("BPHTB CREATED");
+            const { clients, ah_id } = data;
+            await bphtbRepo.create({
+                tgl_berkas_masuk: trx.fn.now(),
+                case_id,
+                ah_id,
+                prd_id,
+                client_id: dshelper.getElement(
+                    clients,
+                    "roles_id",
+                    roles.PENERIMA_HAK,
+                ).id,
+            });
+        } else {
+            const _data = {};
+            for (const value of Object.keys(
+                current_step.workflow.required_fields,
+            )) {
+                if (!!data[value]) _data[value] = data[value];
+                else
+                    throw new ExpressError(
+                        `Required fields are missing. '${value}'`,
+                    );
+            }
+            await bphtbRepo.updateWhere({ case_id }, _data, trx);
+            console.log("BPHTB UPDATED");
+        }
+    }
+
+    await trx("bphtb").insert();
 }
 
 /**
@@ -52,7 +114,9 @@ export async function remove(id) {
 
 export async function nextStep(id, data) {
     try {
-        await casesRepo.nextStep(id, data);
+        return await db.transaction(async (trx) => {
+            await casesRepo.nextStep(id, data);
+        });
 
         cache.delByPattern(`:cases:id:${id}`);
         cache.delByPattern(`:cases:list:`);

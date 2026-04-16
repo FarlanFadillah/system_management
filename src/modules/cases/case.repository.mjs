@@ -13,79 +13,136 @@ const debug = new createDebug("app:repo:cases");
 //   "ah_id" : 3
 // }
 
-export async function createCase(model) {
+/**
+ *
+ * @param {Object} model
+ * @param {import("knex").Knex.Transaction} trx
+ * @returns
+ */
+export async function createCase(model, trx) {
     try {
         // debug("Model : ", JSON.stringify(model));
         const { clients, ...caseData } = model;
-        let result;
-        await db.transaction(async (trx) => {
-            debug("Check case conflicts");
-            const conflict = await trx(TABLE.CASES)
-                .where({ ah_id: caseData.ah_id })
-                .andWhereRaw(`status IN ('IN PROGRESS', 'DRAFT')`)
-                .first();
-            if (conflict) {
-                debug("Conflict detected");
-                throw new ExpressError(
-                    "Alas Hak masih terikat dengan case yang sedang berlangsung",
-                    400,
-                );
-            }
+        debug("Check case conflicts");
+        const conflict = await trx(TABLE.CASES)
+            .where({ ah_id: caseData.ah_id })
+            .andWhereRaw(`status IN ('IN PROGRESS', 'DRAFT')`)
+            .first();
+        if (conflict) {
+            debug("Conflict detected");
+            throw new ExpressError(
+                "Alas Hak masih terikat dengan case yang sedang berlangsung",
+                400,
+            );
+        }
 
-            debug("creating case");
-            const [id] = await trx(TABLE.CASES).insert({
-                ...caseData,
-                code: rand.genStringCaps(5, 5),
-            });
-
-            debug("Get Workflows");
-            const workflows = await trx(TABLE.WORKFLOWS).where({
-                prd_id: caseData.prd_id,
-            });
-
-            const steps = workflows.map((val) => ({
-                case_id: id,
-                step_id: val.id,
-                status: "DRAFT",
-            }));
-
-            if (steps.length <= 0)
-                throw new ExpressError(
-                    "Workflows for this product does not exists",
-                );
-
-            debug("Initiate steps");
-            const [insertedID] = await trx(TABLE.$CASES.STEPS).insert(steps);
-
-            debug("Updating current step case");
-            if (insertedID > 0)
-                await trx(TABLE.CASES)
-                    .update({ current_step: insertedID })
-                    .where({ id: id });
-
-            if (!clients) throw new ExpressError("Clients is empty", 400);
-            debug("create client case");
-            const case_clients = clients.map((val) => ({
-                case_id: id,
-                client_id: val.id,
-                roles_id: val.roles_id,
-            }));
-            await trx(TABLE.$CASES.CLIENTS).insert(case_clients);
-
-            debug("Log activity");
-            await trx(TABLE.$CASES.LOGS).insert({
-                case_id: id,
-                action: "Case created",
-            });
-            result = id;
+        debug("creating case");
+        const [id] = await trx(TABLE.CASES).insert({
+            ...caseData,
+            code: rand.genStringCaps(5, 5),
         });
-        return result;
+
+        debug("Log activity");
+        await trx(TABLE.$CASES.LOGS).insert({
+            case_id: id,
+            action: "Case created",
+        });
+        return id;
     } catch (error) {
         throw new ExpressError(
             error.message,
             error.http_status || 400,
             error.code || "something broke",
         );
+    }
+}
+
+/**
+ *
+ * @param {Number} case_id
+ * @param {Number} prd_id
+ * @param {import("knex").Knex.Transaction} trx
+ * @returns
+ */
+export async function createSteps(case_id, prd_id, trx) {
+    try {
+        debug("Get Workflows");
+        const workflows = await trx(TABLE.WORKFLOWS).where({
+            prd_id: prd_id,
+        });
+
+        const steps = workflows.map((val) => ({
+            case_id: case_id,
+            step_id: val.id,
+            status: "DRAFT",
+        }));
+
+        if (steps.length <= 0)
+            throw new ExpressError(
+                "Workflows for this product does not exists",
+            );
+
+        debug("Initiate steps");
+        const [insertedID] = await trx(TABLE.$CASES.STEPS).insert(steps);
+
+        return insertedID;
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
+}
+
+/**
+ *
+ * @param {Number} id
+ * @param {import("knex").Knex.Transaction} trx
+ * @returns
+ */
+export async function getStep(id, trx) {
+    try {
+        return await trx(`${TABLE.$CASES.STEPS} as cs`)
+            .leftJoin(`${TABLE.WORKFLOWS} as wf`, "wf.id", "cs.step_id")
+            .where("cs.id", id)
+            .select("cs.*")
+            .select(
+                trx.raw(
+                    `JSON_OBJECT("name", wf.name, "required", wf.required_fields) as workflow`,
+                ),
+            )
+            .first();
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
+}
+
+/**
+ *
+ * @param {Number} case_id
+ * @param {Array} clients
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function setClients(case_id, clients, trx) {
+    if (!clients) throw new ExpressError("Clients is empty", 400);
+    debug("create client case");
+    const case_clients = clients.map((val) => ({
+        case_id: case_id,
+        client_id: val.id,
+        roles_id: val.roles_id,
+    }));
+    await trx(TABLE.$CASES.CLIENTS).insert(case_clients);
+}
+
+/**
+ *
+ * @param {Number} id
+ * @param {Object} data
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function updateCase(id, data, trx) {
+    try {
+        await trx(TABLE.CASES).where({ id: id }).forUpdate().select("*");
+        await trx(TABLE.CASES).where({ id: id }).update(data);
+    } catch (error) {
+        throw new ExpressError(error.message);
     }
 }
 
@@ -101,8 +158,8 @@ export async function nextStep(id, data) {
              * 5. Update current step to the next if exists
              *
              */
-
             const _case = await trx(TABLE.CASES).where({ id: id }).first();
+            await trx(TABLE.CASES).where({ id: id }).forUpdate().first(); // lock for update
             if (!_case) throw new ExpressError("Case does not exist", 404);
             else if (_case.status === "DONE")
                 throw new ExpressError("Case already finished");
@@ -145,7 +202,6 @@ export async function nextStep(id, data) {
                 ])
                 .first();
 
-            console.log(next_step);
             if (next_step) {
                 await trx(TABLE.CASES)
                     .where({ id: id })

@@ -15,6 +15,7 @@ export async function up(knex) {
         // columns
         table.increments("id").primary();
         table.bigInteger("hasil_survei");
+        table.bigInteger("total_bayar");
 
         table.timestamps(true, true);
 
