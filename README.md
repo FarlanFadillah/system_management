@@ -1,12 +1,12 @@
-## 🏛️ System Management Notary Office
+# Management System for Notary Office
 
-**System Management Notary Office** is a backend-focused REST API designed to manage notary office operations such as client data, legal cases, land ownership (Alas Hak), and administrative regional hierarchy.
+System Management Notary Office is a backend-focused REST API designed to manage notary office operations such as client data, legal cases, land ownership (Alas Hak), and administrative regional hierarchy.
 
-This project is built using a **feature-based architecture**, where each business domain is modularized into its own isolated feature module, improving scalability, maintainability, and clarity.
+This project is built using a feature-based architecture, where each business domain is modularized into its own isolated feature module, improving scalability, maintainability, and clarity.
 
 ---
 
-### 🧱 Architecture: Feature-Based
+## Description
 
 Instead of separating by technical layer globally (controllers, services, routes, etc.), this project organizes code by **feature/domain**:
 
@@ -37,57 +37,32 @@ This approach:
 - Encourages clean domain boundaries
 
 ---
+## Getting Started
 
-### 🚀 Features
-
-- 🔐 Authentication & authorization using JWT
-- 👤 Client management (CRUD)
-- 📂 Case management #TODO
-- 🏞️ Land ownership (Alas Hak) management
-- 🗺️ Administrative region hierarchy (Province → Regency → District → Village)
-- 🔎 Case-insensitive search
-- 🧾 Validation & centralized error handling
-
----
-
-### 🛠️ Tech Stack
+### Tech Stack
 
 - Node.js
 - Express.js
 - Knex.js
-- SQLite
+- MySQL
 - RESTful API
 
----
+### Installing
 
-### 🎯 What This Project Demonstrates
-
-- Feature-based modular backend architecture
-- Proper async handling
-- Repository & service layer separation
-- Clean error propagation pattern
-- Real-world relational database modeling
-
-## ⚙️ How to Run the Project
-
-### 1️⃣ Clone the Repository
+#### Clone the Repository
 
 ```bash
 git clone https://github.com/farlanfadillah/system_management
 cd system_management
 ```
 
----
 
-### 2️⃣ Install Dependencies
+#### Install Dependencies
 
 ```bash
 npm install
 ```
-
----
-
-### 3️⃣ Setup Environment Variables
+#### Setup Environment Variables
 
 Create a `.env.development` file in the root directory:
 
@@ -104,20 +79,17 @@ DP_HOST=localhost
 
 Make sure to adjust the values based on your environment.
 
-Set the environment in `package.json` by defining `NODE_ENV=your_environment`.
-Ensure that a corresponding `.env` file exists for each environment (e.g., `.env.development`, `.env.production`).
-
----
-
-### 4️⃣ Run Database Migration
+#### Run Database Migration
 
 ```bash
 npx knex migrate:latest --knexfile ./knexfile.mjs
+```
 or
+```bash
 npm run migrate
 ```
 
-## 🌱 Run Database Seeds
+#### Run Database Seeds
 
 To populate the database with initial or required data, run:
 
@@ -133,31 +105,38 @@ npm run seed
 
 This command will execute all available seed files in the configured seeds directory.
 
----
 
-## 📥 Import Database
+#### Import Database
 
 Create database:
 
 ```bash
-mysql -u root -p -e "CREATE DATABASE myapp;"
+mysql -u root -p -e "CREATE DATABASE your_db_name;"
 ```
 
 ```bash
-mysql -u root -p myapp < ./sql/dump.sql
+mysql -u root -p your_db_name < ./sql/dump.sql
 ```
 
 ---
 
-### 5️⃣ Start the Server
 
-```bash
-npm start
+### Executing program
+
+* How to run the program
+
+```
+npm run dev
 ```
 
----
+## Help
 
-### 6️⃣ API Testing
+Any advise for common problems or issues.
+```
+command to run if program contains helper info
+```
+
+## API Testing
 
 You can test the API using:
 
@@ -173,7 +152,7 @@ http://localhost:3000
 
 ---
 
-## 🗂️ Project Structure (Feature-Based)
+#### Project Structure (Feature-Based)
 
 ```
 /modules
@@ -184,21 +163,20 @@ http://localhost:3000
 /dbs
 ```
 
-# 🌐 How to Use the REST API
+### How to Use the REST API
 
-## 📌 Base URL
+#### Base URL
 
 ```bash
 http://localhost:3000/api/v1****
 ```
 
----
 
-## 🔐 1. Authentication
+### 1. Authentication
 
 Before accessing protected routes, you need to authenticate.
 
-### Register
+#### Register
 
 **POST** `/auth/register`
 
@@ -212,9 +190,8 @@ Before accessing protected routes, you need to authenticate.
 }
 ```
 
----
 
-### Login
+#### Login
 
 **POST** `/auth/login`
 
@@ -236,7 +213,7 @@ Response:
 
 ---
 
-## 🔑 Using Protected Routes
+### Using Protected Routes
 
 For endpoints that require authentication, include the JWT token in the header:
 
@@ -246,9 +223,9 @@ Authorization: Bearer your_jwt_token_here
 
 ---
 
-## 👤 2. Clients
+### 2. Clients
 
-### Create Client
+#### Create Client
 
 **POST** `/clients`
 
@@ -266,9 +243,8 @@ Authorization: Bearer your_jwt_token_here
 }
 ```
 
----
 
-### Get All Clients with pagination
+#### Get All Clients with pagination
 
 **GET** `/clients?currentpage=1&limit=10`
 
@@ -278,29 +254,25 @@ Search query:
 /clients/search?keyword=yourname&currentpage=1&limit=10
 ```
 
----
 
-### Get Client by ID
+#### Get Client by ID
 
 **GET** `/clients/:id`
 
----
 
-### Update Client
+#### Update Client
 
 **PATCH** `/clients/:id`
 
----
 
-### Delete Client
+#### Delete Client
 
 **DELETE** `/clients/:id`
 
 ---
+### 3. Alas Hak (Land Ownership)
 
-## 🏞️ 3. Alas Hak (Land Ownership)
-
-### Create Alas Hak
+#### Create Alas Hak
 
 **POST** `/alas-hak`
 
@@ -329,9 +301,8 @@ Hints for jenis_hak_id:
 }
 ```
 
----
 
-### Assign Owners to Alas Hak
+#### Assign Owners to Alas Hak
 
 **POST** `/alas-hak/:id/owners`
 
@@ -341,11 +312,11 @@ Hints for jenis_hak_id:
 }
 ```
 
-### Remove the Owner
+#### Remove the Owner
 
 **DELETE** `/alas-hak/:id/owners/:client_id`
 
-### Get All Alas Hak with pagination
+#### Get All Alas Hak with pagination
 
 **GET** `/alas-hak?currentpage=1&limit=10`
 
@@ -359,31 +330,27 @@ level = [kelurahan | kecamatan | kabupaten | provinsi]
 
 **GET** `/alas-hak/search?level=kelurahan&keyword=03040804102576&currentpage=1&limit=10`
 
----
 
-### Get Alas Hak by ID
+#### Get Alas Hak by ID
 
 **GET** `/alas-hak/:id`
 
----
 
-### Update Alas Hak
+#### Update Alas Hak
 
 **PUT** `/alas-hak/:id`
 
----
 
-### Delete Alas Hak
+#### Delete Alas Hak
 
 **DELETE** `/alas-hak/:id`
 
----
 
 ---
 
-## 🏞️ 4. Address (Address Code)
+### 4. Address (Address Code)
 
-### Get Address by kelurahan name
+#### Get Address by kelurahan name
 
 **GET** `/address/kel?name=address-name&currentpage=1&limit=10`
 
