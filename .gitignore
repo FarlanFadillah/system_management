@@ -11,3 +11,6 @@ dbs/main.sqlite3
 # Prettier
 .prettierignore
 .prettierrc
+
+./*.http
+*.http

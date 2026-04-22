@@ -24,7 +24,12 @@ export async function create(data) {
                 data.prd_id,
                 trx,
             );
-            await casesRepo.updateCase(case_id, { current_step: step_id }, trx);
+            await casesRepo.updateCase(
+                case_id,
+                { current_step: step_id, status: "IN PROGRESS" },
+                trx,
+            );
+            await casesRepo.updateStep(step_id, { status: "IN PROGRESS" }, trx);
 
             await validateStep(case_id, step_id, data, trx);
             return case_id;
@@ -36,6 +41,74 @@ export async function create(data) {
         throw error;
     }
 }
+
+/**
+ *
+ * @param {Number} id
+ * @param {Object} data
+ * @returns
+ */
+export async function nextStep(id, data) {
+    try {
+        // TODO
+        /**
+         * 1. Get current step id
+         * 2. validate current step (current step, )
+         * 3. if the current step is valid proceed to the next step, return error if not
+         * 4. check if the next step is exists
+         * 5. update case current step
+         */
+        await db.transaction(async (trx) => {
+            await casesRepo.lockForUpdate(id, trx);
+            const _case = await casesRepo.getById(id);
+            if (!_case) throw new ExpressError("Case not found", 404);
+            else if (_case.status === "DONE")
+                throw new ExpressError("Case already finished");
+            await validateStep(
+                id,
+                _case.current_step,
+                { ...data, prd_id: _case.prd_id },
+                trx,
+            );
+            const next_step = await casesRepo.getNextStep(
+                id,
+                _case.current_step,
+                trx,
+            );
+            if (next_step) {
+                await casesRepo.updateStep(
+                    _case.current_step,
+                    { status: "DONE" },
+                    trx,
+                );
+                await casesRepo.updateCase(
+                    id,
+                    { current_step: next_step.id },
+                    trx,
+                );
+                await casesRepo.updateStep(
+                    next_step.id,
+                    { status: "IN PROGRESS" },
+                    trx,
+                );
+
+                await validateStep(id, next_step.id, null, trx);
+            } else {
+                await casesRepo.updateCase(id, { status: "DONE" }, trx);
+                await casesRepo.updateStep(
+                    _case.current_step,
+                    { status: "DONE" },
+                    trx,
+                );
+            }
+        });
+        cache.delByPattern(`:cases:id:${id}`);
+        cache.delByPattern(`:cases:list:`);
+    } catch (error) {
+        throw error;
+    }
+}
+
 /**
  *
  * @param {Number} case_id
@@ -44,38 +117,10 @@ export async function create(data) {
  * @param {import("knex").Knex.Transaction} trx
  */
 async function validateStep(case_id, step_id, data, trx) {
-    const current_step = await casesRepo.getStep(step_id, trx);
-    if (!current_step.workflow.required_fields) return;
+    const step = await casesRepo.getStep(step_id, trx);
+    if (!step.workflow.required) return;
     // BPHTB
-    if (current_step.workflow.name.includes("BPHTB")) {
-        if (!(await bphtbRepo.isExists({ case_id: case_id }, trx))) {
-            console.log("BPHTB CREATED");
-            const { clients, ah_id } = data;
-            await bphtbRepo.create({
-                tgl_berkas_masuk: trx.fn.now(),
-                case_id,
-                ah_id,
-                prd_id,
-                client_id: dshelper.getElement(
-                    clients,
-                    "roles_id",
-                    roles.PENERIMA_HAK,
-                ).id,
-            });
-        } else {
-            const _data = {};
-            for (const value of Object.keys(
-                current_step.workflow.required_fields,
-            )) {
-                if (!!data[value]) _data[value] = data[value];
-                else
-                    throw new ExpressError(
-                        `Required fields are missing. '${value}'`,
-                    );
-            }
-            await bphtbRepo.updateWhere({ case_id }, _data, trx);
-            console.log("BPHTB UPDATED");
-        }
+    if (step.workflow.name.includes("BPHTB")) {
     }
 
     await trx("bphtb").insert();
@@ -107,19 +152,6 @@ export async function remove(id) {
 
         cache.delByPattern(`:cases:id:${id}`);
         cache.delByPattern(":cases:list:");
-    } catch (error) {
-        throw error;
-    }
-}
-
-export async function nextStep(id, data) {
-    try {
-        return await db.transaction(async (trx) => {
-            await casesRepo.nextStep(id, data);
-        });
-
-        cache.delByPattern(`:cases:id:${id}`);
-        cache.delByPattern(`:cases:list:`);
     } catch (error) {
         throw error;
     }

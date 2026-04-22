@@ -18,7 +18,7 @@ router
         ...mainRules.paginationValidationRules,
         validate,
         pagination,
-        cache.cachingMiddleware(keyBuilder("cases")),
+        cache.cachingMiddleware(keyBuilder("cases:list")),
         ctrl.getAllCases,
     );
 
@@ -27,7 +27,7 @@ router.get(
     ...mainRules.paginationValidationRules,
     ...rules.searchValidationRules,
     validate,
-    cache.cachingMiddleware(keyBuilder("cases")),
+    cache.cachingMiddleware(keyBuilder("cases:list")),
     ctrl.searchByDate,
 );
 

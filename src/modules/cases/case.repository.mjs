@@ -98,6 +98,7 @@ export async function createSteps(case_id, prd_id, trx) {
  * @returns
  */
 export async function getStep(id, trx) {
+    console.log(id);
     try {
         return await trx(`${TABLE.$CASES.STEPS} as cs`)
             .leftJoin(`${TABLE.WORKFLOWS} as wf`, "wf.id", "cs.step_id")
@@ -105,12 +106,36 @@ export async function getStep(id, trx) {
             .select("cs.*")
             .select(
                 trx.raw(
-                    `JSON_OBJECT("name", wf.name, "required", wf.required_fields) as workflow`,
+                    `JSON_OBJECT("name", wf.name, "required", COALESCE(wf.required_fields, null)) as workflow`,
                 ),
             )
             .first();
     } catch (error) {
         throw new ExpressError(error.message);
+    }
+}
+
+/**
+ * @param {Number} case_id
+ * @param {Number} current_step_id
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function getNextStep(case_id, current_step_id, trx) {
+    try {
+        const current_step = await trx(TABLE.$CASES.STEPS)
+            .where({
+                id: current_step_id,
+            })
+            .first();
+        if (!current_step)
+            throw new ExpressError("Current step does not exists", 404);
+
+        return await trx(TABLE.$CASES.STEPS)
+            .where({ case_id: case_id })
+            .andWhere("step_id", ">", current_step.step_id)
+            .first();
+    } catch (error) {
+        throw new ExpressError(error.message, error.http_status || 400);
     }
 }
 
@@ -134,13 +159,40 @@ export async function setClients(case_id, clients, trx) {
 /**
  *
  * @param {Number} id
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function lockForUpdate(id, trx) {
+    try {
+        await trx(TABLE.CASES).where({ id: id }).forUpdate().select("*");
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
+}
+
+/**
+ *
+ * @param {Number} id
  * @param {Object} data
  * @param {import("knex").Knex.Transaction} trx
  */
 export async function updateCase(id, data, trx) {
     try {
-        await trx(TABLE.CASES).where({ id: id }).forUpdate().select("*");
-        await trx(TABLE.CASES).where({ id: id }).update(data);
+        await trx(TABLE.CASES).where("id", id).update(data);
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
+}
+
+/**
+ *
+ * @param {Number} id
+ * @param {Object} data
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function updateStep(id, data, trx) {
+    try {
+        await trx(TABLE.$CASES.STEPS).where({ id: id }).forUpdate().select("*");
+        await trx(TABLE.$CASES.STEPS).where({ id: id }).update(data);
     } catch (error) {
         throw new ExpressError(error.message);
     }
@@ -320,7 +372,7 @@ export async function log(trx, id, action) {
 export async function getById(id) {
     try {
         const [[data]] = await db.raw(`
-            SELECT c.id, c.code, c.status, c.completed_at,
+            SELECT c.id, c.code, c.status, c.completed_at, c.current_step,
                 DATE_FORMAT(c.created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
                 DATE_FORMAT(c.updated_at, '%Y-%m-%d %H:%i:%s') AS updated_at,
             (SELECT JSON_OBJECT("id", ah.id, "no_alas_hak", ah.no_alas_hak) 
