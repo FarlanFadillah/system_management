@@ -7,6 +7,7 @@ import db from "../../dbs/db.mjs";
 import * as dshelper from "../../utils/ds.mjs";
 import roles from "../../configs/roles.config.mjs";
 import * as bphtbRepo from "../../shared/bphtb/bphtb.repository.mjs";
+import * as bphtbService from "../../shared/bphtb/bphtb.service.mjs";
 /**
  *
  * @param {Object} data
@@ -117,10 +118,12 @@ export async function nextStep(id, data) {
  * @param {import("knex").Knex.Transaction} trx
  */
 async function validateStep(case_id, step_id, data, trx) {
+    const _case = await casesRepo.getById(case_id);
     const step = await casesRepo.getStep(step_id, trx);
     if (!step.workflow.required) return;
     // BPHTB
     if (step.workflow.name.includes("BPHTB")) {
+        await bphtbService.validateBPHTB(_case.id, data, trx);
     }
 
     await trx("bphtb").insert();
