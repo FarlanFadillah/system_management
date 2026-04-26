@@ -65,11 +65,11 @@ export async function seed(knex) {
             order: 3,
             prd_id: 1,
             required_fields: {
-                hasil_survei: {
+                total_bayar: {
                     name: "total_bayar",
                     type: "number",
                 },
-                tgl_survei: {
+                tgl_perintah_bayar: {
                     name: "tgl_perintah_bayar",
                     type: "date",
                 },

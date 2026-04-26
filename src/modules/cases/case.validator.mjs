@@ -16,9 +16,11 @@ export const patchProsesValidationRules = [
     validator.numericalOptional("current_step"),
 ];
 
-export const nextStepValidationRules = [
+export const stepValidationRules = [
     validator.dateOptional("tgl_survei"),
     validator.numericalOptional("hasil_survei"),
+    validator.numericalOptional("total_bayar"),
+    validator.dateOptional("tgl_perintah_bayar"),
 ];
 
 export const stepsValidationRules = [

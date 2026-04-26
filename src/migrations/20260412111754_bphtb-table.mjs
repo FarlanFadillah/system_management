@@ -48,21 +48,32 @@ export async function up(knex) {
             .references("id")
             .inTable("products")
             .onDelete("CASCADE");
-        table
-            .integer("client_id")
-            .unsigned()
-            .notNullable()
-            .references("id")
-            .inTable("clients")
-            .onDelete("CASCADE");
-
         // indexes
-        table.index(["client_id", "ah_id"]);
         table.index("case_id");
-        table.index("client_id");
         table.index("ah_id");
         table.index("prd_id");
         table.index("tgl_survei");
+    });
+
+    await knex.schema.createTable("bphtb_clients", (table) => {
+        table
+            .integer("client_id")
+            .notNullable()
+            .unsigned()
+            .references("id")
+            .inTable("clients")
+            .onDelete("CASCADE");
+        table
+            .integer("bphtb_id")
+            .notNullable()
+            .unsigned()
+            .references("id")
+            .inTable("bphtb")
+            .onDelete("CASCADE");
+
+        table.index(["client_id", "bphtb_id"]);
+        table.index("client_id");
+        table.index("bphtb_id");
     });
 }
 
@@ -71,5 +82,6 @@ export async function up(knex) {
  * @returns { Promise<void> }
  */
 export async function down(knex) {
+    await knex.schema.dropTable("bphtb_clients");
     await knex.schema.dropTable("bphtb");
 }

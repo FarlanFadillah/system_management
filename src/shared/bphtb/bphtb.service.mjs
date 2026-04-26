@@ -5,28 +5,30 @@ import ROLES from "../../configs/roles.config.mjs";
 /**
  *
  * @param {Number} case_id
+ * @param {Object} data
  * @param {import("knex").Knex.Transaction} trx
  */
-export async function validateBPHTB(case_id, trx) {
+export async function validateBPHTB(caseDTO, data, trx) {
     try {
-        const exists = await bphtbRepo.isExists({ case_id }, trx);
-        const _case = await trx(TABLE.CASES).where({ id: case_id });
-        if (exists) {
-            await bphtbRepo.updateWhere({ case_id }, data, trx);
-        } else {
-            const clients = await trx(`${TABLE.CLIENTS} as cl`)
-                .leftJoin(
-                    `${TABLE.$CASES.CLIENTS} as cc`,
-                    "cc.case_id",
-                    _case.id,
-                )
-                .where("cl.id", "cc.client_id")
-                .andWhere("cc.roles_id", ROLES.PENERIMA_HAK)
-                .first();
-
-            await bphtbRepo.create({ case_id, prd_id, ah_id, client_id }, trx);
+        console.log(caseDTO);
+        const exists = await bphtbRepo.isExists({ case_id: caseDTO.id }, trx);
+        if (!exists) {
+            const id = await bphtbRepo.create(
+                {
+                    case_id: caseDTO.id,
+                    prd_id: caseDTO.prd_id,
+                    ah_id: caseDTO.ah_id,
+                },
+                trx,
+            );
+            const clients = await bphtbRepo.getClientIdsFromCase(caseDTO.id);
+            await bphtbRepo.linkBPHTBClients(id, clients, trx);
         }
-    } catch (error) {}
+
+        await bphtbRepo.updateWhere({ case_id: caseDTO.id }, data, trx);
+    } catch (error) {
+        throw error;
+    }
 }
 
 /**

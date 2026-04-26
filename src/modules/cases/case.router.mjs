@@ -38,14 +38,20 @@ router.get(
 );
 
 router
-    .route("/:id")
-    .delete(...mainRules.IDValidationRules, validate, ctrl.removeCase)
+    .route("/:id/steps/next")
+    .post(...mainRules.IDValidationRules, validate, ctrl.nextStep);
+router
+    .route("/:id/steps/validate")
     .post(
         ...mainRules.IDValidationRules,
-        ...rules.nextStepValidationRules,
+        ...rules.stepValidationRules,
         validate,
-        ctrl.nextStep,
-    )
+        ctrl.validateStep,
+    );
+
+router
+    .route("/:id")
+    .delete(...mainRules.IDValidationRules, validate, ctrl.removeCase)
     .patch(
         ...mainRules.IDValidationRules,
         ...rules.patchProsesValidationRules,
@@ -63,15 +69,6 @@ router
         validate,
         cache.cachingMiddleware(keyBuilder("cases")),
         ctrl.getCase,
-    );
-
-router
-    .route("/:id/steps")
-    .patch(
-        ...rules.stepsValidationRules,
-        ...mainRules.IDValidationRules,
-        validate,
-        ctrl.updateStep,
     );
 
 router

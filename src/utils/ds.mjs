@@ -36,3 +36,24 @@ export function jsonToArray(obj) {
 
     return result;
 }
+
+/**
+ *
+ * @param {Object} data
+ * @param {Array} keys
+ */
+/**
+ *
+ * @param {Object} data
+ * @param {Array} keys
+ */
+export function pick(data, keys) {
+    return keys.reduce((acc, cur) => {
+        if (data[cur]) {
+            acc[cur] = data[cur];
+        } else {
+            throw Error(`${cur} field does not exists`);
+        }
+        return acc;
+    }, {});
+}

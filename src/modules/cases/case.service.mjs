@@ -30,9 +30,6 @@ export async function create(data) {
                 { current_step: step_id, status: "IN PROGRESS" },
                 trx,
             );
-            await casesRepo.updateStep(step_id, { status: "IN PROGRESS" }, trx);
-
-            await validateStep(case_id, step_id, data, trx);
             return case_id;
         });
 
@@ -46,10 +43,9 @@ export async function create(data) {
 /**
  *
  * @param {Number} id
- * @param {Object} data
  * @returns
  */
-export async function nextStep(id, data) {
+export async function nextStep(id) {
     try {
         // TODO
         /**
@@ -59,46 +55,70 @@ export async function nextStep(id, data) {
          * 4. check if the next step is exists
          * 5. update case current step
          */
+
+        // get case by its id
+        const _case = await casesRepo.getById(id);
+
+        // validate case
+        if (!_case) throw new ExpressError("Case not found", 404);
+        else if (_case.status === "DONE")
+            throw new ExpressError("Case already finished");
+
+        // get current step
+        const current_step = await casesRepo.getStep(_case.current_step);
+
+        // check if current step is valid or don't have requirement
+        if (!current_step.valid && current_step.required_fields)
+            throw Error("Current step not finished yet");
+
         await db.transaction(async (trx) => {
+            // Lock case for update
             await casesRepo.lockForUpdate(id, trx);
-            const _case = await casesRepo.getById(id);
-            if (!_case) throw new ExpressError("Case not found", 404);
-            else if (_case.status === "DONE")
-                throw new ExpressError("Case already finished");
-            await validateStep(
-                id,
-                _case.current_step,
-                { ...data, prd_id: _case.prd_id },
-                trx,
-            );
+
+            // get the next step if exists
             const next_step = await casesRepo.getNextStep(
                 id,
                 _case.current_step,
                 trx,
             );
+
+            // check if next step is exists
             if (next_step) {
+                // current step is done
                 await casesRepo.updateStep(
                     _case.current_step,
-                    { status: "DONE" },
+                    { status: "DONE", valid: true, completed_at: trx.fn.now() },
                     trx,
                 );
+
+                // update current step id
                 await casesRepo.updateCase(
                     id,
                     { current_step: next_step.id },
                     trx,
                 );
+
+                // update new current step
                 await casesRepo.updateStep(
                     next_step.id,
                     { status: "IN PROGRESS" },
                     trx,
                 );
-
-                await validateStep(id, next_step.id, null, trx);
             } else {
-                await casesRepo.updateCase(id, { status: "DONE" }, trx);
+                // if the code reach this if statement
+                // its mean the case is done
+
+                // update case, set status to done
+                await casesRepo.updateCase(
+                    id,
+                    { status: "DONE", completed_at: trx.fn.now() },
+                    trx,
+                );
+
+                // update current step, set status to done
                 await casesRepo.updateStep(
                     _case.current_step,
-                    { status: "DONE" },
+                    { status: "DONE", completed_at: trx.fn.now() },
                     trx,
                 );
             }
@@ -113,20 +133,37 @@ export async function nextStep(id, data) {
 /**
  *
  * @param {Number} case_id
- * @param {Number} step_id
  * @param {Object} data
  * @param {import("knex").Knex.Transaction} trx
  */
-async function validateStep(case_id, step_id, data, trx) {
-    const _case = await casesRepo.getById(case_id);
-    const step = await casesRepo.getStep(step_id, trx);
-    if (!step.workflow.required) return;
-    // BPHTB
-    if (step.workflow.name.includes("BPHTB")) {
-        await bphtbService.validateBPHTB(_case.id, data, trx);
-    }
+export async function validateStep(case_id, data) {
+    const _case = await casesRepo.getCaseById(case_id);
+    // validate case
+    if (!_case) throw new ExpressError("Case not found", 404);
+    else if (_case.status === "DONE")
+        throw new ExpressError("Case already finished");
 
-    await trx("bphtb").insert();
+    const step = await casesRepo.getStep(_case.current_step);
+    if (!step.required_fields || step.valid) return;
+
+    const dto = dshelper.pick(data, Object.keys(step.required_fields));
+
+    await db.transaction(async (trx) => {
+        const { id, prd_id, ah_id } = _case;
+        // BPHTB
+        if (step.name.includes("BPHTB")) {
+            await bphtbService.validateBPHTB({ id, prd_id, ah_id }, dto, trx);
+        }
+
+        await casesRepo.updateStep(
+            step.id,
+            {
+                valid: true,
+                completed_at: trx.fn.now(),
+            },
+            trx,
+        );
+    });
 }
 
 /**
@@ -152,22 +189,6 @@ export async function update(id, model) {
 export async function remove(id) {
     try {
         await mainRepo.remove("cases", id);
-
-        cache.delByPattern(`:cases:id:${id}`);
-        cache.delByPattern(":cases:list:");
-    } catch (error) {
-        throw error;
-    }
-}
-
-/**
- *
- * @param {Number} case_id
- * @param {String} status
- */
-export async function updateCaseStep(id, status) {
-    try {
-        await casesRepo.updateCurrentCaseWorkflow(id, status);
 
         cache.delByPattern(`:cases:id:${id}`);
         cache.delByPattern(":cases:list:");

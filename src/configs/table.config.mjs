@@ -26,4 +26,7 @@ export default {
         KEL: "kelurahan",
     },
     BPHTB: "bphtb",
+    $BPHTB: {
+        CLIENTS: "bphtb_clients",
+    },
 };

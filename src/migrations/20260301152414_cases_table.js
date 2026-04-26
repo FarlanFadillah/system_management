@@ -32,10 +32,9 @@ export async function up(knex) {
         table
             .integer("ah_id")
             .unsigned()
-            .notNullable()
             .references("id")
             .inTable("alas_hak")
-            .onDelete("CASCADE");
+            .onDelete("SET NULL");
 
         // indexes
         table.index("code");
@@ -62,6 +61,9 @@ export async function up(knex) {
 
     await knex.schema.createTable("case_steps", (table) => {
         table.increments("id").primary();
+        table.string("name").notNullable();
+        table.json("required_fields").defaultTo(null);
+        table.boolean("valid").defaultTo(false);
         table
             .integer("case_id")
             .unsigned()

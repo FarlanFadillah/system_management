@@ -1,10 +1,11 @@
 import { asyncHandler } from "../../utils/asyncHandler.mjs";
 import * as casesService from "./case.service.mjs";
+import httpStatus from "http-status";
 
 export const createCase = asyncHandler(async (req, res, next) => {
     const id = await casesService.create(req.matchedData);
 
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
         success: true,
         msg: "Proses Alas Hak added Successfully",
         data: {
@@ -17,7 +18,7 @@ export const updateCase = asyncHandler(async (req, res, next) => {
     const { id, ...data } = req.matchedData;
     await casesService.update(id, data);
 
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
         status: true,
         msg: "Proses Alas Hak updated successfully",
     });
@@ -26,7 +27,7 @@ export const updateCase = asyncHandler(async (req, res, next) => {
 export const removeCase = asyncHandler(async (req, res, next) => {
     const { id } = req.matchedData;
     await casesService.remove(id);
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
         success: true,
         msg: "Proses Alas Hak remove successfully",
     });
@@ -35,28 +36,27 @@ export const removeCase = asyncHandler(async (req, res, next) => {
 export const getCase = asyncHandler(async (req, res, next) => {
     const { id } = req.matchedData;
     const data = await casesService.get(id);
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
         success: true,
         data,
     });
 });
 
-export const updateStep = asyncHandler(async (req, res, next) => {
-    const { id, status } = req.matchedData;
+export const validateStep = asyncHandler(async (req, res, next) => {
+    const { id, ...data } = req.matchedData;
+    await casesService.validateStep(id, data);
 
-    await casesService.updateCaseStep(id, status);
-
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
         success: true,
-        msg: "Case updated successfully",
+        message: "Current is valid, you can proceed to the next step",
     });
 });
 
 export const nextStep = asyncHandler(async (req, res, next) => {
-    const { id, ...data } = req.matchedData;
-    await casesService.nextStep(id, data);
+    const { id } = req.matchedData;
+    await casesService.nextStep(id);
 
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
         success: true,
         msg: "Case is processed to the next step",
     });
@@ -70,7 +70,7 @@ export const addClient = asyncHandler(async (req, res, next) => {
         roles_id,
     );
 
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
         success: true,
         msg: "Client and Roles added succesfully",
         data: result,
@@ -81,7 +81,7 @@ export const removeClient = asyncHandler(async (req, res, next) => {
     const { id, client_id } = req.matchedData;
 
     await casesService.removeClientAndRoles(id, client_id);
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
         success: true,
         msg: "Client - Roles relations processed",
     });
@@ -90,7 +90,7 @@ export const removeClient = asyncHandler(async (req, res, next) => {
 export const updateClient = asyncHandler(async (req, res, next) => {
     const { id, clients_id, roles_id } = req.matchedData;
     await casesService.updateClientRoles(id, clients_id, roles_id);
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
         success: true,
         msg: "Client and Roles updated successfully",
     });
@@ -103,7 +103,7 @@ export const getAllCases = asyncHandler(async (req, res, next) => {
         Number(currentpage),
         Number(limit),
     );
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
         success: true,
         _metadata,
         data,
@@ -117,7 +117,7 @@ export const searchByDate = asyncHandler(async (req, res, next) => {
         Number(limit),
         { from, to, code },
     );
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
         success: true,
         _metadata,
         data,
@@ -126,5 +126,5 @@ export const searchByDate = asyncHandler(async (req, res, next) => {
 
 export const getRoles = asyncHandler(async (req, res, next) => {
     const roles = await casesService.getRoles();
-    res.status(200).json({ success: true, data: roles });
+    res.status(httpStatus.OK).json({ success: true, data: roles });
 });

@@ -71,11 +71,15 @@ export async function createSteps(case_id, prd_id, trx) {
             prd_id: prd_id,
         });
 
-        const steps = workflows.map((val) => ({
-            case_id: case_id,
-            step_id: val.id,
-            status: "DRAFT",
-        }));
+        const steps = workflows
+            .sort((a, b) => a.order - b.order)
+            .map((val, index) => ({
+                case_id: case_id,
+                step_id: val.id,
+                name: val.name,
+                status: index === 0 ? "IN PROGRESS" : "DRAFT",
+                required_fields: val.required_fields,
+            }));
 
         if (steps.length <= 0)
             throw new ExpressError(
@@ -94,21 +98,12 @@ export async function createSteps(case_id, prd_id, trx) {
 /**
  *
  * @param {Number} id
- * @param {import("knex").Knex.Transaction} trx
  * @returns
  */
-export async function getStep(id, trx) {
-    console.log(id);
+export async function getStep(id) {
     try {
-        return await trx(`${TABLE.$CASES.STEPS} as cs`)
-            .leftJoin(`${TABLE.WORKFLOWS} as wf`, "wf.id", "cs.step_id")
+        return await db(`${TABLE.$CASES.STEPS} as cs`)
             .where("cs.id", id)
-            .select("cs.*")
-            .select(
-                trx.raw(
-                    `JSON_OBJECT("name", wf.name, "required", COALESCE(wf.required_fields, null)) as workflow`,
-                ),
-            )
             .first();
     } catch (error) {
         throw new ExpressError(error.message);
@@ -177,7 +172,9 @@ export async function lockForUpdate(id, trx) {
  */
 export async function updateCase(id, data, trx) {
     try {
-        await trx(TABLE.CASES).where("id", id).update(data);
+        await trx(TABLE.CASES)
+            .where("id", id)
+            .update({ ...data, updated_at: trx.fn.now() });
     } catch (error) {
         throw new ExpressError(error.message);
     }
@@ -192,167 +189,9 @@ export async function updateCase(id, data, trx) {
 export async function updateStep(id, data, trx) {
     try {
         await trx(TABLE.$CASES.STEPS).where({ id: id }).forUpdate().select("*");
-        await trx(TABLE.$CASES.STEPS).where({ id: id }).update(data);
-    } catch (error) {
-        throw new ExpressError(error.message);
-    }
-}
-
-export async function nextStep(id, data) {
-    try {
-        await db.transaction(async (trx) => {
-            // TODO
-            /**
-             * 1. Get the case
-             * 2. Get current step
-             * 3. Check required field
-             * 4. Update necessary data
-             * 5. Update current step to the next if exists
-             *
-             */
-            const _case = await trx(TABLE.CASES).where({ id: id }).first();
-            await trx(TABLE.CASES).where({ id: id }).forUpdate().first(); // lock for update
-            if (!_case) throw new ExpressError("Case does not exist", 404);
-            else if (_case.status === "DONE")
-                throw new ExpressError("Case already finished");
-
-            const current_step = await trx(`${TABLE.$CASES.STEPS} as cs`)
-                .leftJoin(`${TABLE.WORKFLOWS} as wf`, "wf.id", "cs.step_id")
-                .where("cs.id", "=", _case.current_step)
-                .select("wf.required_fields", "wf.name", "cs.step_id")
-                .first();
-            if (current_step.required_fields) {
-                const { required_fields, name } = current_step;
-                const _data = {};
-                for (const value of Object.keys(required_fields)) {
-                    if (!!data[value]) _data[value] = data[value];
-                    else
-                        throw new ExpressError(
-                            `Required fields are missing. '${value}'`,
-                        );
-                }
-
-                if (name.includes("BPHTB")) {
-                    await trx(TABLE.BPHTB).where({ case_id: id }).update(_data);
-                }
-
-                // Set the current step status as 'DONE'
-                await trx(TABLE.$CASES.STEPS)
-                    .where({ case_id: id })
-                    .update({ status: "DONE" });
-            }
-
-            const next_step = await trx(`${TABLE.$CASES.STEPS} as cs`)
-                .leftJoin(`${TABLE.WORKFLOWS} as wf`, "wf.id", "cs.step_id")
-                .where("cs.case_id", id)
-                .andWhere("cs.step_id", ">", current_step.step_id)
-                .select([
-                    "cs.id",
-                    "cs.step_id",
-                    "wf.required_fields",
-                    "wf.name",
-                ])
-                .first();
-
-            if (next_step) {
-                await trx(TABLE.CASES)
-                    .where({ id: id })
-                    .update({ current_step: next_step.id });
-
-                await trx(TABLE.$CASES.STEPS)
-                    .where({ id: next_step.id })
-                    .update({ status: "IN PROGRESS" });
-            } else {
-                await trx(TABLE.CASES).where({ id: id }).update({
-                    status: "DONE",
-                    completed_at: trx.fn.now(),
-                });
-            }
-        });
-    } catch (error) {
-        throw error;
-    }
-}
-
-export async function updateCurrentCaseWorkflow(id, status) {
-    try {
-        await db.transaction(async (trx) => {
-            // TODO
-            /**
-             * 1. Update status, and check current step.
-             * 2. Update current step if the status is DONE
-             * 3. Set the current step to IN PROGRESS
-             */
-            debug("Get case and lock for update");
-            const data = await trx(TABLE.CASES)
-                .where({ id: id })
-                .forUpdate()
-                .first();
-
-            debug("Get current step case");
-            const current_step = await trx(`${TABLE.$CASES.STEPS} as cs`)
-                .leftJoin(`${TABLE.WORKFLOWS} as w`, "w.id", "cs.step_id")
-                .select(["cs.*", "w.name"])
-                .where({
-                    "cs.id": data.current_step,
-                    "cs.case_id": data.id,
-                })
-                .first();
-
-            if (!current_step) throw new ExpressError("Step not found");
-            if (current_step.status === "DONE")
-                throw new ExpressError("Step already completed");
-
-            if (status === "DONE") {
-                debug("Current Step completed");
-                await trx(TABLE.$CASES.STEPS)
-                    .update({ status: status, completed_at: trx.fn.now() })
-                    .where({ id: data.current_step, case_id: id });
-                await log(trx, data.id, `${current_step.name} : COMPLETED`);
-            } else {
-                debug("Current Step updated");
-                await trx(TABLE.$CASES.STEPS)
-                    .update({ status: status })
-                    .where({ id: data.current_step, case_id: id });
-
-                await log(trx, data.id, `${current_step.name} : [${status}]`);
-            }
-
-            if (status === "DONE") {
-                debug("Get next step to check if it exists");
-                const next_step = await trx(`${TABLE.$CASES.STEPS} as cs`)
-                    .leftJoin(`${TABLE.WORKFLOWS} as w`, "w.id", "cs.step_id")
-                    .where("step_id", ">", current_step.step_id)
-                    .andWhere({ case_id: data.id })
-                    .select(["cs.*", "w.name"])
-                    .orderBy("cs.step_id", "asc")
-                    .first();
-
-                if (next_step) {
-                    debug("Move to the next step");
-                    await trx(TABLE.CASES)
-                        .where({ id: id })
-                        .update({ current_step: next_step.id });
-
-                    debug("Update current step status");
-                    await trx(TABLE.CASES)
-                        .where({ id: next_step.id, case_id: data.id })
-                        .update({ status: "IN PROGRESS" });
-
-                    await log(
-                        trx,
-                        data.id,
-                        `${next_step.name} : [IN PROGRESS]`,
-                    );
-                } else {
-                    debug("Case completed");
-                    await trx(TABLE.CASES)
-                        .where({ id: id })
-                        .update({ status: "DONE" });
-                    await log(trx, data.id, `Case Completed`);
-                }
-            }
-        });
+        await trx(TABLE.$CASES.STEPS)
+            .where({ id: id })
+            .update({ ...data });
     } catch (error) {
         throw new ExpressError(error.message);
     }
@@ -366,6 +205,14 @@ export async function log(trx, id, action) {
         });
     } catch (error) {
         throw new ExpressError(error.message);
+    }
+}
+
+export async function getCaseById(id) {
+    try {
+        return await db(TABLE.CASES).select("*").where({ id }).first();
+    } catch (error) {
+        throw error;
     }
 }
 
@@ -388,7 +235,8 @@ export async function getById(id) {
                     WHEN cs.id = c.current_step THEN 1
                     ELSE 0
                 END,
-                "required_fields", wf.required_fields
+                "valid", cs.valid,
+                "required_fields", cs.required_fields
             )) FROM ${TABLE.$CASES.STEPS} as cs
                 LEFT JOIN ${TABLE.WORKFLOWS} AS wf on wf.id = cs.step_id
                 WHERE cs.case_id = c.id
