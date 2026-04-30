@@ -31,7 +31,7 @@ export async function createCase(model, trx) {
         if (conflict) {
             debug("Conflict detected");
             throw new ExpressError(
-                "Alas Hak masih terikat dengan case yang sedang berlangsung",
+                `Alas Hak masih terikat dengan case yang sedang berlangsung (case id ${conflict.id})`,
                 400,
             );
         }
@@ -40,6 +40,8 @@ export async function createCase(model, trx) {
         const [id] = await trx(TABLE.CASES).insert({
             ...caseData,
             code: rand.genStringCaps(5, 5),
+            created_at: new Date(),
+            updated_at: new Date(),
         });
 
         debug("Log activity");
@@ -98,11 +100,13 @@ export async function createSteps(case_id, prd_id, trx) {
 /**
  *
  * @param {Number} id
+ * @param {import("knex").Knex.Transaction} trx
  * @returns
  */
-export async function getStep(id) {
+export async function getStep(id, trx) {
     try {
-        return await db(`${TABLE.$CASES.STEPS} as cs`)
+        if (!trx) trx = db;
+        return await trx(`${TABLE.$CASES.STEPS} as cs`)
             .where("cs.id", id)
             .first();
     } catch (error) {
@@ -117,6 +121,7 @@ export async function getStep(id) {
  */
 export async function getNextStep(case_id, current_step_id, trx) {
     try {
+        if (!trx) trx = db;
         const current_step = await trx(TABLE.$CASES.STEPS)
             .where({
                 id: current_step_id,
@@ -208,6 +213,25 @@ export async function log(trx, id, action) {
     }
 }
 
+/**
+ * Get related client from case for bphtb
+ * @param {Number} case_id
+ * @param {Number} role_id
+ * @returns {Object}
+ */
+export async function getClientIdsFromCase(case_id, role_id) {
+    try {
+        return await db(`${TABLE.CASES} as c`)
+            .leftJoin(`${TABLE.$CASES.CLIENTS} as cc`, "cc.case_id", "c.id")
+            .leftJoin(`${TABLE.CLIENTS} as cl`, "cl.id", "cc.client_id")
+            .where("c.id", case_id)
+            .andWhere("cc.roles_id", role_id)
+            .select("cl.id");
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function getCaseById(id) {
     try {
         return await db(TABLE.CASES).select("*").where({ id }).first();
@@ -216,12 +240,17 @@ export async function getCaseById(id) {
     }
 }
 
-export async function getById(id) {
+/**
+ *
+ * @param {Number} id
+ * @param {import("knex").Knex.Transaction} trx
+ * @returns
+ */
+export async function getById(id, trx) {
     try {
-        const [[data]] = await db.raw(`
-            SELECT c.id, c.code, c.status, c.completed_at, c.current_step,
-                DATE_FORMAT(c.created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
-                DATE_FORMAT(c.updated_at, '%Y-%m-%d %H:%i:%s') AS updated_at,
+        if (!trx) trx = db;
+        const [[data]] = await trx.raw(`
+            SELECT c.*,
             (SELECT JSON_OBJECT("id", ah.id, "no_alas_hak", ah.no_alas_hak) 
                 FROM ${TABLE.ALASHAK} AS ah WHERE ah.id = c.ah_id
             ) AS alas_hak,
@@ -392,5 +421,19 @@ export async function getRoles() {
         return await db("client_roles").select(["id", "name"]);
     } catch (error) {
         throw new ExpressError(error.message);
+    }
+}
+
+/**
+ *
+ * @param {Number} id
+ * @param {import("knex").Knex.Transaction} trx
+ * @returns
+ */
+export async function getProduct(id, trx) {
+    try {
+        return await trx(TABLE.$CASES.PRD).where({ id: id }).first();
+    } catch (error) {
+        throw error;
     }
 }

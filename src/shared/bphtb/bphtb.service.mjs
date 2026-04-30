@@ -10,7 +10,6 @@ import ROLES from "../../configs/roles.config.mjs";
  */
 export async function validateBPHTB(caseDTO, data, trx) {
     try {
-        console.log(caseDTO);
         const exists = await bphtbRepo.isExists({ case_id: caseDTO.id }, trx);
         if (!exists) {
             const id = await bphtbRepo.create(

@@ -8,14 +8,7 @@ process.on("unhandledRejection", console.error);
 
 const PORT = process.env.PORT || 3030;
 
-// routes
-import authRouter from "./modules/auth/auth.router.mjs";
-import addressRouter from "./modules/address/address.router.mjs";
-import clientsRouter from "./modules/clients/client.router.mjs";
-import alasHakRouter from "./modules/alas_hak/alas_hak.router.mjs";
-import casesRouter from "./modules/cases/case.router.mjs";
-import aktaRouter from "./modules/akta_ppat/akta.router.mjs";
-import statsRouter from "./modules/stats/stats.router.mjs";
+import routerV1 from "./routes.mjs";
 
 // middlewares
 import { globalErrorHandler } from "./middlewares/error.middleware.mjs";
@@ -28,13 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 app.use(cors());
 
-app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/address", addressRouter);
-app.use("/api/v1/clients", clientsRouter);
-app.use("/api/v1/alas-hak", alasHakRouter);
-app.use("/api/v1/cases", casesRouter);
-app.use("/api/v1/akta-ppat", aktaRouter);
-app.use("/api/v1/stats", statsRouter);
+app.use("/api/v1", routerV1);
 
 app.use(globalErrorHandler);
 

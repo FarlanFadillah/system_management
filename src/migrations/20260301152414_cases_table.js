@@ -6,6 +6,12 @@ export async function up(knex) {
     // --- TABLE: produk ---
     await knex.schema.createTable("products", (table) => {
         table.increments("id").primary();
+        table.boolean("is_transaction").defaultTo(false);
+        table.enum("type_transaction", [
+            "FULL_TRANSFER",
+            "PARTIAL_TRANSFER",
+            "RELEASE",
+        ]);
         table.string("name", 20);
     });
 
@@ -16,7 +22,7 @@ export async function up(knex) {
         // columns nullable
         table.increments("id").primary();
         table.string("code", 5).unique();
-        table.date("completed_at");
+        table.dateTime("completed_at");
         table.timestamps(true, true);
 
         // columns not nullable

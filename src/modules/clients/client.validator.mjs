@@ -21,6 +21,7 @@ export const createClientValidationRules = [
     validator.numericalOptional("rt"),
     validator.numericalOptional("rw"),
     validator.mobilePhoneOptional("phone_number"),
+    validator.booleanOptional("is_deceased"),
 ];
 
 export const patchClientValidationRules = [

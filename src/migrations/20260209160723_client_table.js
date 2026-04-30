@@ -12,13 +12,14 @@ export async function up(knex) {
         table.string("last_name", 255);
         table.date("birth_date").notNullable();
         table.string("birth_place", 255).notNullable();
-        table.string("job_name", 255).notNullable();
+        table.string("job_name", 255);
         table.string("address", 255);
         table.string("address_code", 255).notNullable();
         table.string("rt", 255);
         table.string("rw", 255);
         table.string("phone_number", 20);
         table.timestamps(true, true);
+        table.boolean("is_deceased").defaultTo(false);
         table
             .enu("marriage_status", [
                 "kawin",

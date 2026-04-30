@@ -65,4 +65,4 @@ router
         ctrl.getAlasHak,
     );
 
-export { router as default };
+export default router;

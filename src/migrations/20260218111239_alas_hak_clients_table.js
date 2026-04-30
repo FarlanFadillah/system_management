@@ -4,7 +4,7 @@
  */
 export async function up(knex) {
     // --- TABLE: clients_alas_hak ---
-    return knex.schema.createTable("alas_hak_clients", (table) => {
+    await knex.schema.createTable("alas_hak_clients", (table) => {
         table
             .integer("client_id")
             .unsigned()
@@ -18,7 +18,7 @@ export async function up(knex) {
             .inTable("alas_hak")
             .onDelete("CASCADE");
         table.primary(["client_id", "alas_hak_id"]);
-
+        table.dateTime("start_date");
         // indexes
         table.index("alas_hak_id");
     });

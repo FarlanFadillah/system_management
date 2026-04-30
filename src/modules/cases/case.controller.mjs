@@ -54,11 +54,13 @@ export const validateStep = asyncHandler(async (req, res, next) => {
 
 export const nextStep = asyncHandler(async (req, res, next) => {
     const { id } = req.matchedData;
-    await casesService.nextStep(id);
+    const finished = await casesService.nextStep(id);
 
     res.status(httpStatus.OK).json({
         success: true,
-        msg: "Case is processed to the next step",
+        msg: finished
+            ? "Case is finished"
+            : "Case is processed to the next step",
     });
 });
 

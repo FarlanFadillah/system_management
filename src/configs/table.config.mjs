@@ -29,4 +29,5 @@ export default {
     $BPHTB: {
         CLIENTS: "bphtb_clients",
     },
+    OWNERSHIPS: "owner_histories",
 };

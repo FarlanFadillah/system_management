@@ -275,3 +275,29 @@ export function isArrayOfObjects(field) {
         validator.body(`${field}.*`).optional().isObject({ strict: true }),
     ];
 }
+
+/**
+ *
+ * @param {String} field
+ * @param {"body" | "param" | "query"} location
+ * @returns
+ */
+export function booleanRequired(field, location = "body") {
+    return validator[location](field)
+        .notEmpty()
+        .isBoolean()
+        .withMessage(`${field} can't empty`);
+}
+
+/**
+ *
+ * @param {String} field
+ * @param {"body" | "param" | "query"} location
+ * @returns
+ */
+export function booleanOptional(field, location = "body") {
+    return validator[location](field)
+        .optional()
+        .isBoolean()
+        .withMessage(`${field} can't empty`);
+}

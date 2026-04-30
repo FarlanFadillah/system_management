@@ -1,13 +1,15 @@
 import * as mainRepo from "../../utils/main.repository.mjs";
 import * as casesRepo from "./case.repository.mjs";
+import * as casesHelper from "./case.helper.mjs";
 import * as jsonHelper from "../../helper/json.helper.mjs";
 import { ExpressError } from "../../utils/custom.error.mjs";
 import * as cache from "../../utils/cache.mjs";
 import db from "../../dbs/db.mjs";
 import * as dshelper from "../../utils/ds.mjs";
 import roles from "../../configs/roles.config.mjs";
-import * as bphtbRepo from "../../shared/bphtb/bphtb.repository.mjs";
 import * as bphtbService from "../../shared/bphtb/bphtb.service.mjs";
+import configs from "../../configs/index.mjs";
+import { config } from "dotenv";
 /**
  *
  * @param {Object} data
@@ -18,6 +20,7 @@ export async function create(data) {
         const id = await db.transaction(async (trx) => {
             const { clients } = data;
             const case_id = await casesRepo.createCase(data, trx);
+
             await casesRepo.setClients(case_id, clients, trx);
 
             const step_id = await casesRepo.createSteps(
@@ -25,6 +28,7 @@ export async function create(data) {
                 data.prd_id,
                 trx,
             );
+
             await casesRepo.updateCase(
                 case_id,
                 { current_step: step_id, status: "IN PROGRESS" },
@@ -47,6 +51,7 @@ export async function create(data) {
  */
 export async function nextStep(id) {
     try {
+        let finished = false;
         // TODO
         /**
          * 1. Get current step id
@@ -56,24 +61,28 @@ export async function nextStep(id) {
          * 5. update case current step
          */
 
-        // get case by its id
-        const _case = await casesRepo.getById(id);
-
-        // validate case
-        if (!_case) throw new ExpressError("Case not found", 404);
-        else if (_case.status === "DONE")
-            throw new ExpressError("Case already finished");
-
-        // get current step
-        const current_step = await casesRepo.getStep(_case.current_step);
-
-        // check if current step is valid or don't have requirement
-        if (!current_step.valid && current_step.required_fields)
-            throw Error("Current step not finished yet");
-
         await db.transaction(async (trx) => {
             // Lock case for update
             await casesRepo.lockForUpdate(id, trx);
+
+            // get case by its id
+            const _case = await casesRepo.getById(id, trx);
+
+            // validate case
+            if (!_case) throw new ExpressError("Case not found", 404);
+            else if (_case.status === "DONEs")
+                throw new ExpressError("Case already finished");
+            const prd = await casesRepo.getProduct(_case.prd_id, trx);
+
+            // get current step
+            const current_step = await casesRepo.getStep(
+                _case.current_step,
+                trx,
+            );
+
+            // check if current step is valid or don't have requirement
+            if (!current_step.valid && current_step.required_fields)
+                throw Error("Current step not finished yet");
 
             // get the next step if exists
             const next_step = await casesRepo.getNextStep(
@@ -111,9 +120,19 @@ export async function nextStep(id) {
                 // update case, set status to done
                 await casesRepo.updateCase(
                     id,
-                    { status: "DONE", completed_at: trx.fn.now() },
+                    { status: "DONE", completed_at: new Date() },
                     trx,
                 );
+
+                // proceed transaction if case products is transaction
+                if (prd.is_transaction) {
+                    await casesHelper.processTransaction(
+                        prd.type_transaction,
+                        _case.id,
+                        _case.ah_id,
+                        trx,
+                    );
+                }
 
                 // update current step, set status to done
                 await casesRepo.updateStep(
@@ -121,10 +140,13 @@ export async function nextStep(id) {
                     { status: "DONE", completed_at: trx.fn.now() },
                     trx,
                 );
+
+                finished = true;
             }
         });
         cache.delByPattern(`:cases:id:${id}`);
         cache.delByPattern(`:cases:list:`);
+        return finished;
     } catch (error) {
         throw error;
     }

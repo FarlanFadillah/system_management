@@ -23,19 +23,39 @@ export async function seed(knex) {
     ]);
 
     await knex("products").insert([
-        { id: 1, name: "JUAL BELI" },
-        { id: 2, name: "WARIS" },
-        { id: 3, name: "HIBAH" },
+        {
+            id: 1,
+            name: "JUAL BELI",
+            is_transaction: true,
+            type_transaction: "FULL_TRANSFER",
+        },
+        {
+            id: 2,
+            name: "WARIS",
+            is_transaction: true,
+            type_transaction: "PARTIAL_TRANSFER",
+        },
+        {
+            id: 3,
+            name: "HIBAH",
+            is_transaction: true,
+            type_transaction: "FULL_TRANSFER",
+        },
         { id: 4, name: "PENDAFTARAN PERTAMA" },
         { id: 5, name: "PEMECAHAN" },
         { id: 6, name: "GANTI NAMA" },
         { id: 7, name: "ROYA" },
-        { id: 8, name: "PISAH HAK BERSAMA" },
+        {
+            id: 8,
+            name: "PISAH HAK BERSAMA",
+            is_transaction: true,
+            type_transaction: "RELEASE",
+        },
     ]);
 
     await knex("client_roles").insert([
         { id: 1, name: "PEMBERI HAK" },
-        { id: 2, name: "PENERIMAH HAK" },
+        { id: 2, name: "PENERIMA HAK" },
         { id: 3, name: "PIHAK PERSETUJUAN" },
         { id: 4, name: "KUASA PEMBERI" },
         { id: 5, name: "KUASA PENERIMA" },
@@ -45,36 +65,36 @@ export async function seed(knex) {
 
     await knex("workflows").insert([
         { name: "Validasi Berkas", order: 1, prd_id: 1 },
-        {
-            name: "BPHTB - Survei",
-            order: 2,
-            prd_id: 1,
-            required_fields: {
-                hasil_survei: {
-                    name: "hasil_survei",
-                    type: "number",
-                },
-                tgl_survei: {
-                    name: "tgl_survei",
-                    type: "date",
-                },
-            },
-        },
-        {
-            name: "BPHTB - Perintah Bayar",
-            order: 3,
-            prd_id: 1,
-            required_fields: {
-                total_bayar: {
-                    name: "total_bayar",
-                    type: "number",
-                },
-                tgl_perintah_bayar: {
-                    name: "tgl_perintah_bayar",
-                    type: "date",
-                },
-            },
-        },
+        // {
+        //     name: "BPHTB - Survei",
+        //     order: 2,
+        //     prd_id: 1,
+        //     required_fields: {
+        //         hasil_survei: {
+        //             name: "hasil_survei",
+        //             type: "number",
+        //         },
+        //         tgl_survei: {
+        //             name: "tgl_survei",
+        //             type: "date",
+        //         },
+        //     },
+        // },
+        // {
+        //     name: "BPHTB - Perintah Bayar",
+        //     order: 3,
+        //     prd_id: 1,
+        //     required_fields: {
+        //         total_bayar: {
+        //             name: "total_bayar",
+        //             type: "number",
+        //         },
+        //         tgl_perintah_bayar: {
+        //             name: "tgl_perintah_bayar",
+        //             type: "date",
+        //         },
+        //     },
+        // },
         // { name: "PPH", order: 3, prd_id: 1 },
         // { name: "ZNT", order: 4, prd_id: 1 },
         // { name: "CEKING", order: 5, prd_id: 1 },

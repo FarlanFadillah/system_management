@@ -38,6 +38,15 @@ export async function up(knex) {
         table.index("type_id");
         table.index("address_code");
     });
+
+    await knex.schema.alterTable("alas_hak", (table) => {
+        table
+            .integer("parent_id")
+            .unsigned()
+            .references("id")
+            .inTable("alas_hak")
+            .onDelete("SET NULL");
+    });
 }
 
 /**
