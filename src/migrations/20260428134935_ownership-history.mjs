@@ -23,7 +23,7 @@ export async function up(knex) {
             .inTable("cases")
             .onDelete("SET NULL");
         table.datetime("start_date");
-        table.datetime("end_date").defaultTo(knex.fn.now());
+        table.datetime("end_date");
         table.string("acq_type");
     });
 }

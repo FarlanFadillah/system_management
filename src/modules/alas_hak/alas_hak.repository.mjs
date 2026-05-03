@@ -43,12 +43,6 @@ export async function get(id) {
                 "prov.id",
                 "kab.id_provinsi",
             )
-            .leftJoin(
-                `${TABLE.$ALASHAK.CLIENTS} as ahc`,
-                "ahc.alas_hak_id",
-                "ah.id",
-            )
-            .leftJoin(`${TABLE.CLIENTS} as cl`, "cl.id", "ahc.client_id")
             .leftJoin(`${TABLE.$ALASHAK.TYPES} as tp`, "tp.id", "ah.type_id")
             .where("ah.id", id)
             .select([
@@ -69,12 +63,38 @@ export async function get(id) {
             )
             .select(
                 db.raw(`
-                COALESCE(
-                    JSON_ARRAYAGG(JSON_OBJECT("id", cl.id, "nik", cl.nik, "nkk", cl.nkk, "first_name", cl.first_name, "last_name", cl.last_name)),
-                    JSON_ARRAY()
+                    (SELECT COALESCE(
+                        JSON_ARRAYAGG(JSON_OBJECT("id", cl.id, "nik", cl.nik, "nkk", cl.nkk, 
+                        "first_name", cl.first_name, "last_name", cl.last_name, 
+                        "start_date", ahc.start_date)),
+                        JSON_ARRAY()
+                    ) as owners
+                    FROM ${TABLE.$ALASHAK.CLIENTS} as ahc
+                    LEFT JOIN ${TABLE.CLIENTS} as cl on cl.id = ahc.client_id
+                    WHERE ahc.alas_hak_id = ah.id
                 ) as owners
                 `),
             )
+            .select(
+                db.raw(`
+                    (
+                    SELECT COALESCE(JSON_ARRAYAGG(t.obj), JSON_ARRAY())
+                    FROM(
+                        SELECT 
+                            JSON_OBJECT("id", cl.id, "nik", cl.nik, "nkk", cl.nkk, "first_name", cl.first_name, 
+                            "last_name", cl.last_name, "start_date", oh.start_date, "end_date", oh.end_date, "type", oh.acq_type, 
+                            "case_id", oh.case_id) 
+                        as obj
+                        FROM ${TABLE.OWNERSHIPS} as oh
+                        LEFT JOIN ${TABLE.CLIENTS} as cl on cl.id = oh.client_id
+                        WHERE oh.ah_id = ah.id
+                        ORDER BY oh.start_date DESC
+                        LIMIT 18446744073709551615
+                    ) as t
+                ) as old_owners
+                `),
+            )
+
             .groupBy("ah.id")
             .first();
     } catch (error) {

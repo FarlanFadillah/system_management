@@ -13,6 +13,7 @@ export async function up(knex) {
             "RELEASE",
         ]);
         table.string("name", 20);
+        table.json("roles");
     });
 
     const enumStatus = ["DRAFT", "PENDING", "IN PROGRESS", "DONE", "REJECTED"];

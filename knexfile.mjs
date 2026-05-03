@@ -1,7 +1,5 @@
 import "./env.mjs";
 
-console.log(process.env.DB_NAME);
-
 export default {
     development: {
         client: process.env.DB_CLIENT,

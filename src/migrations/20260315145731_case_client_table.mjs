@@ -24,7 +24,7 @@ export async function up(knex) {
             .inTable("clients")
             .onDelete("CASCADE");
         table
-            .integer("roles_id")
+            .integer("role_id")
             .unsigned()
             .references("id")
             .inTable("client_roles")
@@ -34,7 +34,7 @@ export async function up(knex) {
 
         // indexes
         table.index("client_id");
-        table.index("roles_id");
+        table.index("role_id");
     });
 }
 

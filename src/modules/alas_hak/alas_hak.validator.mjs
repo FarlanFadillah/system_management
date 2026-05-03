@@ -10,6 +10,7 @@ export const addAlasHakValidationRules = [
     validator.stringOptional("address_code"),
     validator.numericalRequired("type_id"),
     validator.numericalRequired("luas"),
+    validator.numericalOptional("parent_id"),
 ];
 
 export const updateAlasHakValidationRules = [

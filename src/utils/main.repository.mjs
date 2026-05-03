@@ -168,6 +168,24 @@ export async function isRowExists(table, model) {
 /**
  *
  * @param {String} table
+ * @param {Object} model
+ * @returns
+ */
+export async function isExistsWhere(table, model) {
+    try {
+        const { count } = await db(table)
+            .where(model)
+            .count("* as count")
+            .first();
+        return count > 0;
+    } catch (error) {
+        throw new ExpressError(error.message);
+    }
+}
+
+/**
+ *
+ * @param {String} table
  * @param {Number} id
  * @param {Array} select
  * @returns

@@ -9,7 +9,6 @@ import * as dshelper from "../../utils/ds.mjs";
 import roles from "../../configs/roles.config.mjs";
 import * as bphtbService from "../../shared/bphtb/bphtb.service.mjs";
 import configs from "../../configs/index.mjs";
-import { config } from "dotenv";
 /**
  *
  * @param {Object} data
@@ -17,15 +16,19 @@ import { config } from "dotenv";
  */
 export async function create(data) {
     try {
-        const id = await db.transaction(async (trx) => {
-            const { clients } = data;
-            const case_id = await casesRepo.createCase(data, trx);
+        const DTO = await casesHelper.validateCaseData(data);
 
-            await casesRepo.setClients(case_id, clients, trx);
+        const id = await db.transaction(async (trx) => {
+            const case_id = await casesRepo.createCase(
+                { prd_id: DTO.prd_id, ah_id: DTO.ah_id },
+                trx,
+            );
+
+            await casesRepo.setClients(case_id, DTO.clients, trx);
 
             const step_id = await casesRepo.createSteps(
                 case_id,
-                data.prd_id,
+                DTO.prd_id,
                 trx,
             );
 
@@ -37,6 +40,9 @@ export async function create(data) {
             return case_id;
         });
 
+        DTO.clients.forEach((val) => {
+            cache.delByPattern(`:clients:id:${val?.id}`);
+        });
         cache.delByPattern(":cases:list:");
         return id;
     } catch (error) {
@@ -187,6 +193,8 @@ export async function validateStep(case_id, data) {
         );
     });
 }
+
+export async function validateParties(prd_id, clients) {}
 
 /**
  *

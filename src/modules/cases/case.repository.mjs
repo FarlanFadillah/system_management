@@ -21,24 +21,9 @@ const debug = new createDebug("app:repo:cases");
  */
 export async function createCase(model, trx) {
     try {
-        // debug("Model : ", JSON.stringify(model));
-        const { clients, ...caseData } = model;
-        debug("Check case conflicts");
-        const conflict = await trx(TABLE.CASES)
-            .where({ ah_id: caseData.ah_id })
-            .andWhereRaw(`status IN ('IN PROGRESS', 'DRAFT')`)
-            .first();
-        if (conflict) {
-            debug("Conflict detected");
-            throw new ExpressError(
-                `Alas Hak masih terikat dengan case yang sedang berlangsung (case id ${conflict.id})`,
-                400,
-            );
-        }
-
         debug("creating case");
         const [id] = await trx(TABLE.CASES).insert({
-            ...caseData,
+            ...model,
             code: rand.genStringCaps(5, 5),
             created_at: new Date(),
             updated_at: new Date(),
@@ -146,12 +131,11 @@ export async function getNextStep(case_id, current_step_id, trx) {
  * @param {import("knex").Knex.Transaction} trx
  */
 export async function setClients(case_id, clients, trx) {
-    if (!clients) throw new ExpressError("Clients is empty", 400);
     debug("create client case");
     const case_clients = clients.map((val) => ({
         case_id: case_id,
         client_id: val.id,
-        roles_id: val.roles_id,
+        role_id: val.role_id,
     }));
     await trx(TABLE.$CASES.CLIENTS).insert(case_clients);
 }
@@ -225,11 +209,42 @@ export async function getClientIdsFromCase(case_id, role_id) {
             .leftJoin(`${TABLE.$CASES.CLIENTS} as cc`, "cc.case_id", "c.id")
             .leftJoin(`${TABLE.CLIENTS} as cl`, "cl.id", "cc.client_id")
             .where("c.id", case_id)
-            .andWhere("cc.roles_id", role_id)
+            .andWhere("cc.role_id", role_id)
             .select("cl.id");
     } catch (error) {
         throw error;
     }
+}
+
+/**
+ * Get related client from case for bphtb
+ * @param {Number} case_id
+ * @param {Number} role_id
+ * @returns {Object}
+ */
+export async function getClientIdsFromCases(case_id) {
+    try {
+        return await db(`${TABLE.CASES} as c`)
+            .leftJoin(`${TABLE.$CASES.CLIENTS} as cc`, "cc.case_id", "c.id")
+            .leftJoin(`${TABLE.CLIENTS} as cl`, "cl.id", "cc.client_id")
+            .where("c.id", case_id)
+            .select("cl.id");
+    } catch (error) {
+        throw error;
+    }
+}
+
+/**
+ *
+ * @param {Number} ah_id
+ * @param {Array} column
+ * @returns
+ */
+export async function getAlasHakOwner(ah_id, column = ["*"]) {
+    return await db(`${TABLE.CLIENTS} as cl`)
+        .select(`cl.${column}`)
+        .leftJoin(`${TABLE.$CLIENTS.ALASHAK} as ahc`, "ahc.client_id", "cl.id")
+        .where("ahc.alas_hak_id", ah_id);
 }
 
 export async function getCaseById(id) {
@@ -256,7 +271,7 @@ export async function getById(id, trx) {
             ) AS alas_hak,
             (SELECT JSON_ARRAYAGG(JSON_OBJECT("id", cl.id, "first_name", cl.first_name, "last_name", cl.last_name, "role", cr.name))
                 FROM ${TABLE.$CASES.CLIENTS} as cc LEFT JOIN ${TABLE.CLIENTS} AS cl on cl.id = cc.client_id 
-                LEFT JOIN ${TABLE.$CLIENTS.ROLES} as cr on cr.id = cc.roles_id
+                LEFT JOIN ${TABLE.$CLIENTS.ROLES} as cr on cr.id = cc.role_id
                 WHERE cc.case_id = c.id
             ) AS clients,
             (SELECT JSON_ARRAYAGG(JSON_OBJECT("id", cs.id, "status", cs.status, "name", wf.name, "is_active",
@@ -432,6 +447,7 @@ export async function getRoles() {
  */
 export async function getProduct(id, trx) {
     try {
+        if (!trx) trx = db;
         return await trx(TABLE.$CASES.PRD).where({ id: id }).first();
     } catch (error) {
         throw error;

@@ -91,6 +91,7 @@ async function saveOwnershipHistories(case_id, ah_id, clients, trx) {
             case_id: case_id,
             start_date: cur.start_date ? cur.start_date : null,
             acq_type: prd.name,
+            end_date: new Date(),
         });
         return acc;
     }, []);

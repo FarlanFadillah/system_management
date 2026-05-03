@@ -22,27 +22,86 @@ export async function seed(knex) {
         { id: 5, name: "NIB" },
     ]);
 
-    await knex("products").insert([
+    await knex("client_roles").insert([
+        { id: 1, name: "PEMBERI_HAK" },
+        { id: 2, name: "PENERIMA_HAK" },
+        { id: 3, name: "PIHAK_PERSETUJUAN" },
+        { id: 4, name: "KUASA_PEMBERI" },
+        { id: 5, name: "KUASA_PENERIMA" },
+        { id: 6, name: "PEMOHON" },
+        { id: 7, name: "SAKSI" },
+    ]);
+
+    // const [[{ ROLES }]] = await knex.raw(`
+    //         SELECT JSON_ARRAYAGG(JSON_OBJECT(cr.name, cr.id)) as ROLES FROM client_roles as cr
+    //     `);
+    // const [[{ ROLES }]] = await knex.raw(`
+    //         SELECT JSON_OBJECTAGG(name, id) as ROLES FROM client_roles
+    //     `);
+
+    const [{ ROLES }] = await knex("client_roles").select(
+        knex.raw(`
+            JSON_OBJECTAGG(name, id) as ROLES
+        `),
+    );
+
+    // bulk insert ignore default value
+    // because knex normalize the data so the missing column will be null
+    [
         {
             id: 1,
             name: "JUAL BELI",
             is_transaction: true,
             type_transaction: "FULL_TRANSFER",
+            roles: {
+                required: [ROLES.PENERIMA_HAK],
+                optional: [
+                    ROLES.PIHAK_PERSETUJUAN,
+                    ROLES.KUASA_PEMBERI,
+                    ROLES.KUASA_PENERIMA,
+                ],
+                auto: [ROLES.PEMBERI_HAK],
+            },
         },
         {
             id: 2,
             name: "WARIS",
             is_transaction: true,
             type_transaction: "PARTIAL_TRANSFER",
+            roles: {
+                required: [ROLES.PENERIMA_HAK],
+                optional: [],
+                auto: [ROLES.PEMBERI_HAK],
+            },
         },
         {
             id: 3,
             name: "HIBAH",
             is_transaction: true,
             type_transaction: "FULL_TRANSFER",
+            roles: {
+                required: [ROLES.PENERIMA_HAK],
+                optional: [
+                    ROLES.PIHAK_PERSETUJUAN,
+                    ROLES.KUASA_PEMBERI,
+                    ROLES.KUASA_PENERIMA,
+                ],
+                auto: [ROLES.PEMBERI_HAK],
+            },
         },
-        { id: 4, name: "PENDAFTARAN PERTAMA" },
-        { id: 5, name: "PEMECAHAN" },
+        {
+            id: 4,
+            name: "PENDAFTARAN PERTAMA",
+            roles: {
+                required: [ROLES.PENERIMA_HAK],
+                optional: [],
+                auto: [],
+            },
+        },
+        {
+            id: 5,
+            name: "PEMECAHAN",
+        },
         { id: 6, name: "GANTI NAMA" },
         { id: 7, name: "ROYA" },
         {
@@ -50,18 +109,17 @@ export async function seed(knex) {
             name: "PISAH HAK BERSAMA",
             is_transaction: true,
             type_transaction: "RELEASE",
+            roles: {
+                required: [ROLES.PEMBERI_HAK, ROLES.PENERIMA_HAK],
+                optional: [
+                    ROLES.PIHAK_PERSETUJUAN,
+                    ROLES.KUASA_PEMBERI,
+                    ROLES.KUASA_PENERIMA,
+                ],
+                auto: [],
+            },
         },
-    ]);
-
-    await knex("client_roles").insert([
-        { id: 1, name: "PEMBERI HAK" },
-        { id: 2, name: "PENERIMA HAK" },
-        { id: 3, name: "PIHAK PERSETUJUAN" },
-        { id: 4, name: "KUASA PEMBERI" },
-        { id: 5, name: "KUASA PENERIMA" },
-        { id: 6, name: "PEMOHON" },
-        { id: 7, name: "SAKSI" },
-    ]);
+    ].forEach(async (val) => await knex("products").insert(val));
 
     await knex("workflows").insert([
         { name: "Validasi Berkas", order: 1, prd_id: 1 },
