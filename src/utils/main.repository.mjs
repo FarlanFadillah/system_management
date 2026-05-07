@@ -133,11 +133,13 @@ export async function updateWhere(table, model, data) {
  *
  * @param {String} table
  * @param {Number} id
+ * @param {import("knex").Knex.Transaction}
  * @returns
  */
-export async function isExists(table, id) {
+export async function isExists(table, id, trx) {
     try {
-        const { count } = await db(table)
+        const conn = trx || db;
+        const { count } = await conn(table)
             .where({ id })
             .count("id as count")
             .first();
@@ -169,11 +171,13 @@ export async function isRowExists(table, model) {
  *
  * @param {String} table
  * @param {Object} model
+ * @param {import("knex").Knex.Transaction}
  * @returns
  */
-export async function isExistsWhere(table, model) {
+export async function isExistsWhere(table, model, trx) {
     try {
-        const { count } = await db(table)
+        const conn = trx || db;
+        const { count } = await conn(table)
             .where(model)
             .count("* as count")
             .first();

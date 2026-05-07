@@ -52,7 +52,7 @@ export async function getClientIdsFromCase(case_id) {
             .leftJoin(`${TABLE.$CASES.CLIENTS} as cc`, "cc.case_id", "c.id")
             .leftJoin(`${TABLE.CLIENTS} as cl`, "cl.id", "cc.client_id")
             .where("c.id", case_id)
-            .andWhere("cc.roles_id", ROLES.PENERIMA_HAK)
+            .andWhere("cc.role_id", ROLES.PENERIMA_HAK)
             .select("cl.id");
     } catch (error) {
         throw error;

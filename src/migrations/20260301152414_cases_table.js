@@ -27,7 +27,7 @@ export async function up(knex) {
         table.timestamps(true, true);
 
         // columns not nullable
-        table.enu("status", enumStatus).notNullable();
+        table.enu("status", enumStatus).notNullable().defaultTo(enumStatus[0]);
 
         // foreign keys
         table
@@ -55,7 +55,7 @@ export async function up(knex) {
         table.string("name").notNullable();
         table.integer("order").unsigned().notNullable();
         table.string("version").notNullable().defaultTo("v1");
-        table.json("required_fields").defaultTo(null);
+        table.json("validation").defaultTo(null);
         table
             .integer("prd_id")
             .unsigned()
@@ -69,7 +69,7 @@ export async function up(knex) {
     await knex.schema.createTable("case_steps", (table) => {
         table.increments("id").primary();
         table.string("name").notNullable();
-        table.json("required_fields").defaultTo(null);
+        table.json("validation").defaultTo(null);
         table.boolean("valid").defaultTo(false);
         table
             .integer("case_id")

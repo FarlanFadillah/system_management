@@ -35,7 +35,7 @@ export const removeCase = asyncHandler(async (req, res, next) => {
 
 export const getCase = asyncHandler(async (req, res, next) => {
     const { id } = req.matchedData;
-    const data = await casesService.get(id);
+    const data = await casesService.getCaseWithDetails(id);
     res.status(httpStatus.OK).json({
         success: true,
         data,
@@ -43,7 +43,8 @@ export const getCase = asyncHandler(async (req, res, next) => {
 });
 
 export const validateStep = asyncHandler(async (req, res, next) => {
-    const { id, ...data } = req.matchedData;
+    const { id } = req.matchedData;
+    const data = req.body;
     await casesService.validateStep(id, data);
 
     res.status(httpStatus.OK).json({

@@ -6,8 +6,6 @@ export const IDValidationRules = [validator.numericalRequired("id", "param")];
 
 export const createProsesValidationRules = [
     validator.numericalRequired("prd_id"),
-    validator.numericalRequired("ah_id"),
-    ...validator.isArrayOfObjects("clients"),
 ];
 
 export const patchProsesValidationRules = [
@@ -50,3 +48,5 @@ export const nomorSuratValidationRules = [
 export const rolesNameValidationRules = [
     validator.stringRequired("name", "query"),
 ];
+
+// custom validator

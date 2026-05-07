@@ -9,6 +9,14 @@ import * as dshelper from "../../utils/ds.mjs";
 import roles from "../../configs/roles.config.mjs";
 import * as bphtbService from "../../shared/bphtb/bphtb.service.mjs";
 import configs from "../../configs/index.mjs";
+
+// step handlers
+const handlers = {
+    bphtb: bphtbService.validateBPHTB,
+    alashak: casesHelper.validateAlasHak,
+    clients: casesHelper.validateClients,
+};
+
 /**
  *
  * @param {Object} data
@@ -16,22 +24,26 @@ import configs from "../../configs/index.mjs";
  */
 export async function create(data) {
     try {
-        const DTO = await casesHelper.validateCaseData(data);
-
         const id = await db.transaction(async (trx) => {
-            const case_id = await casesRepo.createCase(
-                { prd_id: DTO.prd_id, ah_id: DTO.ah_id },
-                trx,
+            // validate products
+            const prd_exists = await mainRepo.isExists(
+                configs.TABLE.$CASES.PRD,
+                data.prd_id,
             );
+            if (!prd_exists)
+                throw new ExpressError("Products not available", 404);
 
-            await casesRepo.setClients(case_id, DTO.clients, trx);
+            // insert case data
+            const case_id = await casesRepo.createCase(data, trx);
 
+            // insert step from workflow templates
             const step_id = await casesRepo.createSteps(
                 case_id,
-                DTO.prd_id,
+                data.prd_id,
                 trx,
             );
 
+            // update status current step
             await casesRepo.updateCase(
                 case_id,
                 { current_step: step_id, status: "IN PROGRESS" },
@@ -40,9 +52,9 @@ export async function create(data) {
             return case_id;
         });
 
-        DTO.clients.forEach((val) => {
-            cache.delByPattern(`:clients:id:${val?.id}`);
-        });
+        // DTO.clients.forEach((val) => {
+        //     cache.delByPattern(`:clients:id:${val?.id}`);
+        // });
         cache.delByPattern(":cases:list:");
         return id;
     } catch (error) {
@@ -76,7 +88,7 @@ export async function nextStep(id) {
 
             // validate case
             if (!_case) throw new ExpressError("Case not found", 404);
-            else if (_case.status === "DONEs")
+            else if (_case.status === "DONE")
                 throw new ExpressError("Case already finished");
             const prd = await casesRepo.getProduct(_case.prd_id, trx);
 
@@ -87,7 +99,7 @@ export async function nextStep(id) {
             );
 
             // check if current step is valid or don't have requirement
-            if (!current_step.valid && current_step.required_fields)
+            if (!current_step.valid && current_step.validation)
                 throw Error("Current step not finished yet");
 
             // get the next step if exists
@@ -165,36 +177,19 @@ export async function nextStep(id) {
  * @param {import("knex").Knex.Transaction} trx
  */
 export async function validateStep(case_id, data) {
-    const _case = await casesRepo.getCaseById(case_id);
-    // validate case
-    if (!_case) throw new ExpressError("Case not found", 404);
-    else if (_case.status === "DONE")
-        throw new ExpressError("Case already finished");
-
-    const step = await casesRepo.getStep(_case.current_step);
-    if (!step.required_fields || step.valid) return;
-
-    const dto = dshelper.pick(data, Object.keys(step.required_fields));
-
+    const { dto, handler } = await casesHelper.validateStepData(case_id, data);
     await db.transaction(async (trx) => {
-        const { id, prd_id, ah_id } = _case;
-        // BPHTB
-        if (step.name.includes("BPHTB")) {
-            await bphtbService.validateBPHTB({ id, prd_id, ah_id }, dto, trx);
-        }
-
-        await casesRepo.updateStep(
-            step.id,
+        await handlers[handler](case_id, dto, trx);
+        await casesRepo.updateCurrentStep(
+            case_id,
             {
                 valid: true,
-                completed_at: trx.fn.now(),
+                completed_at: new Date(),
             },
             trx,
         );
     });
 }
-
-export async function validateParties(prd_id, clients) {}
 
 /**
  *
@@ -232,7 +227,7 @@ export async function remove(id) {
  * @param {Number} id
  * @returns
  */
-export async function get(id) {
+export async function getCaseWithDetails(id) {
     try {
         const data = await casesRepo.getById(id);
         if (!data) throw new ExpressError("Data not found", 404);
@@ -243,6 +238,9 @@ export async function get(id) {
     }
 }
 
+export async function getCaseData(id) {
+    return await mainRepo.get(configs.TABLE.CASES, id);
+}
 /**
  *
  * @param {Number} currentpage
@@ -266,6 +264,13 @@ export async function getAll(currentpage, limit) {
     }
 }
 
+/**
+ *
+ * @param {Number} currentpage
+ * @param {Number} limit
+ * @param {Object} filters
+ * @returns
+ */
 export async function getFilteredCases(currentpage, limit, filters) {
     try {
         const offset = (currentpage - 1) * limit;
@@ -430,50 +435,4 @@ export async function getRoles() {
     } catch (error) {
         throw error;
     }
-}
-
-// HELPER
-
-/**
- *
- * @param {Array} data
- * @returns {Array}
- */
-function destructureData(data) {
-    const {
-        first_name,
-        last_name,
-        client_id,
-        roles_name,
-        alas_hak_id,
-        no_alas_hak,
-        luas,
-        step_name,
-        step_status,
-        ...proses_data
-    } = data[0];
-
-    const clients_roles = data.map((val) => {
-        const { first_name, last_name, client_id, roles_name, ...dump } = val;
-        return {
-            id: client_id,
-            first_name,
-            last_name,
-            role: roles_name,
-        };
-    });
-
-    return {
-        ...proses_data,
-        alas_hak: {
-            id: alas_hak_id,
-            no_alas_hak,
-            luas,
-        },
-        client_roles: clients_roles[0].id ? clients_roles : [],
-        steps: {
-            name: step_name,
-            status: step_status,
-        },
-    };
 }

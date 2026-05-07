@@ -53,8 +53,9 @@ export async function createCase(model, trx) {
  */
 export async function createSteps(case_id, prd_id, trx) {
     try {
+        const conn = trx || db;
         debug("Get Workflows");
-        const workflows = await trx(TABLE.WORKFLOWS).where({
+        const workflows = await conn(TABLE.WORKFLOWS).where({
             prd_id: prd_id,
         });
 
@@ -65,7 +66,7 @@ export async function createSteps(case_id, prd_id, trx) {
                 step_id: val.id,
                 name: val.name,
                 status: index === 0 ? "IN PROGRESS" : "DRAFT",
-                required_fields: val.required_fields,
+                validation: val.validation,
             }));
 
         if (steps.length <= 0)
@@ -74,7 +75,7 @@ export async function createSteps(case_id, prd_id, trx) {
             );
 
         debug("Initiate steps");
-        const [insertedID] = await trx(TABLE.$CASES.STEPS).insert(steps);
+        const [insertedID] = await conn(TABLE.$CASES.STEPS).insert(steps);
 
         return insertedID;
     } catch (error) {
@@ -90,8 +91,8 @@ export async function createSteps(case_id, prd_id, trx) {
  */
 export async function getStep(id, trx) {
     try {
-        if (!trx) trx = db;
-        return await trx(`${TABLE.$CASES.STEPS} as cs`)
+        const conn = trx || db;
+        return await conn(`${TABLE.$CASES.STEPS} as cs`)
             .where("cs.id", id)
             .first();
     } catch (error) {
@@ -106,8 +107,8 @@ export async function getStep(id, trx) {
  */
 export async function getNextStep(case_id, current_step_id, trx) {
     try {
-        if (!trx) trx = db;
-        const current_step = await trx(TABLE.$CASES.STEPS)
+        const conn = trx || db;
+        const current_step = await conn(TABLE.$CASES.STEPS)
             .where({
                 id: current_step_id,
             })
@@ -115,7 +116,7 @@ export async function getNextStep(case_id, current_step_id, trx) {
         if (!current_step)
             throw new ExpressError("Current step does not exists", 404);
 
-        return await trx(TABLE.$CASES.STEPS)
+        return await conn(TABLE.$CASES.STEPS)
             .where({ case_id: case_id })
             .andWhere("step_id", ">", current_step.step_id)
             .first();
@@ -125,19 +126,36 @@ export async function getNextStep(case_id, current_step_id, trx) {
 }
 
 /**
- *
+ * Link Clients to case
  * @param {Number} case_id
  * @param {Array} clients
  * @param {import("knex").Knex.Transaction} trx
  */
-export async function setClients(case_id, clients, trx) {
+export async function linkClients(case_id, clients, trx) {
+    const conn = trx || db;
     debug("create client case");
     const case_clients = clients.map((val) => ({
         case_id: case_id,
         client_id: val.id,
         role_id: val.role_id,
     }));
-    await trx(TABLE.$CASES.CLIENTS).insert(case_clients);
+    await conn(TABLE.$CASES.CLIENTS).insert(case_clients);
+}
+
+/**
+ * Link alas hak to case
+ * @param {Number} id
+ * @param {Number} ah_id
+ * @param {import("knex").Knex.Transaction}
+ */
+export async function linkAlasHak(id, ah_id, trx) {
+    const conn = trx || db;
+    await conn(TABLE.CASES).select("*").where({ id }).forUpdate();
+
+    const alas_hak = await conn(TABLE.ALASHAK).where({ id: ah_id }).first();
+    if (!alas_hak) throw new ExpressError("Alas Hak not found");
+
+    await conn(TABLE.CASES).where({ id: id }).update({ ah_id: ah_id });
 }
 
 /**
@@ -147,7 +165,8 @@ export async function setClients(case_id, clients, trx) {
  */
 export async function lockForUpdate(id, trx) {
     try {
-        await trx(TABLE.CASES).where({ id: id }).forUpdate().select("*");
+        const conn = trx || db;
+        await conn(TABLE.CASES).where({ id: id }).forUpdate().select("*");
     } catch (error) {
         throw new ExpressError(error.message);
     }
@@ -161,9 +180,10 @@ export async function lockForUpdate(id, trx) {
  */
 export async function updateCase(id, data, trx) {
     try {
-        await trx(TABLE.CASES)
+        const conn = trx || db;
+        await conn(TABLE.CASES)
             .where("id", id)
-            .update({ ...data, updated_at: trx.fn.now() });
+            .update({ ...data, updated_at: new Date() });
     } catch (error) {
         throw new ExpressError(error.message);
     }
@@ -177,8 +197,12 @@ export async function updateCase(id, data, trx) {
  */
 export async function updateStep(id, data, trx) {
     try {
-        await trx(TABLE.$CASES.STEPS).where({ id: id }).forUpdate().select("*");
-        await trx(TABLE.$CASES.STEPS)
+        const conn = trx || db;
+        await conn(TABLE.$CASES.STEPS)
+            .where({ id: id })
+            .forUpdate()
+            .select("*");
+        await conn(TABLE.$CASES.STEPS)
             .where({ id: id })
             .update({ ...data });
     } catch (error) {
@@ -186,9 +210,30 @@ export async function updateStep(id, data, trx) {
     }
 }
 
+/**
+ *
+ * @param {Number} case_id
+ * @param {Object} data
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function updateCurrentStep(case_id, data, trx) {
+    const conn = trx || db;
+    const { current_step } = await conn(TABLE.CASES)
+        .where({ id: case_id })
+        .first();
+    await conn(TABLE.$CASES.STEPS)
+        .where({ id: current_step })
+        .forUpdate()
+        .select("*");
+    await conn(TABLE.$CASES.STEPS)
+        .where({ id: current_step })
+        .update({ ...data });
+}
+
 export async function log(trx, id, action) {
     try {
-        await trx(TABLE.$CASES.LOGS).insert({
+        const conn = trx || db;
+        await conn(TABLE.$CASES.LOGS).insert({
             case_id: id,
             action: action,
         });
@@ -247,9 +292,10 @@ export async function getAlasHakOwner(ah_id, column = ["*"]) {
         .where("ahc.alas_hak_id", ah_id);
 }
 
-export async function getCaseById(id) {
+export async function getCaseById(id, trx) {
     try {
-        return await db(TABLE.CASES).select("*").where({ id }).first();
+        const conn = trx || db;
+        return await conn(TABLE.CASES).select("*").where({ id }).first();
     } catch (error) {
         throw error;
     }
@@ -263,8 +309,8 @@ export async function getCaseById(id) {
  */
 export async function getById(id, trx) {
     try {
-        if (!trx) trx = db;
-        const [[data]] = await trx.raw(`
+        const conn = trx || db;
+        const [[data]] = await conn.raw(`
             SELECT c.*,
             (SELECT JSON_OBJECT("id", ah.id, "no_alas_hak", ah.no_alas_hak) 
                 FROM ${TABLE.ALASHAK} AS ah WHERE ah.id = c.ah_id
@@ -280,7 +326,7 @@ export async function getById(id, trx) {
                     ELSE 0
                 END,
                 "valid", cs.valid,
-                "required_fields", cs.required_fields
+                "validation", cs.validation
             )) FROM ${TABLE.$CASES.STEPS} as cs
                 LEFT JOIN ${TABLE.WORKFLOWS} AS wf on wf.id = cs.step_id
                 WHERE cs.case_id = c.id
@@ -447,8 +493,8 @@ export async function getRoles() {
  */
 export async function getProduct(id, trx) {
     try {
-        if (!trx) trx = db;
-        return await trx(TABLE.$CASES.PRD).where({ id: id }).first();
+        const conn = trx || db;
+        return await conn(TABLE.$CASES.PRD).where({ id: id }).first();
     } catch (error) {
         throw error;
     }

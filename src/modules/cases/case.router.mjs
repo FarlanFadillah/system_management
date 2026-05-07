@@ -42,12 +42,7 @@ router
     .post(...mainRules.IDValidationRules, validate, ctrl.nextStep);
 router
     .route("/:id/steps/validate")
-    .post(
-        ...mainRules.IDValidationRules,
-        ...rules.stepValidationRules,
-        validate,
-        ctrl.validateStep,
-    );
+    .post(...mainRules.IDValidationRules, validate, ctrl.validateStep);
 
 router
     .route("/:id")

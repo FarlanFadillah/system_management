@@ -5,6 +5,7 @@ import { ExpressError } from "../../utils/custom.error.mjs";
 import * as mainRepo from "../../utils/main.repository.mjs";
 import { config } from "dotenv";
 import * as dsa from "../../utils/ds.mjs";
+import Joi from "joi";
 
 /**
  *
@@ -55,18 +56,67 @@ export async function processTransaction(type, case_id, ah_id, trx) {
     }
 }
 
-export async function validateCaseData(data) {
-    const { ah_id, prd_id, clients } = data;
+/**
+ *
+ * @param {Number} case_id
+ * @param {Object} data
+ * @returns
+ */
+export async function validateStepData(case_id, data) {
+    const _case = await casesRepo.getCaseById(case_id);
+    // validate case
+    if (!_case) throw new ExpressError("Case not found", 404);
+    else if (_case.status === "DONE")
+        throw new ExpressError("Case already finished");
+
+    const { validation, valid } = await casesRepo.getStep(_case.current_step);
+    const { handler = null, fields = null } = validation;
+    if (!validation || !fields)
+        throw new ExpressError(
+            "Current step does not have requirement, you can continue",
+        );
+    else if (valid) {
+        throw new ExpressError("Current step is valid, you can continue");
+    }
+    const schema = Joi.build(fields);
+    const { value: dto, error } = schema.validate(data, {
+        stripUnknown: true,
+    });
+
+    if (error) {
+        console.log(error);
+        throw new Error(error);
+    }
+
+    return { dto, handler };
+}
+
+/**
+ *
+ * @param {Number} case_id
+ * @param {Object} data
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function validateAlasHak(case_id, data, trx) {
+    const { ah_id } = data;
 
     // validate alas hak
-    const ah_exists = await mainRepo.isExists(configs.TABLE.ALASHAK, ah_id);
+    const ah_exists = await mainRepo.isExists(
+        configs.TABLE.ALASHAK,
+        ah_id,
+        trx,
+    );
     if (!ah_exists) throw new ExpressError("Alas Hak not found", 404);
 
     // check if the Alas Hak case is still ongoing
-    const ah_conflict = await mainRepo.isExistsWhere(configs.TABLE.CASES, {
-        ah_id: ah_id,
-        status: "IN PROGRESS",
-    });
+    const ah_conflict = await mainRepo.isExistsWhere(
+        configs.TABLE.CASES,
+        {
+            ah_id: ah_id,
+            status: "IN PROGRESS",
+        },
+        trx,
+    );
     if (ah_conflict) {
         throw new ExpressError(
             `Alas Hak masih terikat dengan case yang sedang berlangsung`,
@@ -75,27 +125,29 @@ export async function validateCaseData(data) {
     }
 
     // check if alas hak is invalid
-    const ah_invalid = await mainRepo.isExistsWhere(configs.TABLE.ALASHAK, {
-        parent_id: ah_id,
-    });
+    const ah_invalid = await mainRepo.isExistsWhere(
+        configs.TABLE.ALASHAK,
+        {
+            parent_id: ah_id,
+        },
+        trx,
+    );
     if (ah_invalid) throw new ExpressError("Alas Hak already has been divided");
 
-    // validate products
-    const prd_exists = await mainRepo.isExists(
-        configs.TABLE.$CASES.PRD,
-        prd_id,
-    );
-    if (!prd_exists) throw new ExpressError("Products not available", 404);
+    await casesRepo.linkAlasHak(case_id, ah_id, trx);
+}
 
-    // validate clients
+export async function validateClients(case_id, data, trx) {
+    const { clients } = data;
+    const { ah_id, prd_id } = await casesRepo.getCaseById(case_id, trx);
+
+    // get valid clients
     const valid_clients = await filterClients(prd_id, ah_id, clients);
 
-    return {
-        ah_id,
-        prd_id,
-        clients: valid_clients,
-    };
+    await casesRepo.linkClients(case_id, valid_clients, trx);
 }
+
+// local functions
 
 /**
  * Validate and Filter clients
@@ -127,8 +179,6 @@ async function filterClients(prd_id, ah_id, clients) {
             "MISSING INPUT",
         );
     }
-
-    throw Error("FORCE ERROR");
 
     // check optional roles
     const optional = pickClients(prd_id, clients, "optional");

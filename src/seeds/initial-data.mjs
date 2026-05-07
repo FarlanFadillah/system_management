@@ -1,3 +1,5 @@
+import Joi from "joi";
+
 /**
  *
  * @param {import("knex").Knex} knex
@@ -123,21 +125,45 @@ export async function seed(knex) {
 
     await knex("workflows").insert([
         { name: "Validasi Berkas", order: 1, prd_id: 1 },
-        // {
-        //     name: "BPHTB - Survei",
-        //     order: 2,
-        //     prd_id: 1,
-        //     required_fields: {
-        //         hasil_survei: {
-        //             name: "hasil_survei",
-        //             type: "number",
-        //         },
-        //         tgl_survei: {
-        //             name: "tgl_survei",
-        //             type: "date",
-        //         },
-        //     },
-        // },
+        {
+            name: "Alas Hak - Input Alas Hak",
+            order: 2,
+            prd_id: 1,
+            validation: {
+                handler: "alashak",
+                fields: Joi.object({
+                    ah_id: Joi.number().required(),
+                }).describe(),
+            },
+        },
+        {
+            name: "CLients - Input Clients",
+            order: 3,
+            prd_id: 1,
+            validation: {
+                handler: "clients",
+                fields: Joi.object({
+                    clients: Joi.array()
+                        .items({
+                            id: Joi.number().required(),
+                            role_id: Joi.number().required(),
+                        })
+                        .required(),
+                }).describe(),
+            },
+        },
+        {
+            name: "BPHTB - Survei",
+            order: 4,
+            prd_id: 1,
+            validation: {
+                handler: "bphtb",
+                fields: Joi.object({
+                    tgl_survei: Joi.date().required(),
+                    hasil_survei: Joi.number().min(1).required(),
+                }).describe(),
+            },
+        },
         // {
         //     name: "BPHTB - Perintah Bayar",
         //     order: 3,
