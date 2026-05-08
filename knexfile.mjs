@@ -14,11 +14,11 @@ export default {
         },
         useNullAsDefault: true,
         migrations: {
-            directory: "./src/migrations",
+            directory: "./src/dbs/migrations",
             loadExtensions: [".mjs", ".js"],
         },
         seeds: {
-            directory: "./src/seeds",
+            directory: "./src/dbs/seeds",
             loadExtensions: [".mjs", ".js"],
         },
     },
