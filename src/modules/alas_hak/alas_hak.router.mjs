@@ -2,7 +2,7 @@ import express from "express";
 import * as ctrl from "./alas_hak.controller.mjs";
 import * as rules from "./alas_hak.validator.mjs";
 
-import * as mainRules from "../../validator/validation.rules.mjs";
+import * as mainRules from "../../shared/validator/validation.rules.mjs";
 import * as cache from "../../shared/middlewares/caching.middleware.mjs";
 import { validateToken } from "../../shared/middlewares/jwt.middleware.mjs";
 import { validate } from "../../shared/middlewares/validator.middleware.mjs";

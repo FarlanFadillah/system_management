@@ -2,7 +2,7 @@ import express from "express";
 import * as rules from "./akta.validator.mjs";
 import * as ctrl from "./akta.controller.mjs";
 import * as cache from "../../shared/middlewares/caching.middleware.mjs";
-import * as mainRules from "../../validator/validation.rules.mjs";
+import * as mainRules from "../../shared/validator/validation.rules.mjs";
 import { validateToken } from "../../shared/middlewares/jwt.middleware.mjs";
 import { validate } from "../../shared/middlewares/validator.middleware.mjs";
 import { keyBuilder } from "../../shared/utils/cachekeybuilder.mjs";
