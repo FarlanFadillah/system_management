@@ -1,11 +1,11 @@
 import * as casesRepo from "./case.repository.mjs";
-import * as trxService from "../../shared/transactions/transaction.service.mjs";
+import * as trxService from "../../shared/services/transaction.service.mjs";
 import configs from "../../configs/index.mjs";
-import { ExpressError } from "../../utils/custom.error.mjs";
-import * as mainRepo from "../../utils/main.repository.mjs";
+import { ExpressError } from "../../shared/utils/custom.error.mjs";
+import * as mainRepo from "../../shared/repositories/main.repository.mjs";
 import { config } from "dotenv";
-import * as dsa from "../../utils/ds.mjs";
-import * as joiUtils from "../../utils/joi.mjs";
+import * as dsa from "../../shared/utils/ds.mjs";
+import * as joiUtils from "../../shared/utils/joi.mjs";
 
 /**
  *

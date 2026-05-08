@@ -1,4 +1,4 @@
-import { ExpressError } from "../../utils/custom.error.mjs";
+import { ExpressError } from "../../shared/utils/custom.error.mjs";
 import db from "../../dbs/db.mjs";
 import TABLE from "../../configs/table.config.mjs";
 

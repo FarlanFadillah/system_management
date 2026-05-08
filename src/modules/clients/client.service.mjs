@@ -1,8 +1,8 @@
-import { ExpressError } from "../../utils/custom.error.mjs";
+import { ExpressError } from "../../shared/utils/custom.error.mjs";
 import * as clientRepo from "./client.repository.mjs";
-import * as mainRepo from "../../utils/main.repository.mjs";
-import * as jsonHelper from "../../helper/json.helper.mjs";
-import * as cache from "../../utils/cache.mjs";
+import * as mainRepo from "../../shared/repositories/main.repository.mjs";
+import * as jsonHelper from "../../shared/helper/json.helper.mjs";
+import * as cache from "../../shared/utils/cache.mjs";
 
 /**
  *

@@ -1,8 +1,8 @@
 import * as authRepo from "./auth.repository.mjs";
-import * as mainRepo from "../../utils/main.repository.mjs";
-import * as crypt from "../../utils/crypt.mjs";
-import * as jwt from "../../utils/jwt.mjs";
-import { ExpressError } from "../../utils/custom.error.mjs";
+import * as mainRepo from "../../shared/repositories/main.repository.mjs";
+import * as crypt from "../../shared/utils/crypt.mjs";
+import * as jwt from "../../shared/utils/jwt.mjs";
+import { ExpressError } from "../../shared/utils/custom.error.mjs";
 
 export async function verifyPassword(username, password) {
     try {

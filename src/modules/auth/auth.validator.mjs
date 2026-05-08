@@ -1,5 +1,5 @@
-import { ExpressError } from "../../utils/custom.error.mjs";
-import * as validator from "../../utils/validators.mjs";
+import { ExpressError } from "../../shared/utils/custom.error.mjs";
+import * as validator from "../../shared/utils/validators.mjs";
 
 export const registerValidationRules = [
     validator.stringRequired("username"),

@@ -1,4 +1,4 @@
-import { asyncHandler } from "../../utils/asyncHandler.mjs";
+import { asyncHandler } from "../../shared/utils/asyncHandler.mjs";
 import * as aktaService from "./akta.service.mjs";
 
 export const addAktaPPAT = asyncHandler(async (req, res, next) => {

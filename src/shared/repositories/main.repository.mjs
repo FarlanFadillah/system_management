@@ -1,5 +1,5 @@
-import db from "../dbs/db.mjs";
-import { ExpressError } from "./custom.error.mjs";
+import db from "../../dbs/db.mjs";
+import { ExpressError } from "../utils/custom.error.mjs";
 
 /**
  *

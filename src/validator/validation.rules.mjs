@@ -1,4 +1,4 @@
-import * as validator from "../utils/validators.mjs";
+import * as validator from "../shared/utils/validators.mjs";
 
 export const IDValidationRules = [validator.numericalRequired("id", "param")];
 

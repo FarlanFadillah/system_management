@@ -3,11 +3,11 @@ import * as ctrl from "./alas_hak.controller.mjs";
 import * as rules from "./alas_hak.validator.mjs";
 
 import * as mainRules from "../../validator/validation.rules.mjs";
-import * as cache from "../../middlewares/caching.middleware.mjs";
-import { validateToken } from "../../middlewares/jwt.middleware.mjs";
-import { validate } from "../../middlewares/validator.middleware.mjs";
-import { pagination } from "../../middlewares/pagination.middleware.mjs";
-import { keyBuilder } from "../../utils/cachekeybuilder.mjs";
+import * as cache from "../../shared/middlewares/caching.middleware.mjs";
+import { validateToken } from "../../shared/middlewares/jwt.middleware.mjs";
+import { validate } from "../../shared/middlewares/validator.middleware.mjs";
+import { pagination } from "../../shared/middlewares/pagination.middleware.mjs";
+import { keyBuilder } from "../../shared/utils/cachekeybuilder.mjs";
 
 const router = express.Router();
 

@@ -1,4 +1,4 @@
-import * as validator from "../../utils/validators.mjs";
+import * as validator from "../../shared/utils/validators.mjs";
 // {
 //     "no_akta": "01",
 //     "tgl_akta": "2026-03-03",

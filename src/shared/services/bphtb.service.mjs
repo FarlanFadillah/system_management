@@ -1,4 +1,4 @@
-import * as bphtbRepo from "./bphtb.repository.mjs";
+import * as bphtbRepo from "../repositories/bphtb.repository.mjs";
 import db from "../../dbs/db.mjs";
 import TABLE from "../../configs/table.config.mjs";
 import ROLES from "../../configs/roles.config.mjs";

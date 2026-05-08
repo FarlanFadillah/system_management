@@ -6,17 +6,17 @@ import {
     updateUser,
     verifyToken,
 } from "./auth.controller.mjs";
-import { authLimiter } from "../../middlewares/ratelimiter.middleware.mjs";
+import { authLimiter } from "../../shared/middlewares/ratelimiter.middleware.mjs";
 import {
     registerValidationRules,
     loginValidationRules,
 } from "./auth.validator.mjs";
-import { validate } from "../../middlewares/validator.middleware.mjs";
-import { validateToken } from "../../middlewares/jwt.middleware.mjs";
+import { validate } from "../../shared/middlewares/validator.middleware.mjs";
+import { validateToken } from "../../shared/middlewares/jwt.middleware.mjs";
 import {
     adminAuthorization,
     superUserAuthorization,
-} from "../../middlewares/authorization.middleware.mjs";
+} from "../../shared/middlewares/authorization.middleware.mjs";
 
 const router = express.Router();
 

@@ -1,5 +1,5 @@
-import { asyncHandler } from "../../utils/asyncHandler.mjs";
-import { ExpressError } from "../../utils/custom.error.mjs";
+import { asyncHandler } from "../../shared/utils/asyncHandler.mjs";
+import { ExpressError } from "../../shared/utils/custom.error.mjs";
 import * as addressService from "./address.service.mjs";
 
 export const getKelurahan = asyncHandler(async (req, res, next) => {

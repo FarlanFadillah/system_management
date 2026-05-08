@@ -1,4 +1,4 @@
-import { asyncHandler } from "../../utils/asyncHandler.mjs";
+import { asyncHandler } from "../../shared/utils/asyncHandler.mjs";
 import * as casesService from "./case.service.mjs";
 import httpStatus from "http-status";
 

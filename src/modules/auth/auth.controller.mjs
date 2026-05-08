@@ -1,7 +1,7 @@
 import { matchedData } from "express-validator";
-import { asyncHandler } from "../../utils/asyncHandler.mjs";
+import { asyncHandler } from "../../shared/utils/asyncHandler.mjs";
 import * as authService from "./auth.service.mjs";
-import { ExpressError } from "../../utils/custom.error.mjs";
+import { ExpressError } from "../../shared/utils/custom.error.mjs";
 
 export const register = asyncHandler(async (req, res, next) => {
     await authService.registerUser(req.matchedData);

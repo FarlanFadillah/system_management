@@ -1,4 +1,4 @@
-import { asyncHandler } from "../../utils/asyncHandler.mjs";
+import { asyncHandler } from "../../shared/utils/asyncHandler.mjs";
 import * as alasHakService from "./alas_hak.service.mjs";
 
 export const addAlasHak = asyncHandler(async (req, res, next) => {

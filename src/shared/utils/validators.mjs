@@ -1,5 +1,5 @@
 import { body, check, param, query, validationResult } from "express-validator";
-import db from "../dbs/db.mjs";
+import db from "../../dbs/db.mjs";
 import { ExpressError } from "./custom.error.mjs";
 
 const validator = {

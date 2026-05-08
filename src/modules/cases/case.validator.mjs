@@ -1,4 +1,4 @@
-import * as validator from "../../utils/validators.mjs";
+import * as validator from "../../shared/utils/validators.mjs";
 const status = ["DRAFT", "PENDING", "IN PROGRESS", "DONE", "REJECTED"];
 import Joi from "joi";
 

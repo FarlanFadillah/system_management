@@ -1,8 +1,8 @@
 import db from "../../dbs/db.mjs";
-import { ExpressError } from "../../utils/custom.error.mjs";
+import { ExpressError } from "../../shared/utils/custom.error.mjs";
 import createDebug from "debug";
 import TABLE from "../../configs/table.config.mjs";
-import * as rand from "../../utils/randString.mjs";
+import * as rand from "../../shared/utils/randString.mjs";
 const debug = new createDebug("app:repo:cases");
 
 // {
