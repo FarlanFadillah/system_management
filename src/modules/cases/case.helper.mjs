@@ -5,7 +5,7 @@ import { ExpressError } from "../../utils/custom.error.mjs";
 import * as mainRepo from "../../utils/main.repository.mjs";
 import { config } from "dotenv";
 import * as dsa from "../../utils/ds.mjs";
-import Joi from "joi";
+import * as joiUtils from "../../utils/joi.mjs";
 
 /**
  *
@@ -78,7 +78,7 @@ export async function validateStepData(case_id, data) {
     else if (valid) {
         throw new ExpressError("Current step is valid, you can continue");
     }
-    const schema = Joi.build(fields);
+    const schema = joiUtils.buildJoiSchema(fields);
     const { value: dto, error } = schema.validate(data, {
         stripUnknown: true,
     });

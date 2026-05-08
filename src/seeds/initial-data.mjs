@@ -131,9 +131,7 @@ export async function seed(knex) {
             prd_id: 1,
             validation: {
                 handler: "alashak",
-                fields: Joi.object({
-                    ah_id: Joi.number().required(),
-                }).describe(),
+                fields: [{ name: "ah_id", type: "number", required: true }],
             },
         },
         {
@@ -142,14 +140,18 @@ export async function seed(knex) {
             prd_id: 1,
             validation: {
                 handler: "clients",
-                fields: Joi.object({
-                    clients: Joi.array()
-                        .items({
-                            id: Joi.number().required(),
-                            role_id: Joi.number().required(),
-                        })
-                        .required(),
-                }).describe(),
+                fields: [
+                    {
+                        name: "clients",
+                        type: "array",
+                        required: true,
+                        min: 1,
+                        items: [
+                            { name: "id", type: "number", required: true },
+                            { name: "role_id", type: "number", required: true },
+                        ],
+                    },
+                ],
             },
         },
         {
@@ -158,10 +160,10 @@ export async function seed(knex) {
             prd_id: 1,
             validation: {
                 handler: "bphtb",
-                fields: Joi.object({
-                    tgl_survei: Joi.date().required(),
-                    hasil_survei: Joi.number().min(1).required(),
-                }).describe(),
+                fields: [
+                    { name: "tgl_survei", type: "date", required: true },
+                    { name: "hasil_survei", type: "number", required: true },
+                ],
             },
         },
         // {

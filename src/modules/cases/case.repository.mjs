@@ -71,7 +71,7 @@ export async function createSteps(case_id, prd_id, trx) {
 
         if (steps.length <= 0)
             throw new ExpressError(
-                "Workflows for this product does not exists",
+                "The workflow for this product is not available.",
             );
 
         debug("Initiate steps");
