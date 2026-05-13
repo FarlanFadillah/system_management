@@ -3,6 +3,7 @@ import { ExpressError } from "../../shared/utils/custom.error.mjs";
 import createDebug from "debug";
 import TABLE from "../../configs/table.config.mjs";
 import * as rand from "../../shared/utils/randString.mjs";
+import knex from "knex";
 const debug = new createDebug("app:repo:cases");
 
 // {
@@ -67,6 +68,7 @@ export async function createSteps(case_id, prd_id, trx) {
                 name: val.name,
                 status: index === 0 ? "IN PROGRESS" : "DRAFT",
                 validation: val.validation,
+                can_skip: val.can_skip,
             }));
 
         if (steps.length <= 0)
@@ -166,7 +168,10 @@ export async function linkAlasHak(id, ah_id, trx) {
 export async function lockForUpdate(id, trx) {
     try {
         const conn = trx || db;
-        await conn(TABLE.CASES).where({ id: id }).forUpdate().select("*");
+        return await conn(TABLE.CASES)
+            .where({ id: id })
+            .select("*")
+            .forUpdate();
     } catch (error) {
         throw new ExpressError(error.message);
     }
@@ -246,11 +251,13 @@ export async function log(trx, id, action) {
  * Get related client from case for bphtb
  * @param {Number} case_id
  * @param {Number} role_id
- * @returns {Object}
+ * @param {knex.Knex.Transaction} trx
+ * @returns {Promise<Array>}
  */
-export async function getClientIdsFromCase(case_id, role_id) {
+export async function getClientIdsFromCase(case_id, role_id, trx) {
     try {
-        return await db(`${TABLE.CASES} as c`)
+        const conn = trx || db;
+        return await conn(`${TABLE.CASES} as c`)
             .leftJoin(`${TABLE.$CASES.CLIENTS} as cc`, "cc.case_id", "c.id")
             .leftJoin(`${TABLE.CLIENTS} as cl`, "cl.id", "cc.client_id")
             .where("c.id", case_id)

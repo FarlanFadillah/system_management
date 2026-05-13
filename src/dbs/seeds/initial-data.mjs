@@ -110,7 +110,7 @@ export async function seed(knex) {
             id: 8,
             name: "PISAH HAK BERSAMA",
             is_transaction: true,
-            type_transaction: "RELEASE",
+            type_transaction: "PARTIAL_RELEASE",
             roles: {
                 required: [ROLES.PEMBERI_HAK, ROLES.PENERIMA_HAK],
                 optional: [
@@ -123,12 +123,13 @@ export async function seed(knex) {
         },
     ].forEach(async (val) => await knex("products").insert(val));
 
+    // jual beli
     await knex("workflows").insert([
-        { name: "Validasi Berkas", order: 1, prd_id: 1 },
         {
             name: "Alas Hak - Input Alas Hak",
-            order: 2,
+            order: 1,
             prd_id: 1,
+            can_skip: false,
             validation: {
                 handler: "alashak",
                 fields: [{ name: "ah_id", type: "number", required: true }],
@@ -136,8 +137,9 @@ export async function seed(knex) {
         },
         {
             name: "CLients - Input Clients",
-            order: 3,
+            order: 2,
             prd_id: 1,
+            can_skip: false,
             validation: {
                 handler: "clients",
                 fields: [
@@ -155,9 +157,22 @@ export async function seed(knex) {
             },
         },
         {
+            name: "BPHTB - Masuk Survei",
+            order: 3,
+            prd_id: 1,
+            can_skip: false,
+            validation: {
+                handler: "bphtb",
+                fields: [
+                    { name: "tgl_berkas_masuk", type: "date", required: true },
+                ],
+            },
+        },
+        {
             name: "BPHTB - Survei",
             order: 4,
             prd_id: 1,
+            can_skip: false,
             validation: {
                 handler: "bphtb",
                 fields: [
@@ -166,26 +181,91 @@ export async function seed(knex) {
                 ],
             },
         },
-        // {
-        //     name: "BPHTB - Perintah Bayar",
-        //     order: 3,
-        //     prd_id: 1,
-        //     required_fields: {
-        //         total_bayar: {
-        //             name: "total_bayar",
-        //             type: "number",
-        //         },
-        //         tgl_perintah_bayar: {
-        //             name: "tgl_perintah_bayar",
-        //             type: "date",
-        //         },
-        //     },
-        // },
-        // { name: "PPH", order: 3, prd_id: 1 },
-        // { name: "ZNT", order: 4, prd_id: 1 },
-        // { name: "CEKING", order: 5, prd_id: 1 },
-        // { name: "Tanda Tangah AJB", order: 6, prd_id: 1 },
-        // { name: "Validasi NOTARIS", order: 7, prd_id: 1 },
+        {
+            name: "BPHTB - Perintah Bayar",
+            order: 5,
+            prd_id: 1,
+            can_skip: false,
+            validation: {
+                handler: "bphtb",
+                fields: [
+                    {
+                        name: "tgl_perintah_bayar",
+                        type: "date",
+                        required: true,
+                    },
+                    { name: "total_bayar", type: "number", required: true },
+                ],
+            },
+        },
+        {
+            name: "BPHTB - Lunas",
+            order: 6,
+            prd_id: 1,
+            can_skip: false,
+            validation: {
+                handler: "bphtb",
+                fields: [
+                    {
+                        name: "tgl_bayar",
+                        type: "date",
+                        required: true,
+                    },
+                ],
+            },
+        },
+        {
+            name: "PPH - Billing",
+            order: 7,
+            prd_id: 1,
+            can_skip: true,
+            validation: {
+                handler: "pph",
+                fields: [
+                    { name: "code", type: "string", required: true },
+                    { name: "date", type: "date", required: true },
+                    { name: "client_id", type: "number", required: true },
+                ],
+            },
+        },
+        {
+            name: "PPH - Pembayaran",
+            order: 7,
+            prd_id: 1,
+            can_skip: true,
+            validation: {
+                handler: "pph",
+                fields: [
+                    { name: "paid_date", type: "date", required: true },
+                    {
+                        name: "total_tax",
+                        type: "number",
+                        required: true,
+                    },
+                ],
+            },
+        },
+        {
+            name: "AKTA - Input Akta PPAT",
+            order: 8,
+            prd_id: 1,
+            can_skip: false,
+            validation: {
+                handler: "akta",
+                fields: [
+                    { name: "number", type: "number", required: true },
+                    { name: "year", type: "string", length: 4, required: true },
+                    { name: "date", type: "date", required: true },
+                ],
+            },
+        },
+        {
+            name: "Proses di BPN",
+            order: 9,
+            prd_id: 1,
+            can_skip: false,
+            validation: null,
+        },
     ]);
 
     await knex("alas_hak").insert([

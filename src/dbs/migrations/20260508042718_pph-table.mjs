@@ -7,17 +7,20 @@ export async function up(knex) {
         table.increments("id").primary();
         table.string("code").unique();
         table.datetime("date");
-        table.bigInteger("total");
+        table.bigInteger("total_tax");
         table.datetime("paid_date");
+        table.string("doc_path");
         table
             .integer("case_id")
-            .references("id")
-            .inTable("cases")
+            .unsigned()
+            .nullable()
+            .references("cases.id")
             .onDelete("SET NULL");
         table
             .integer("client_id")
-            .references("id")
-            .inTable("clients")
+            .unsigned()
+            .nullable()
+            .references("clients.id")
             .onDelete("SET NULL");
 
         table.index(["case_id", "client_id"]);

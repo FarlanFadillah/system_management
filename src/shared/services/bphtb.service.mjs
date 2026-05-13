@@ -12,7 +12,7 @@ import { caseService } from "../../modules/cases/index.js";
  */
 export async function validateBPHTB(case_id, data, trx) {
     try {
-        const _case = await caseService.getCaseData(case_id);
+        const _case = await caseService.getCaseData(case_id, trx);
         const exists = await bphtbRepo.isExists({ case_id }, trx);
         if (!exists) {
             const id = await bphtbRepo.create(

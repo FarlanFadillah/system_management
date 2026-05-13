@@ -3,15 +3,18 @@
  * @returns { Promise<void> }
  */
 export async function up(knex) {
+    const prodTypes = [
+        "FULL_TRANSFER",
+        "PARTIAL_TRANSFER",
+        "PARTIAL_RELEASE",
+        "SPLIT",
+        "MERGE",
+    ];
     // --- TABLE: produk ---
     await knex.schema.createTable("products", (table) => {
         table.increments("id").primary();
+        table.enum("type_transaction", prodTypes).defaultTo(null);
         table.boolean("is_transaction").defaultTo(false);
-        table.enum("type_transaction", [
-            "FULL_TRANSFER",
-            "PARTIAL_TRANSFER",
-            "RELEASE",
-        ]);
         table.string("name", 20);
         table.json("roles");
     });
@@ -56,6 +59,7 @@ export async function up(knex) {
         table.integer("order").unsigned().notNullable();
         table.string("version").notNullable().defaultTo("v1");
         table.json("validation").defaultTo(null);
+        table.boolean("can_skip").defaultTo(false);
         table
             .integer("prd_id")
             .unsigned()
@@ -71,6 +75,7 @@ export async function up(knex) {
         table.string("name").notNullable();
         table.json("validation").defaultTo(null);
         table.boolean("valid").defaultTo(false);
+        table.boolean("can_skip").defaultTo(false);
         table
             .integer("case_id")
             .unsigned()

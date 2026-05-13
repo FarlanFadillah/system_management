@@ -192,11 +192,13 @@ export async function isExistsWhere(table, model, trx) {
  * @param {String} table
  * @param {Number} id
  * @param {Array} select
+ * @param {import("knex").Knex.Transaction} trx
  * @returns
  */
-export async function get(table, id, select = ["*"]) {
+export async function get(table, id, select = ["*"], trx) {
     try {
-        return await db(table).where({ id }).select(select).first();
+        const conn = trx || db;
+        return await conn(table).where({ id }).select(select).first();
     } catch (error) {
         throw new ExpressError(error.message);
     }

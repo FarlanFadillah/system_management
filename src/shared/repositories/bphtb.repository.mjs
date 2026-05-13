@@ -10,7 +10,11 @@ import ROLES from "../../configs/roles.config.mjs";
  */
 export async function create(data, trx) {
     try {
-        const [id] = await trx(TABLE.BPHTB).insert(data);
+        const [id] = await trx(TABLE.BPHTB).insert({
+            ...data,
+            created_at: new Date(),
+            updated_at: new Date(),
+        });
         return id;
     } catch (error) {
         throw new ExpressError(error.message);
@@ -67,7 +71,9 @@ export async function getClientIdsFromCase(case_id) {
 export async function update(id, data, trx) {
     try {
         await trx(TABLE.BPHTB).where({ id: id }).forUpdate();
-        await trx(TABLE.BPHTB).where({ id: id }).update(data);
+        await trx(TABLE.BPHTB)
+            .where({ id: id })
+            .update({ ...data, updated_at: new Date() });
     } catch (error) {
         throw new ExpressError(error.message);
     }
@@ -81,7 +87,9 @@ export async function update(id, data, trx) {
 export async function updateWhere(model, data, trx) {
     try {
         await trx(TABLE.BPHTB).where(model).forUpdate();
-        await trx(TABLE.BPHTB).where(model).update(data);
+        await trx(TABLE.BPHTB)
+            .where(model)
+            .update({ ...data, updated_at: new Date() });
     } catch (error) {
         throw new ExpressError(error.message);
     }

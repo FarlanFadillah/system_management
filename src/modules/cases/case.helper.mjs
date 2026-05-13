@@ -6,53 +6,63 @@ import * as mainRepo from "../../shared/repositories/main.repository.mjs";
 import { config } from "dotenv";
 import * as dsa from "../../shared/utils/ds.mjs";
 import * as joiUtils from "../../shared/utils/joi.mjs";
+import * as cache from "../../shared/utils/cache.mjs";
 
 /**
  *
- * @param {String} type
  * @param {Number} case_id
+ * @param {Number} current_step
  * @param {Number} ah_id
  * @param {import("knex").Knex.Transaction} trx
+ * @returns
  */
-export async function processTransaction(type, case_id, ah_id, trx) {
-    try {
-        let clients = [];
-        switch (type) {
-            case configs.TRX.FULL:
-                clients = await getClientsByRoleId(
-                    case_id,
-                    configs.ROLES.PENERIMA_HAK,
-                );
-                await trxService.transferLandOwnership(
-                    case_id,
-                    ah_id,
-                    clients.reduce((acc, cur) => {
-                        acc.push(cur.id);
-                        return acc;
-                    }, []),
-                    trx,
-                );
-                break;
-            case configs.TRX.RELEASE:
-                clients = await getClientsByRoleId(
-                    case_id,
-                    configs.ROLES.PEMBERI_HAK,
-                );
-                await trxService.releaseLandOwnership(
-                    case_id,
-                    ah_id,
-                    clients.reduce((acc, cur) => {
-                        acc.push(cur.id);
-                        return acc;
-                    }, []),
-                    trx,
-                );
-                break;
-            default:
-                break;
-        }
-    } catch (error) {
-        throw error;
+export async function proceedToNextStep(case_id, current_step, ah_id, trx) {
+    // get the next step if exists
+    const next_step = await casesRepo.getNextStep(case_id, current_step, trx);
+
+    // check if next step is exists
+    if (next_step) {
+        // current step is done
+        await casesRepo.updateStep(
+            current_step,
+            { status: "DONE", valid: true, completed_at: trx.fn.now() },
+            trx,
+        );
+
+        // update current step id
+        await casesRepo.updateCase(
+            case_id,
+            { current_step: next_step.id },
+            trx,
+        );
+
+        // update new current step
+        await casesRepo.updateStep(
+            next_step.id,
+            { status: "IN PROGRESS" },
+            trx,
+        );
+
+        return false;
+    } else {
+        // if the code reach this if statement
+        // its mean the case is done
+
+        // update case, set status to done
+        await casesRepo.updateCase(
+            case_id,
+            { status: "DONE", completed_at: new Date() },
+            trx,
+        );
+
+        // update current step, set status to done
+        await casesRepo.updateStep(
+            current_step,
+            { status: "DONE", completed_at: new Date() },
+            trx,
+        );
+
+        return true;
     }
 }
 
@@ -70,14 +80,14 @@ export async function validateStepData(case_id, data) {
         throw new ExpressError("Case already finished");
 
     const { validation, valid } = await casesRepo.getStep(_case.current_step);
-    const { handler = null, fields = null } = validation;
-    if (!validation || !fields)
+    if (!validation)
         throw new ExpressError(
             "Current step does not have requirement, you can continue",
         );
     else if (valid) {
         throw new ExpressError("Current step is valid, you can continue");
     }
+    const { handler = null, fields = null } = validation;
     const schema = joiUtils.buildJoiSchema(fields);
     const { value: dto, error } = schema.validate(data, {
         stripUnknown: true,
@@ -135,6 +145,11 @@ export async function validateAlasHak(case_id, data, trx) {
     if (ah_invalid) throw new ExpressError("Alas Hak already has been divided");
 
     await casesRepo.linkAlasHak(case_id, ah_id, trx);
+
+    cache.delByPattern(`:alashak:id:${ah_id}:`);
+    cache.delByPattern(":alashak:list:");
+    cache.delByPattern(`:cases:id:${case_id}:`);
+    cache.delByPattern(":cases:list:");
 }
 
 export async function validateClients(case_id, data, trx) {
@@ -145,9 +160,16 @@ export async function validateClients(case_id, data, trx) {
     const valid_clients = await filterClients(prd_id, ah_id, clients);
 
     await casesRepo.linkClients(case_id, valid_clients, trx);
+
+    valid_clients.forEach((val) => {
+        cache.delByPattern(`:clients:id:${val.id}:`);
+    });
+    cache.delByPattern(`:clients:list:`);
+    cache.delByPattern(`:cases:id:${case_id}:`);
+    cache.delByPattern(":cases:list:");
 }
 
-// local functions
+// Local functions
 
 /**
  * Validate and Filter clients
@@ -218,8 +240,6 @@ async function filterClients(prd_id, ah_id, clients) {
     return [...owners, ...required];
 }
 
-// Local functions
-
 /**
  *
  * @param {Number} case_id
@@ -233,10 +253,6 @@ async function getClientsByRoleId(case_id, role) {
             `There is no ${configs.ROLES.PENERIMA_HAK} is link to the case`,
         );
     return clients;
-}
-
-async function getCaseClients(case_id) {
-    const clients = await casesRepo.getcli;
 }
 
 /**

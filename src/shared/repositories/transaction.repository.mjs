@@ -64,6 +64,8 @@ export async function releaseOwnership(case_id, ah_id, clients, trx) {
     }
 }
 
+export async function getClientsAndRolesFromCase(case_id, trx) {}
+
 /**
  *
  * @param {Number} case_id

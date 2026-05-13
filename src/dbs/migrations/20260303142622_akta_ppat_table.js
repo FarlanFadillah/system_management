@@ -27,7 +27,14 @@ export async function up(knex) {
             .references("id")
             .inTable("products")
             .onDelete("SET NULL");
+
+        table
+            .integer("ah_id")
+            .unsigned()
+            .references("alas_hak.id")
+            .onDelete("SET NULL");
         // indexes
+        table.index("ah_id");
         table.index("case_id");
         table.index("prd_id");
         table.index("number");

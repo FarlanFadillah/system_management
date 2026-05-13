@@ -10,6 +10,7 @@ const my_schema = Joi.array().items({
         then: Joi.number().required(),
         otherwise: Joi.forbidden(),
     }),
+    length: Joi.number().optional(),
 });
 
 /**
@@ -28,6 +29,10 @@ export function buildJoiSchema(fields) {
         if (field.items) {
             j = j.items(buildJoiSchema(field.items));
             j = j.min(field.min);
+        }
+
+        if (field.length) {
+            j = j.length(4).pattern(/^[0-9]+$/);
         }
 
         // required

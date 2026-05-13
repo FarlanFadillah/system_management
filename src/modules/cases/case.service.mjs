@@ -8,6 +8,9 @@ import db from "../../dbs/db.mjs";
 import * as dshelper from "../../shared/utils/ds.mjs";
 import roles from "../../configs/roles.config.mjs";
 import * as bphtbService from "../../shared/services/bphtb.service.mjs";
+import * as pphService from "../../shared/services/pph.service.mjs";
+import * as trxService from "../../shared/services/transaction.service.mjs";
+import * as aktaService from "../../shared/services/akta.service.mjs";
 import configs from "../../configs/index.mjs";
 
 // step handlers
@@ -15,6 +18,8 @@ const handlers = {
     bphtb: bphtbService.validateBPHTB,
     alashak: casesHelper.validateAlasHak,
     clients: casesHelper.validateClients,
+    pph: pphService.validatePPH,
+    akta: aktaService.validateAkta,
 };
 
 /**
@@ -35,6 +40,7 @@ export async function create(data) {
 
             // insert case data
             const case_id = await casesRepo.createCase(data, trx);
+            await casesRepo.lockForUpdate(case_id, trx);
 
             // insert step from workflow templates
             const step_id = await casesRepo.createSteps(
@@ -80,17 +86,14 @@ export async function nextStep(id) {
          */
 
         await db.transaction(async (trx) => {
-            // Lock case for update
-            await casesRepo.lockForUpdate(id, trx);
-
+            // Lock case for update and
             // get case by its id
-            const _case = await casesRepo.getById(id, trx);
+            const [_case] = await casesRepo.lockForUpdate(id, trx);
 
             // validate case
             if (!_case) throw new ExpressError("Case not found", 404);
             else if (_case.status === "DONE")
                 throw new ExpressError("Case already finished");
-            const prd = await casesRepo.getProduct(_case.prd_id, trx);
 
             // get current step
             const current_step = await casesRepo.getStep(
@@ -98,70 +101,38 @@ export async function nextStep(id) {
                 trx,
             );
 
-            // check if current step is valid or don't have requirement
-            if (!current_step.valid && current_step.validation)
-                throw Error("Current step not finished yet");
+            console.log(current_step.can_skip);
 
-            // get the next step if exists
-            const next_step = await casesRepo.getNextStep(
-                id,
+            // check if current step is valid or don't have requirement
+            if (
+                !current_step.valid &&
+                current_step.validation &&
+                !current_step.can_skip
+            )
+                throw Error(
+                    `Current step not finished yet [${current_step.name}]`,
+                );
+
+            finished = await casesHelper.proceedToNextStep(
+                _case.id,
                 _case.current_step,
+                _case.ah_id,
                 trx,
             );
 
-            // check if next step is exists
-            if (next_step) {
-                // current step is done
-                await casesRepo.updateStep(
-                    _case.current_step,
-                    { status: "DONE", valid: true, completed_at: trx.fn.now() },
+            // proceed transaction if case is finished
+            // and its product is a transaction
+            const prd = await casesRepo.getProduct(_case.prd_id, trx);
+            if (finished && prd.is_transaction) {
+                await trxService.transaction(
+                    _case.id,
+                    _case.ah_id,
+                    prd.type_transaction,
                     trx,
                 );
-
-                // update current step id
-                await casesRepo.updateCase(
-                    id,
-                    { current_step: next_step.id },
-                    trx,
-                );
-
-                // update new current step
-                await casesRepo.updateStep(
-                    next_step.id,
-                    { status: "IN PROGRESS" },
-                    trx,
-                );
-            } else {
-                // if the code reach this if statement
-                // its mean the case is done
-
-                // update case, set status to done
-                await casesRepo.updateCase(
-                    id,
-                    { status: "DONE", completed_at: new Date() },
-                    trx,
-                );
-
-                // proceed transaction if case products is transaction
-                if (prd.is_transaction) {
-                    await casesHelper.processTransaction(
-                        prd.type_transaction,
-                        _case.id,
-                        _case.ah_id,
-                        trx,
-                    );
-                }
-
-                // update current step, set status to done
-                await casesRepo.updateStep(
-                    _case.current_step,
-                    { status: "DONE", completed_at: trx.fn.now() },
-                    trx,
-                );
-
-                finished = true;
             }
         });
+
         cache.delByPattern(`:cases:id:${id}`);
         cache.delByPattern(`:cases:list:`);
         return finished;
@@ -238,8 +209,8 @@ export async function getCaseWithDetails(id) {
     }
 }
 
-export async function getCaseData(id) {
-    return await mainRepo.get(configs.TABLE.CASES, id);
+export async function getCaseData(id, trx) {
+    return await mainRepo.get(configs.TABLE.CASES, id, "", trx);
 }
 /**
  *

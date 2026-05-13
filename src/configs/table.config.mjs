@@ -30,4 +30,5 @@ export default {
         CLIENTS: "bphtb_clients",
     },
     OWNERSHIPS: "owner_histories",
+    PPH: "pph",
 };

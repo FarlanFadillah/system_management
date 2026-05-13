@@ -3,7 +3,6 @@ import authRouter from "./modules/auth/auth.router.mjs";
 import addressRouter from "./modules/address/address.router.mjs";
 import alasHakRouter from "./modules/alas_hak/alas_hak.router.mjs";
 import casesRouter from "./modules/cases/case.router.mjs";
-import aktaRouter from "./modules/akta_ppat/akta.router.mjs";
 import statsRouter from "./modules/stats/stats.router.mjs";
 import express from "express";
 
@@ -29,10 +28,6 @@ const defaultRoutes = [
     {
         path: "/stats",
         router: statsRouter,
-    },
-    {
-        path: "/akta-ppat",
-        router: aktaRouter,
     },
     {
         path: "/clients",
