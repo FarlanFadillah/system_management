@@ -133,6 +133,7 @@ export async function seed(knex) {
             validation: {
                 handler: "alashak",
                 fields: [{ name: "ah_id", type: "number", required: true }],
+                invalidation: null,
             },
         },
         {
@@ -154,6 +155,9 @@ export async function seed(knex) {
                         ],
                     },
                 ],
+                invalidation: {
+                    strategy: "delete",
+                },
             },
         },
         {
@@ -166,6 +170,9 @@ export async function seed(knex) {
                 fields: [
                     { name: "tgl_berkas_masuk", type: "date", required: true },
                 ],
+                invalidation: {
+                    strategy: "delete",
+                },
             },
         },
         {
@@ -179,6 +186,10 @@ export async function seed(knex) {
                     { name: "tgl_survei", type: "date", required: true },
                     { name: "hasil_survei", type: "number", required: true },
                 ],
+                invalidation: {
+                    strategy: "nullify",
+                    fields: ["tgl_survei", "hasil_survei"],
+                },
             },
         },
         {
@@ -196,6 +207,10 @@ export async function seed(knex) {
                     },
                     { name: "total_bayar", type: "number", required: true },
                 ],
+                invalidation: {
+                    strategy: "nullify",
+                    fields: ["tgl_perintah_bayar", "total_bayar"],
+                },
             },
         },
         {
@@ -212,6 +227,10 @@ export async function seed(knex) {
                         required: true,
                     },
                 ],
+                invalidation: {
+                    strategy: "nullify",
+                    fields: ["tgl_bayar"],
+                },
             },
         },
         {
@@ -226,6 +245,9 @@ export async function seed(knex) {
                     { name: "date", type: "date", required: true },
                     { name: "client_id", type: "number", required: true },
                 ],
+                invalidation: {
+                    strategy: "delete",
+                },
             },
         },
         {
@@ -243,6 +265,10 @@ export async function seed(knex) {
                         required: true,
                     },
                 ],
+                invalidation: {
+                    strategy: "nullify",
+                    fields: ["paid_date", "total_tax"],
+                },
             },
         },
         {
@@ -257,6 +283,9 @@ export async function seed(knex) {
                     { name: "year", type: "string", length: 4, required: true },
                     { name: "date", type: "date", required: true },
                 ],
+                invalidation: {
+                    strategy: "delete",
+                },
             },
         },
         {

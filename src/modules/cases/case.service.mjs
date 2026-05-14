@@ -15,11 +15,20 @@ import configs from "../../configs/index.mjs";
 
 // step handlers
 const handlers = {
-    bphtb: bphtbService.validateBPHTB,
-    alashak: casesHelper.validateAlasHak,
-    clients: casesHelper.validateClients,
-    pph: pphService.validatePPH,
-    akta: aktaService.validateAkta,
+    validate: {
+        bphtb: bphtbService.validateBPHTB,
+        alashak: casesHelper.validateAlasHak,
+        clients: casesHelper.validateClients,
+        pph: pphService.validatePPH,
+        akta: aktaService.validateAkta,
+    },
+    invalidate: {
+        alashak: casesHelper.invalidateAlasHak,
+        clients: casesHelper.invalidateClients,
+        pph: pphService.invalidatePPH,
+        bphtb: bphtbService.invalidateBPHB,
+        akta: aktaService.invalidateAkta,
+    },
 };
 
 /**
@@ -101,8 +110,6 @@ export async function nextStep(id) {
                 trx,
             );
 
-            console.log(current_step.can_skip);
-
             // check if current step is valid or don't have requirement
             if (
                 !current_step.valid &&
@@ -141,6 +148,40 @@ export async function nextStep(id) {
     }
 }
 
+export async function prevStep(id) {
+    try {
+        await db.transaction(async (trx) => {
+            const [_case] = await casesRepo.lockForUpdate(id, trx);
+
+            // validate case
+            if (!_case) throw new ExpressError("Case not found", 404);
+            else if (_case.status === "DONE")
+                throw new ExpressError("Case already finished");
+
+            const result = await casesHelper.invalidateCurrentStep(
+                _case.current_step,
+                trx,
+            );
+            if (result) {
+                const func = handlers.invalidate[result.handler];
+                if (func) await func(id, result.invalidation, trx);
+            }
+
+            // set the current step to the previous step if exists
+            await casesHelper.proceedToPreviousStep(
+                _case.id,
+                _case.current_step,
+                trx,
+            );
+        });
+
+        cache.delByPattern(`:cases:list:`);
+        cache.delByPattern(`:cases:id:${id}`);
+    } catch (error) {
+        throw error;
+    }
+}
+
 /**
  *
  * @param {Number} case_id
@@ -150,7 +191,7 @@ export async function nextStep(id) {
 export async function validateStep(case_id, data) {
     const { dto, handler } = await casesHelper.validateStepData(case_id, data);
     await db.transaction(async (trx) => {
-        await handlers[handler](case_id, dto, trx);
+        await handlers.validate[handler](case_id, dto, trx);
         await casesRepo.updateCurrentStep(
             case_id,
             {

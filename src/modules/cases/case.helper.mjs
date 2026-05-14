@@ -12,6 +12,63 @@ import * as cache from "../../shared/utils/cache.mjs";
  *
  * @param {Number} case_id
  * @param {Number} current_step
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function proceedToPreviousStep(case_id, current_step, trx) {
+    // get the next step if exists
+    const prev_step = await casesRepo.getPrevStep(case_id, current_step, trx);
+
+    // check if next step is exists
+    if (prev_step) {
+        // current step is done
+        await casesRepo.updateStep(
+            current_step,
+            { status: "DRAFT", valid: false, completed_at: new Date() },
+            trx,
+        );
+
+        // update current step id
+        await casesRepo.updateCase(
+            case_id,
+            { current_step: prev_step.id },
+            trx,
+        );
+
+        // update new current step
+        await casesRepo.updateStep(
+            prev_step.id,
+            { status: "IN PROGRESS" },
+            trx,
+        );
+    } else {
+        throw new ExpressError(
+            "you're reaching the beginning of the workflows",
+        );
+    }
+}
+
+/**
+ *
+ * @param {Number} cs_id
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function invalidateCurrentStep(cs_id, trx) {
+    const current_step = await casesRepo.getStep(cs_id, trx);
+
+    const { validation } = current_step;
+    if (!validation) return null;
+    if (!validation.invalidation) return null;
+
+    return {
+        handler: validation.handler,
+        invalidation: validation.invalidation,
+    };
+}
+
+/**
+ *
+ * @param {Number} case_id
+ * @param {Number} current_step
  * @param {Number} ah_id
  * @param {import("knex").Knex.Transaction} trx
  * @returns
@@ -167,6 +224,30 @@ export async function validateClients(case_id, data, trx) {
     cache.delByPattern(`:clients:list:`);
     cache.delByPattern(`:cases:id:${case_id}:`);
     cache.delByPattern(":cases:list:");
+}
+
+/**
+ *
+ * @param {Number} case_id
+ * @param {Object} invalidation
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function invalidateAlasHak(case_id, invalidation, trx) {
+    if (invalidation.strategy === "nullify") {
+        await casesRepo.unlinkAlasHak(case_id, trx);
+    }
+}
+
+/**
+ *
+ * @param {Number} case_id
+ * @param {Object} invalidation
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function invalidateClients(case_id, invalidation, trx) {
+    if (invalidation.strategy === "delete") {
+        await casesRepo.unlinkClients(case_id, trx);
+    }
 }
 
 // Local functions

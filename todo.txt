@@ -1,0 +1,3 @@
+* make clients field simpler like (nik, fullname, address_code)
+* make sure the on delete for each table that related to cases
+* move validate/invalidate clients/alashak to shared folder (/shared/services/alashak.handler.mjs, etc)

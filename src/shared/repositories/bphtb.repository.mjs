@@ -110,3 +110,14 @@ export async function isExists(model, trx) {
         throw new ExpressError(error.message);
     }
 }
+
+/**
+ *
+ * @param {Object} model
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function deleteWhere(model, trx) {
+    const conn = trx || db;
+    await conn(TABLE.BPHTB).where(model).forUpdate();
+    await conn(TABLE.BPHTB).where(model).delete();
+}

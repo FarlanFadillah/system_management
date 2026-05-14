@@ -26,6 +26,27 @@ export async function validateAkta(case_id, data, trx) {
 
 /**
  *
+ * @param {Number} case_id
+ * @param {Object} invalidation
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function invalidateAkta(case_id, invalidation, trx) {
+    if (invalidation.strategy === "delete") {
+        await aktaRepo.deleteAktaWhere({ case_id: case_id }, trx);
+    } else if (invalidation.strategy === "nullify") {
+        await aktaRepo.updateAktaWhere(
+            { case_id: case_id },
+            invalidation.fields.reduce((acc, cur) => {
+                acc[cur] = null;
+                return acc;
+            }, {}),
+            trx,
+        );
+    }
+}
+
+/**
+ *
  * @param {Number} number
  * @param {String} year
  * @param {import("knex").Knex.Transaction} trx

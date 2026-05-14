@@ -36,6 +36,28 @@ export async function validateBPHTB(case_id, data, trx) {
 /**
  *
  * @param {Number} case_id
+ * @param {Object} invalidation
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function invalidateBPHB(case_id, invalidation, trx) {
+    console.log(invalidation);
+    if (invalidation.strategy === "delete") {
+        await bphtbRepo.deleteWhere({ case_id: case_id }, trx);
+    } else if (invalidation.strategy === "nullify") {
+        await bphtbRepo.updateWhere(
+            { case_id: case_id },
+            invalidation.fields.reduce((acc, cur) => {
+                acc[cur] = null;
+                return acc;
+            }, {}),
+            trx,
+        );
+    }
+}
+
+/**
+ *
+ * @param {Number} case_id
  * @param {Number} prd_id
  * @param {Number} ah_id
  * @param {Number} client_id

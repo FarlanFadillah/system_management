@@ -45,6 +45,9 @@ export const getCase = asyncHandler(async (req, res, next) => {
 export const validateStep = asyncHandler(async (req, res, next) => {
     const { id } = req.matchedData;
     const data = req.body;
+
+    console.log(data);
+
     await casesService.validateStep(id, data);
 
     res.status(httpStatus.OK).json({
@@ -62,6 +65,17 @@ export const nextStep = asyncHandler(async (req, res, next) => {
         msg: finished
             ? "Case is finished"
             : "Case is processed to the next step",
+    });
+});
+
+export const prevStep = asyncHandler(async (req, res, next) => {
+    const { id } = req.matchedData;
+
+    await casesService.prevStep(id);
+
+    res.status(httpStatus.OK).json({
+        success: true,
+        msg: "Sending back to the previous step",
     });
 });
 

@@ -128,6 +128,30 @@ export async function getNextStep(case_id, current_step_id, trx) {
 }
 
 /**
+ * @param {Number} case_id
+ * @param {Number} step_id
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function getPrevStep(case_id, step_id, trx) {
+    try {
+        const conn = trx || db;
+        const current_step = await conn(TABLE.$CASES.STEPS)
+            .where({
+                id: step_id,
+            })
+            .first();
+        if (!current_step)
+            throw new ExpressError("Current step does not exists", 404);
+        return await conn(TABLE.$CASES.STEPS)
+            .where({ case_id: case_id })
+            .andWhere("step_id", "=", current_step.step_id - 1)
+            .first();
+    } catch (error) {
+        throw new ExpressError(error.message, error.http_status || 400);
+    }
+}
+
+/**
  * Link Clients to case
  * @param {Number} case_id
  * @param {Array} clients
@@ -145,6 +169,17 @@ export async function linkClients(case_id, clients, trx) {
 }
 
 /**
+ *
+ * @param {Number} case_id
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function unlinkClients(case_id, trx) {
+    const conn = trx || db;
+    await conn(TABLE.$CASES.CLIENTS).where({ case_id: case_id }).forUpdate();
+    await conn(TABLE.$CASES.CLIENTS).where({ case_id: case_id }).delete();
+}
+
+/**
  * Link alas hak to case
  * @param {Number} id
  * @param {Number} ah_id
@@ -158,6 +193,17 @@ export async function linkAlasHak(id, ah_id, trx) {
     if (!alas_hak) throw new ExpressError("Alas Hak not found");
 
     await conn(TABLE.CASES).where({ id: id }).update({ ah_id: ah_id });
+}
+
+/**
+ *
+ * @param {Number} id
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function unlinkAlasHak(id, trx) {
+    const conn = trx || db;
+    await conn(TABLE.CASES).where({ id: id }).forUpdate();
+    await conn(TABLE.CASES).where({ id: id }).update({ ah_id: null });
 }
 
 /**

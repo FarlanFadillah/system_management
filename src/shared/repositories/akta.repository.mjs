@@ -12,6 +12,28 @@ export async function createAkta(data, trx) {
 }
 
 /**
+ *
+ * @param {Object} id
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function deleteAktaWhere(model, trx) {
+    const conn = trx || db;
+
+    await conn(TABLE.AKTAPPAT).where(model).delete();
+}
+
+/**
+ *
+ * @param {Object} model
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function updateAktaWhere(model, data, trx) {
+    const conn = trx || db;
+    await conn(TABLE.AKTAPPAT).where(model).forUpdate();
+    await conn(TABLE.AKTAPPAT).where(model).update(data);
+}
+
+/**
  * @param {String} year
  * @param {import("knex").Knex.Transaction} trx
  */

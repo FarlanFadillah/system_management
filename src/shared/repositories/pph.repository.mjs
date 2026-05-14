@@ -45,6 +45,18 @@ export async function updatePPHWhere(model, data, trx) {
 
 /**
  *
+ * @param {Object} model
+ * @param {knex.Knex.Transaction} trx
+ */
+export async function deletePPHWhere(model, trx) {
+    const conn = trx || db;
+
+    await conn(TABLE.PPH).where(model).forUpdate();
+    await conn(TABLE.PPH).where(model).delete();
+}
+
+/**
+ *
  * @param {Number} case_id
  * @param {knex.Knex.Transaction} trx
  * @returns
