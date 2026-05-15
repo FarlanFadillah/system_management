@@ -57,7 +57,7 @@ export async function updateAlasHak(id, model) {
 export async function getAlasHak(id) {
     try {
         const data = await alasHakRepo.get(id);
-        if (data.length <= 0) throw new ExpressError("Alas Hak not found", 404);
+        if (!data) throw new ExpressError("Alas Hak not found", 404);
         return data;
     } catch (error) {
         throw error;

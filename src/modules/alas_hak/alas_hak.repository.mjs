@@ -64,9 +64,8 @@ export async function get(id) {
             .select(
                 db.raw(`
                     (SELECT COALESCE(
-                        JSON_ARRAYAGG(JSON_OBJECT("id", cl.id, "nik", cl.nik, "nkk", cl.nkk, 
-                        "first_name", cl.first_name, "last_name", cl.last_name, 
-                        "start_date", ahc.start_date)),
+                        JSON_ARRAYAGG(JSON_OBJECT("id", cl.id, "nik", cl.nik, 
+                        "fullname", cl.fullname, "start_date", ahc.start_date)),
                         JSON_ARRAY()
                     ) as owners
                     FROM ${TABLE.$ALASHAK.CLIENTS} as ahc
@@ -81,8 +80,8 @@ export async function get(id) {
                     SELECT COALESCE(JSON_ARRAYAGG(t.obj), JSON_ARRAY())
                     FROM(
                         SELECT 
-                            JSON_OBJECT("id", cl.id, "nik", cl.nik, "nkk", cl.nkk, "first_name", cl.first_name, 
-                            "last_name", cl.last_name, "start_date", oh.start_date, "end_date", oh.end_date, "type", oh.acq_type, 
+                            JSON_OBJECT("id", cl.id, "nik", cl.nik, "fullname", cl.fullname, 
+                            "start_date", oh.start_date, "end_date", oh.end_date, "type", oh.acq_type, 
                             "case_id", oh.case_id) 
                         as obj
                         FROM ${TABLE.OWNERSHIPS} as oh
@@ -233,7 +232,7 @@ export async function getOwners(id) {
         return await db(`${TABLE.$ALASHAK.CLIENTS} as ahc`)
             .leftJoin(`${TABLE.CLIENTS} as cl`, "cl.id", "ahc.client_id")
             .where("ahc.alas_hak_id", id)
-            .select("cl.id", "cl.nik", "cl.first_name", "cl.last_name")
+            .select("cl.id", "cl.nik", "cl.fullname")
             .limit(10)
             .offset(0);
     } catch (error) {

@@ -2,53 +2,13 @@ import TABLE from "../../configs/table.config.mjs";
 import db from "../../dbs/db.mjs";
 import { ExpressError } from "../../shared/utils/custom.error.mjs";
 
-// EXPAMPLE
-// {
-//     "first_name": "Farlan",
-//     "last_name" : "Fadillah",
-//     "nik": 1305xxxxxxxxxxxx,
-//     "nkk": 1307xxxxxxxxxxxx,
-//     "birth_date": "2001-08-29",
-//     "birth_place" : "Duri",
-//     "job_name" : "Pelajar/Mahasiswa",
-//     "address_code" : "13.07.05.2007",
-//     "marriage_status" : "belum kawin",
-//     "gender" : "pria"
-// }
-
-export async function getByCLientId(id) {
-    return await db.raw(`
-        SELECT c.id, c.nik, c.nkk, c.first_name, c.last_name, c.birth_date, c.birth_place, 
-        
-        (SELECT JSON_OBJECT("provinsi", prov.name, "kabupaten", kab.name, "kecamatan", kec.name, "kelurahan", kel.name)
-        FROM ${TABLE.$ADDRESS.PROV} AS prov LEFT JOIN ${TABLE.$ADDRESS.KAB} AS kab on kab.id_provinsi = prov.id
-        LEFT JOIN ${TABLE.$ADDRESS.KEC} AS kec on kec.id_kabupaten = kab.id
-        LEFT JOIN ${TABLE.$ADDRESS.KEL} AS kel on kel.id_kecamatan = kec.id
-        WHERE kel.id = c.address_code
-        ) AS address,
-        
-        (SELECT COALESCE(JSON_ARRAYAGG(JSON_OBJECT("id", ah.id, "no_alas_hak", ah.no_alas_hak)) , JSON_ARRAY())
-        FROM ${TABLE.ALASHAK} AS ah
-        LEFT JOIN ${TABLE.$ALASHAK.CLIENTS} AS ahc on ahc.client_id = c.id 
-        WHERE ah.id = ahc.alas_hak_id) 
-        AS alas_hak,
-        
-        (SELECT
-        CASE 
-            WHEN (SELECT COUNT(cases.id) FROM ${TABLE.CASES} 
-                    LEFT JOIN ${TABLE.$CASES.CLIENTS} AS cc ON cc.case_id = cases.id WHERE c.id = cc.client_id) > 0 THEN  
-            JSON_ARRAYAGG(JSON_OBJECT("id", cases.id, "product", prd.name, "alas_hak", ah.no_alas_hak)) 
-            ELSE JSON_ARRAY()
-        END
-            FROM ${TABLE.CASES}
-        LEFT JOIN ${TABLE.$CASES.PRD} AS prd ON prd.id = ${TABLE.CASES}.prd_id
-        LEFT JOIN ${TABLE.ALASHAK} AS ah ON ah.id = ${TABLE.CASES}.ah_id
-        LEFT JOIN ${TABLE.$CASES.CLIENTS} AS cc on cc.client_id = c.id
-        WHERE cc.case_id = cases.id 
-        ) AS cases
-        FROM ${TABLE.CLIENTS} AS c WHERE c.id = ${id};
-        
-    `);
+/**
+ *
+ * @param {Number} id
+ * @returns {Object}
+ */
+export async function getById(id) {
+    return await db(TABLE.CLIENTS).where({ id: id }).first();
 }
 
 /**
@@ -56,7 +16,7 @@ export async function getByCLientId(id) {
  * @param {Number} id
  * @returns
  */
-export async function getById(id) {
+export async function getByIdWithDetails(id) {
     try {
         const data = await db(`${TABLE.CLIENTS} AS cl`)
             .select(["cl.*"])
@@ -66,7 +26,19 @@ export async function getById(id) {
             )
             .select(
                 db.raw(
-                    `COALESCE(JSON_ARRAYAGG(JSON_OBJECT("id", ah.id, "nomor", ah.no_alas_hak)), JSON_ARRAY()) AS alas_hak`,
+                    `(SELECT COALESCE(JSON_ARRAYAGG(JSON_OBJECT("id", ah.id, "nomor", ah.no_alas_hak)), JSON_ARRAY()) FROM ${TABLE.ALASHAK} AS ah 
+                    LEFT JOIN ${TABLE.$ALASHAK.CLIENTS} AS ahc ON ahc.alas_hak_id = ah.id 
+                    WHERE ahc.client_id = cl.id) AS alas_hak`,
+                ),
+            )
+            .select(
+                db.raw(
+                    `(select coalesce(json_arrayagg(json_object("id", c.id, "product", prd.name, "status", c.status, "alas_hak", ah.no_alas_hak, "current_step", cs.name)), json_array()) from ${TABLE.CASES} as c 
+                    left join ${TABLE.$CASES.CLIENTS} as cc on cc.case_id = c.id 
+                    left join ${TABLE.$CASES.PRD} as prd on prd.id = c.prd_id 
+                    left join ${TABLE.ALASHAK} as ah on ah.id = c.ah_id
+                    left join ${TABLE.$CASES.STEPS} as cs on cs.id = c.current_step
+                    where cc.client_id = cl.id and c.status != 'DONE') as cases `,
                 ),
             )
             .leftJoin(
@@ -89,8 +61,6 @@ export async function getById(id) {
                 "prov.id",
                 "kab.id_provinsi",
             )
-            .leftJoin(`${TABLE.$ALASHAK.CLIENTS} AS ahc`, "ahc.client_id", id)
-            .leftJoin(`${TABLE.ALASHAK} AS ah`, "ah.id", "ahc.alas_hak_id")
             .where("cl.id", id)
             .groupBy("cl.id")
             .first();
@@ -129,7 +99,7 @@ export async function getAllLimitOffset(limit, offset) {
                 "prov.id",
                 "kab.id_provinsi",
             )
-            .select("cl.id", "cl.nik", "cl.first_name", "cl.last_name")
+            .select("cl.id", "cl.nik", "cl.fullname")
             .select(
                 db.raw(
                     "JSON_OBJECT('kelurahan', kel.name, 'kecamatan', kec.name, 'kabupaten', kab.name, 'provinsi', prov.name) AS address",
@@ -153,7 +123,7 @@ export async function getAllLimitOffset(limit, offset) {
 export async function getAll(limit, cursor, orderBy = "id", order = "asc") {
     try {
         return await db(`${TABLE.CLIENTS}`)
-            .select("id", "nik", "first_name", "last_name", "birth_place")
+            .select("id", "nik", "fullname")
             .orderBy(orderBy, order)
             .limit(limit)
             .where("id", ">", cursor);
@@ -200,7 +170,7 @@ export async function search(columns, keyword, limit, offset) {
                     else this.orWhere(`cl.${col}`, "like", `%${keyword}%`);
                 });
             })
-            .select("cl.id", "cl.nik", "cl.first_name", "cl.last_name")
+            .select("cl.id", "cl.nik", "cl.fullname")
             .select(
                 db.raw(
                     `JSON_OBJECT("kelurahan", kel.name, "kecamatan", kec.name, "kabupaten", kab.name, "provinsi", prov.name) AS address`,
