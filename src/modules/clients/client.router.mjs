@@ -7,6 +7,7 @@ import { validateToken } from "../../shared/middlewares/jwt.middleware.mjs";
 import { validate } from "../../shared/middlewares/validator.middleware.mjs";
 import { pagination } from "../../shared/middlewares/pagination.middleware.mjs";
 import { keyBuilder } from "../../shared/utils/cachekeybuilder.mjs";
+import { upload } from "../../shared/middlewares/upload.middleware.js";
 
 const router = express.Router();
 router.use(validateToken);
@@ -54,6 +55,17 @@ router
         validate,
         ctrl.updateClientData,
     );
+
+router
+    .route("/:id/upload")
+    .post(
+        upload.single("document"),
+        ...mainRules.IDValidationRules,
+        ...rules.filenameValidationRules,
+        validate,
+        ctrl.uploadClientDocument,
+    );
+
 router
     .route("/:id/alas-hak")
     .get(

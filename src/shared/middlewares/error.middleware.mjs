@@ -12,3 +12,10 @@ export function globalErrorHandler(err, req, res, next) {
         code: err.error_code,
     });
 }
+
+export function missingEndpoint(req, res, next) {
+    res.status(404).json({
+        success: false,
+        msg: "Enpoint does not extists!",
+    });
+}

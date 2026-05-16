@@ -249,3 +249,14 @@ export async function getAlasHak(client_id, limit, offset) {
         throw new ExpressError(error.message);
     }
 }
+
+/**
+ *
+ * @param {Object} data
+ * @param {import("knex").Knex.Transaction} trx
+ */
+export async function saveDocs(data, trx) {
+    const conn = trx || db;
+    const [id] = await conn(TABLE.$CLIENTS.DOCS).insert(data);
+    return id;
+}

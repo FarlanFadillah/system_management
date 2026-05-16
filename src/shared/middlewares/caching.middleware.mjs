@@ -4,60 +4,6 @@ import * as cache from "../utils/cache.mjs";
 
 /**
  *
- * @param {String} resource
- */
-// export function generateCacheKey(resource) {
-//     return (req, res, next) => {
-//         debug(`starting generating cache key name`);
-//         let cacheKeyName = `cache:${resource}:${req.method}`;
-//         for (const key of Object.keys(req?.matchedData || {}).sort()) {
-//             cacheKeyName += `:${key}:${req.matchedData[key]}`;
-//         }
-//         for (const key of Object.keys(req?.pagination || {}).sort()) {
-//             cacheKeyName += `:${key}:${req.pagination[key]}`;
-//         }
-//         req.cache = {
-//             key: cacheKeyName,
-//             resource: resource,
-//         };
-//         debug(`finished generated cache key name ${cacheKeyName}`);
-
-//         next();
-//     };
-// }
-
-// /**
-//  *
-//  * @param {import("express").Request} req
-//  * @param {import("express").Response} res
-//  * @param {import("express").NextFunction} next
-//  */
-// export function cacheMiddleware(req, res, next) {
-//     if (!req.cache || !req.cache.key) {
-//         debug("No cache key found, skipping cache");
-//         return next();
-//     }
-
-//     const key = req.cache.key;
-//     const data = cache.get(key);
-//     if (data) {
-//         debug(`CACHE HIT : ${key}`);
-//         return res.status(200).json(data);
-//     }
-
-//     debug("CACHE MISS");
-
-//     const resJson = res.json;
-//     res.json = function (data) {
-//         cache.set(key, data, Number(process.env.CACHE_TTL) || 60);
-//         return resJson.call(this, data);
-//     };
-//     // mark as wrapped
-//     next();
-// }
-
-/**
- *
  * @param {Function} keyBuilder
  * @returns
  */

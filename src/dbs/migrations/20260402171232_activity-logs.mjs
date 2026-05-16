@@ -5,17 +5,15 @@
 export async function up(knex) {
     await knex.schema.createTable("activity_logs", (table) => {
         table.increments("id").primary();
-        table
-            .integer("case_id")
-            .unsigned()
-            .references("id")
-            .inTable("cases")
-            .onDelete("CASCADE");
-        table.string("action").notNullable();
+        table.integer("entity_id").unsigned().notNullable();
+        table.string("entity_type").notNullable();
+        table.string("desc").notNullable();
         table.enum("level", ["info", "warning", "error"]).defaultTo("info");
-        table.timestamp("timestamp").defaultTo(knex.fn.now());
+        table.timestamp("timestamp").notNullable();
+        table.json("metadata");
 
-        table.index("case_id");
+        table.index(["entity_type", "entity_id"]);
+        table.index("entity_id");
     });
 }
 

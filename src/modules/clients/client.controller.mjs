@@ -20,6 +20,19 @@ export const deleteClient = asyncHandler(async (req, res, next) => {
     res.status(200).json({ success: true, msg: "User deleted successfully" });
 });
 
+export const uploadClientDocument = asyncHandler(async (req, res, next) => {
+    const { id, type } = req.matchedData;
+    const { filename } = req.file;
+    const path = `/uploads/${filename}`;
+
+    await clientService.saveClientDocument(id, type, path);
+
+    res.status(200).json({
+        success: true,
+        message: "File uploaded successfully",
+    });
+});
+
 export const updateClientData = asyncHandler(async (req, res, next) => {
     const { id, ...data } = req.matchedData;
     await clientService.updateClientData(id, data);

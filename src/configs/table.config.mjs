@@ -4,6 +4,7 @@ export default {
     $CLIENTS: {
         ALASHAK: "alas_hak_clients",
         ROLES: "client_roles",
+        DOCS: "clients_documents",
     },
     AKTAPPAT: "akta_ppat",
     ALASHAK: "alas_hak",

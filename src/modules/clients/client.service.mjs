@@ -3,6 +3,8 @@ import * as clientRepo from "./client.repository.mjs";
 import * as mainRepo from "../../shared/repositories/main.repository.mjs";
 import * as jsonHelper from "../../shared/helper/json.helper.mjs";
 import * as cache from "../../shared/utils/cache.mjs";
+import db from "../../dbs/db.mjs";
+import * as fileUtils from "../../shared/utils/file.js";
 
 /**
  *
@@ -47,6 +49,28 @@ export async function updateClientData(id, model) {
         cache.delByPattern(`:clients:id:${id}`);
         cache.delByPattern(":clients:list:");
     } catch (error) {
+        throw error;
+    }
+}
+
+/**
+ *
+ * @param {Number} cl_id
+ * @param {String} type
+ * @param {String} path
+ */
+export async function saveClientDocument(cl_id, type, path) {
+    try {
+        await db.transaction(async (trx) => {
+            const exists = await mainRepo.isExists("clients", cl_id, trx);
+            if (!exists)
+                throw new ExpressError(
+                    `Client with id ${cl_id} does not extist`,
+                );
+            await clientRepo.saveDocs({ cl_id, type, path }, trx);
+        });
+    } catch (error) {
+        await fileUtils.deleteFile(path);
         throw error;
     }
 }

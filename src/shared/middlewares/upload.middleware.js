@@ -19,9 +19,11 @@ export const upload = multer({
     storage: storage,
     fileFilter: function (req, file, cb) {
         debug("file mime type is", file.mimetype);
+        if (!file.mimetype.includes("/pdf"))
+            cb(new Error("Only allowed for pdf file"), false);
         cb(null, true);
     },
     limits: {
-        fileSize: 5 * 1024 * 1024,
+        fileSize: 1 * 1024 * 1024,
     },
 });

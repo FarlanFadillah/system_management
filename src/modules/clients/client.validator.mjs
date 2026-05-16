@@ -27,3 +27,5 @@ export const patchClientValidationRules = [
 export const searchValidationRules = [
     validator.stringRequired("keyword", "query"),
 ];
+
+export const filenameValidationRules = [validator.stringRequired("type")];

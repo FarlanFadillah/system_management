@@ -9,14 +9,14 @@ const debug = createDebug("app:utils:file");
  */
 export async function deleteFile(dest) {
     const _path = path.join("public", dest);
-    if (!(await isExists(dest))) return;
-    debug("deleting file", _path.substring(0, 10) + "...");
+    if (!(await isExists(_path))) return;
+    debug("deleting file", _path);
     await fs.unlink(_path);
 }
 
-export async function isExists(dest) {
+export async function isExists(path) {
     try {
-        await fs.access(path.join(dest));
+        await fs.access(path);
         return true;
     } catch (error) {
         return false;

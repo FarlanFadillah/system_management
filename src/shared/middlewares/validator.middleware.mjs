@@ -5,6 +5,7 @@ import createDebug from "debug";
 const debug = createDebug("app:middleware:validator");
 
 export function validate(req, res, next) {
+    debug(req.body);
     const result = validationResult(req);
 
     if (result.isEmpty()) {

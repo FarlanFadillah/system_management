@@ -21,13 +21,14 @@ export async function up(knex) {
 
     await knex.schema.createTable("clients_documents", (table) => {
         table.increments("id").primary();
+        table.string("type").notNullable();
         table
             .integer("cl_id")
             .unsigned()
             .notNullable()
             .references("clients.id")
             .onDelete("CASCADE");
-
+        table.unique(["cl_id", "type"]);
         table.string("path").notNullable();
     });
 }
