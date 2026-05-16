@@ -1,5 +1,6 @@
 import * as mainRepo from "../../shared/repositories/main.repository.mjs";
 import * as casesRepo from "./case.repository.mjs";
+import * as logRepo from "../../shared/repositories/logs.repository.mjs";
 import * as casesHelper from "./case.helper.mjs";
 import * as jsonHelper from "../../shared/helper/json.helper.mjs";
 import { ExpressError } from "../../shared/utils/custom.error.mjs";
@@ -40,12 +41,13 @@ export async function create(data) {
     try {
         const id = await db.transaction(async (trx) => {
             // validate products
-            const prd_exists = await mainRepo.isExists(
+            const prd = await mainRepo.get(
                 configs.TABLE.$CASES.PRD,
                 data.prd_id,
+                ["*"],
+                trx,
             );
-            if (!prd_exists)
-                throw new ExpressError("Products not available", 404);
+            if (!prd) throw new ExpressError("Products not available", 404);
 
             // insert case data
             const case_id = await casesRepo.createCase(data, trx);
@@ -62,6 +64,13 @@ export async function create(data) {
             await casesRepo.updateCase(
                 case_id,
                 { current_step: step_id, status: "IN PROGRESS" },
+                trx,
+            );
+            await logRepo.insertLogs(
+                case_id,
+                "cases",
+                `Case [${prd.name}] is created.`,
+                "info",
                 trx,
             );
             return case_id;
@@ -84,7 +93,6 @@ export async function create(data) {
  */
 export async function nextStep(id) {
     try {
-        let finished = false;
         // TODO
         /**
          * 1. Get current step id
@@ -94,7 +102,7 @@ export async function nextStep(id) {
          * 5. update case current step
          */
 
-        await db.transaction(async (trx) => {
+        const caseIsFinished = await db.transaction(async (trx) => {
             // Lock case for update and
             // get case by its id
             const [_case] = await casesRepo.lockForUpdate(id, trx);
@@ -120,10 +128,19 @@ export async function nextStep(id) {
                     `Current step not finished yet [${current_step.name}]`,
                 );
 
-            finished = await casesHelper.proceedToNextStep(
-                _case.id,
-                _case.current_step,
-                _case.ah_id,
+            const [finished, next_step_name] =
+                await casesHelper.proceedToNextStep(
+                    _case.id,
+                    _case.current_step,
+                    _case.ah_id,
+                    trx,
+                );
+
+            await logRepo.insertLogs(
+                id,
+                "cases",
+                `Case proceed to the next step [${next_step_name}].`,
+                "info",
                 trx,
             );
 
@@ -138,11 +155,13 @@ export async function nextStep(id) {
                     trx,
                 );
             }
+
+            return finished;
         });
 
         cache.delByPattern(`:cases:id:${id}`);
         cache.delByPattern(`:cases:list:`);
-        return finished;
+        return caseIsFinished;
     } catch (error) {
         throw error;
     }
@@ -168,9 +187,17 @@ export async function prevStep(id) {
             }
 
             // set the current step to the previous step if exists
-            await casesHelper.proceedToPreviousStep(
+            const prev_name = await casesHelper.proceedToPreviousStep(
                 _case.id,
                 _case.current_step,
+                trx,
+            );
+
+            await logRepo.insertLogs(
+                id,
+                "cases",
+                `Case back to the previous step [${prev_name}].`,
+                "info",
                 trx,
             );
         });
@@ -189,7 +216,8 @@ export async function prevStep(id) {
  * @param {import("knex").Knex.Transaction} trx
  */
 export async function validateStep(case_id, data) {
-    const { dto, handler } = await casesHelper.validateStepData(case_id, data);
+    const { dto, handler, current_step_name } =
+        await casesHelper.validateStepData(case_id, data);
     await db.transaction(async (trx) => {
         await handlers.validate[handler](case_id, dto, trx);
         await casesRepo.updateCurrentStep(
@@ -198,6 +226,14 @@ export async function validateStep(case_id, data) {
                 valid: true,
                 completed_at: new Date(),
             },
+            trx,
+        );
+
+        await logRepo.insertLogs(
+            case_id,
+            "cases",
+            `[${current_step_name}] step is valid.`,
+            "info",
             trx,
         );
     });

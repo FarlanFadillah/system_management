@@ -30,11 +30,6 @@ export async function createCase(model, trx) {
             updated_at: new Date(),
         });
 
-        debug("Log activity");
-        await trx(TABLE.$CASES.LOGS).insert({
-            case_id: id,
-            action: "Case created",
-        });
         return id;
     } catch (error) {
         throw new ExpressError(
@@ -281,18 +276,6 @@ export async function updateCurrentStep(case_id, data, trx) {
         .update({ ...data });
 }
 
-export async function log(trx, id, action) {
-    try {
-        const conn = trx || db;
-        await conn(TABLE.$CASES.LOGS).insert({
-            case_id: id,
-            action: action,
-        });
-    } catch (error) {
-        throw new ExpressError(error.message);
-    }
-}
-
 /**
  * Get related client from case for bphtb
  * @param {Number} case_id
@@ -368,7 +351,7 @@ export async function getById(id, trx) {
             (SELECT JSON_OBJECT("id", ah.id, "no_alas_hak", ah.no_alas_hak) 
                 FROM ${TABLE.ALASHAK} AS ah WHERE ah.id = c.ah_id
             ) AS alas_hak,
-            (SELECT JSON_ARRAYAGG(JSON_OBJECT("id", cl.id, "first_name", cl.first_name, "last_name", cl.last_name, "role", cr.name))
+            (SELECT JSON_ARRAYAGG(JSON_OBJECT("id", cl.id, "fullname", cl.fullname, "role", cr.name))
                 FROM ${TABLE.$CASES.CLIENTS} as cc LEFT JOIN ${TABLE.CLIENTS} AS cl on cl.id = cc.client_id 
                 LEFT JOIN ${TABLE.$CLIENTS.ROLES} as cr on cr.id = cc.role_id
                 WHERE cc.case_id = c.id
@@ -384,9 +367,9 @@ export async function getById(id, trx) {
                 LEFT JOIN ${TABLE.WORKFLOWS} AS wf on wf.id = cs.step_id
                 WHERE cs.case_id = c.id
             ) as case_steps,
-            (SELECT JSON_ARRAYAGG(JSON_OBJECT("action", al.action, "level", al.level, "timestamp", al.timestamp)) 
+            (SELECT JSON_ARRAYAGG(JSON_OBJECT("description", al.desc, "level", al.level, "timestamp", al.timestamp)) 
             FROM ${TABLE.$CASES.LOGS} as al
-            WHERE al.case_id = c.id
+            WHERE al.entity_id = c.id AND al.entity_type = 'cases'
             ) as activities
             FROM ${TABLE.CASES} AS c WHERE c.id = ${id} LIMIT 1;
         `);

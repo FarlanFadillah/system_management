@@ -40,6 +40,7 @@ export async function proceedToPreviousStep(case_id, current_step, trx) {
             { status: "IN PROGRESS" },
             trx,
         );
+        return prev_step.name;
     } else {
         throw new ExpressError(
             "you're reaching the beginning of the workflows",
@@ -100,7 +101,7 @@ export async function proceedToNextStep(case_id, current_step, ah_id, trx) {
             trx,
         );
 
-        return false;
+        return [false, next_step.name];
     } else {
         // if the code reach this if statement
         // its mean the case is done
@@ -119,7 +120,7 @@ export async function proceedToNextStep(case_id, current_step, ah_id, trx) {
             trx,
         );
 
-        return true;
+        return [true, null];
     }
 }
 
@@ -136,7 +137,9 @@ export async function validateStepData(case_id, data) {
     else if (_case.status === "DONE")
         throw new ExpressError("Case already finished");
 
-    const { validation, valid } = await casesRepo.getStep(_case.current_step);
+    const { validation, valid, name } = await casesRepo.getStep(
+        _case.current_step,
+    );
     if (!validation)
         throw new ExpressError(
             "Current step does not have requirement, you can continue",
@@ -155,7 +158,7 @@ export async function validateStepData(case_id, data) {
         throw new Error(error);
     }
 
-    return { dto, handler };
+    return { dto, handler, current_step_name: name };
 }
 
 /**
